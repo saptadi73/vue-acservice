@@ -105,7 +105,7 @@ const router = createRouter({
           component: () => import('../pages/WoPenjualanAC.vue'),
         },
         {
-          path: 'sewa/baru/:id',
+          path: 'sewa/baru',
           name: 'wo sewa order',
           component: () => import('../pages/WoPenyewaanAC.vue'),
         },

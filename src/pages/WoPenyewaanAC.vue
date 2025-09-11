@@ -29,7 +29,7 @@
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Type Pelanggan</td>
-                <td class="font-semibold text-gray-900">: Pribadi</td>
+                <td class="font-semibold text-gray-900">: {{ jenis_pelanggan }}</td>
               </tr>
             </tbody>
           </table>
@@ -44,8 +44,20 @@
                 <td class="font-semibold text-gray-900">: WO-001</td>
               </tr>
               <tr>
-                <td class="pr-4 font-medium text-gray-700">Kode Pelanggan</td>
-                <td class="font-semibold text-gray-900">: Budi</td>
+                <td class="pr-4 font-medium text-gray-700">Pilih Pelanggan</td>
+                <td class="font-semibold text-gray-900">
+                  <select
+                    id="pilihpelanggan"
+                    v-if="customers"
+                    v-model="selectedCustomerId"
+                    @change="onSelectCustomer"
+                  >
+                    <option value="" selected>Pilih Pelanggan</option>
+                    <option v-for="value in customers" :key="value.id" :value="value.id">
+                      {{ value.nama }}
+                    </option>
+                  </select>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -59,15 +71,15 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Nama Pelanggan</td>
-                <td class="font-semibold text-gray-900">: Budi</td>
+                <td class="font-semibold text-gray-900">: {{ nama_pelanggan }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Alamat</td>
-                <td class="font-semibold text-gray-900">: Jl. Merdeka No. 123, Jakarta</td>
+                <td class="font-semibold text-gray-900">: {{ alamat }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">No. HP</td>
-                <td class="font-semibold text-gray-900">: 0812 3456 7890</td>
+                <td class="font-semibold text-gray-900">: {{ no_hp }}</td>
               </tr>
             </tbody>
           </table>
@@ -76,14 +88,18 @@
           <table>
             <tbody>
               <tr>
-                <td class="pr-4 font-medium text-gray-700">Permintaan Khusus</td>
+                <td class="pr-4 font-medium text-gray-700">AC yang Disewa</td>
                 <td class="font-semibold text-gray-900">
-                  <select class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm">
-                    <option value="AC Tidak Dingin">Penambahan Pipa</option>
-                    <option value="AC Bocor">Penambahan Plug In Listrik</option>
-                    <option value="AC Bocor">Perpanjangan Kabel Listrik</option>
-                    <option value="AC Berisik">Instalasi Listrik Tambahan</option>
-                    <option value="AC Mati Total">Lain-lain</option>
+                  <select
+                    id="sewaAcRental"
+                    class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm"
+                    v-model="selectedAssetId"
+                    @change="onSelectAsset"
+                  >
+                    <option value="" selected>Unit AC yang disewa</option>
+                    <option v-for="asset in assets" :key="asset.id" :value="asset.id">
+                      {{ asset.brand }},{{ asset.model }} - {{ asset.tipe }} - {{ asset.kapasitas }}
+                    </option>
                   </select>
                 </td>
               </tr>
@@ -116,15 +132,15 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Brand</td>
-                <td class="font-semibold text-gray-900">: Panasonic</td>
+                <td class="font-semibold text-gray-900">: {{ brand }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Model</td>
-                <td class="font-semibold text-gray-900">: TR-WETG53</td>
+                <td class="font-semibold text-gray-900">: {{ model }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Freon</td>
-                <td class="font-semibold text-gray-900">: R33</td>
+                <td class="font-semibold text-gray-900">: {{ freon }}</td>
               </tr>
             </tbody>
           </table>
@@ -134,15 +150,15 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Tipe</td>
-                <td class="font-semibold text-gray-900">: Split</td>
+                <td class="font-semibold text-gray-900">: {{ tipe }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Kapasitas</td>
-                <td class="font-semibold text-gray-900">: 2600 BTU</td>
+                <td class="font-semibold text-gray-900">: {{ kapasitas }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Lokasi</td>
-                <td class="font-semibold text-gray-900">: Ruang Tamu</td>
+                <td class="font-semibold text-gray-900">: {{ lokasi }}</td>
               </tr>
             </tbody>
           </table>
@@ -500,7 +516,16 @@
                 <span v-else class="text-gray-400 text-xs">Belum ada tanda tangan</span>
               </div>
             </label>
-            <div class="w-full text-center mt-2 text-blue-700 font-semibold">( Nama Teknisi )</div>
+            <div class="w-full text-center mt-2 text-blue-700 font-semibold">
+              (
+              <select id="pilihteknisi" v-if="teknisi" v-model="formData.teknisi_id">
+                <option value="" selected>Pilih Teknisi</option>
+                <option v-for="value in teknisi" :key="value.id" :value="value.id">
+                  {{ value.nama }}
+                </option>
+              </select>
+              )
+            </div>
           </div>
         </div>
         <!-- Pelanggan -->
@@ -527,7 +552,7 @@
               </div>
             </label>
             <div class="w-full text-center mt-2 text-blue-700 font-semibold">
-              ( Nama Pelanggan )
+              ( {{ nama_pelanggan }} )
             </div>
           </div>
         </div>
@@ -549,15 +574,53 @@ const customerAssetId = route.params.id
 const nama_pelanggan = ref('')
 const alamat = ref('')
 const no_hp = ref('')
+const selectedCustomerId = ref('')
+const assets = ref([])
+
+function onSelectCustomer() {
+  const selected = customers.value.find((c) => c.id == selectedCustomerId.value)
+  if (selected) {
+    nama_pelanggan.value = selected.nama
+    alamat.value = selected.alamat
+    no_hp.value = selected.hp
+    jenis_pelanggan.value = selected.jenis
+  } else {
+    nama_pelanggan.value = ''
+    alamat.value = ''
+    no_hp.value = ''
+  }
+}
 const brand = ref('')
 const model = ref('')
 const tipe = ref('')
 const kapasitas = ref('')
 const freon = ref('')
 const lokasi = ref('')
-const kode_pelanggan = ref('')
+const selectedAssetId = ref('')
+
+function onSelectAsset() {
+  const selected = assets.value.find((a) => a.id == selectedAssetId.value)
+  if (selected) {
+    brand.value = selected.brand
+    model.value = selected.model
+    tipe.value = selected.tipe
+    kapasitas.value = selected.kapasitas
+    lokasi.value = selected.lokasi
+    freon.value = selected.freon
+  } else {
+    brand.value = ''
+    model.value = ''
+    tipe.value = ''
+    kapasitas.value = ''
+    lokasi.value = ''
+    freon.value = ''
+  }
+}
+
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
+const customers = ref([])
+const pelangganSignUrl = ref(null)
 
 const formData = ref({
   customer_asset_id: customerAssetId,
@@ -566,22 +629,24 @@ const formData = ref({
 })
 
 // Ambil data work order
-async function getForNewWorkOrder(id) {
+async function getForNewWorkOrder() {
   try {
-    const response = await axios.get(`${BASE_URL}customers/assets/${id}`)
-    nama_pelanggan.value = response.data.data.customer_nama
-    alamat.value = response.data.data.customer_alamat
-    no_hp.value = response.data.data.customer_hp
-    brand.value = response.data.data.brand
-    model.value = response.data.data.model
-    tipe.value = response.data.data.tipe
-    kapasitas.value = response.data.data.kapasitas
-    freon.value = response.data.data.freon
-    lokasi.value = response.data.data.lokasi
-    kode_pelanggan.value = response.data.data.customer_kode_pelanggan
-    jenis_pelanggan.value = response.data.data.customer_jenis
+    const response = await axios.get(`${BASE_URL}customers/rentalassets/all`)
+    assets.value = response.data.data
+    console.log('Data Assets: ', assets.value)
   } catch (error) {
     console.error('Error fetching work order data:', error)
+  }
+}
+
+async function getCustomers() {
+  try {
+    const res = await axios.get(`${BASE_URL}/customers/all`)
+    customers.value = Array.isArray(res?.data?.data) ? res.data.data : []
+    console.log('Data Customers: ', customers.value)
+  } catch (error) {
+    console.error('Error fetching customers:', error)
+    customers.value = []
   }
 }
 
@@ -610,8 +675,9 @@ const teknisiSignUrl = computed(() => {
 
 // Lifecycle
 onMounted(() => {
-  getForNewWorkOrder(customerAssetId)
+  getForNewWorkOrder()
   getPegawai()
+  getCustomers()
 })
 </script>
 
