@@ -185,10 +185,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">1. Unit Indoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkIndoor" value="1" />
+                  <input
+                    v-model="formData.checkIndoor"
+                    type="checkbox"
+                    id="checkIndoor"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganIndoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganIndoor"
                     type="text"
@@ -198,10 +204,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">2. Unit Outdoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkOutdoor" value="1" />
+                  <input
+                    v-model="formData.checkOutdoor"
+                    type="checkbox"
+                    id="checkOutdoor"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganOutdoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganOutdoor"
                     type="text"
@@ -211,10 +223,11 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkPipa" type="checkbox" value="1" />
+                  <input v-model="formData.checkPipa" id="checkPipa" type="checkbox" value="1" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganPipa"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganPipa"
                     type="text"
@@ -224,10 +237,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Selang Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkSelang" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkSelang"
+                    id="checkSelang"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganSelang"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganSelang"
                     type="text"
@@ -237,10 +256,11 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKabel" type="checkbox" value="1" />
+                  <input v-model="formData.checkKabel" id="checkKabel" type="checkbox" value="1" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganKabel"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKabel"
                     type="text"
@@ -266,10 +286,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">1. Instalasi Indoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkInstIndoor" value="1" />
+                  <input
+                    v-model="formData.checkInstIndoor"
+                    type="checkbox"
+                    id="checkInstIndoor"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganInstIndoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstIndoor"
                     type="text"
@@ -279,10 +305,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">2. Instalasi Outdoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkInstOutdoor" value="1" />
+                  <input
+                    v-model="formData.checkInstOutdoor"
+                    type="checkbox"
+                    id="checkInstOutdoor"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganInstOutdoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstOutdoor"
                     type="text"
@@ -292,10 +324,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Instalasi Listrik</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkInstListrik" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkInstListrik"
+                    id="checkInstListrik"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganInstListrik"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstListrik"
                     type="text"
@@ -305,10 +343,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Instalasi Pipa</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkInstPipa" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkInstPipa"
+                    id="checkInstPipa"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganInstPipa"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstPipa"
                     type="text"
@@ -318,10 +362,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Instalasi Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkBuangan" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkBuangan"
+                    id="checkBuangan"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganBuangan"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganBuangan"
                     type="text"
@@ -331,10 +381,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">6. Vaccum</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkVaccum" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkVaccum"
+                    id="checkVaccum"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganVaccum"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganVaccum"
                     type="text"
@@ -344,10 +400,11 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">7. Tekanan Freon</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkFreon" type="checkbox" value="1" />
+                  <input v-model="formData.checkFreon" id="checkFreon" type="checkbox" value="1" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganFreon"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganFreon"
                     type="text"
@@ -361,6 +418,7 @@
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganArus"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganArus"
                     type="text"
@@ -370,10 +428,11 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">9. Temperatur Evaporator</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkEva" type="checkbox" value="1" />
+                  <input v-model="formData.checkEva" id="checkEva" type="checkbox" value="1" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganEva"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganEva"
                     type="text"
@@ -383,10 +442,16 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">10. Temperatur Kondensor</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKondensor" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkKondensor"
+                    id="checkKondensor"
+                    type="checkbox"
+                    value="1"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
+                    v-model="formData.keteranganKondensor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKondensor"
                     type="text"
@@ -487,7 +552,7 @@
       <div class="mt-2 p-2 w-full rounded-lg shadow-md bg-white">
         <input
           type="text"
-          id="hasil"
+          id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
         />
@@ -588,6 +653,7 @@ function onSelectCustomer() {
     nama_pelanggan.value = ''
     alamat.value = ''
     no_hp.value = ''
+    jenis_pelanggan.value = ''
   }
 }
 const brand = ref('')
@@ -625,7 +691,39 @@ const pelangganSignUrl = ref(null)
 const formData = ref({
   customer_asset_id: customerAssetId,
   teknisi_id: null,
-  // ...field lain sesuai kebutuhan...
+  tanda_tangan_teknisi: null,
+  tanda_tangan_pelanggan: null,
+  hasil_pekerjaan: '',
+  checkIndoor: false,
+  keteranganIndoor: '',
+  checkOutdoor: false,
+  keteranganOutdoor: '',
+  checkPipa: false,
+  keteranganPipa: '',
+  checkSelang: false,
+  keteranganSelang: '',
+  checkKabel: false,
+  keteranganKabel: '',
+  checkInstIndoor: false,
+  keteranganInstIndoor: '',
+  checkInstOutdoor: false,
+  keteranganInstOutdoor: '',
+  checkInstListrik: false,
+  keteranganInstListrik: '',
+  checkInstPipa: false,
+  keteranganInstPipa: '',
+  checkBuangan: false,
+  keteranganBuangan: '',
+  checkVaccum: false,
+  keteranganVaccum: '',
+  checkFreon: false,
+  keteranganFreon: '',
+  checkArus: false,
+  keteranganArus: '',
+  checkEva: false,
+  keteranganEva: '',
+  checkKondensor: false,
+  keteranganKondensor: '',
 })
 
 // Ambil data work order

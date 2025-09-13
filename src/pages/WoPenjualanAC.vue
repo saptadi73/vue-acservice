@@ -431,7 +431,8 @@
       <div class="mt-2 p-2 w-full rounded-lg shadow-md bg-white">
         <input
           type="text"
-          id="hasil"
+          v-model="formData.hasil_pekerjaan"
+          id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
         />
@@ -533,7 +534,37 @@ const teknisi = ref([])
 const formData = ref({
   customer_asset_id: customerAssetId,
   teknisi_id: null,
-  // ...field lain sesuai kebutuhan...
+  check_indoor: false,
+  keterangan_indoor: '',
+  check_outdoor: false,
+  keterangan_outdoor: '',
+  check_pipa: false,
+  keterangan_pipa: '',
+  check_selang: false,
+  keterangan_selang: '',
+  check_kabel: false,
+  keterangan_kabel: '',
+  check_inst_indoor: false,
+  keterangan_inst_indoor: '',
+  check_inst_outdoor: false,
+  keterangan_inst_outdoor: '',
+  check_inst_listrik: false,
+  keterangan_inst_listrik: '',
+  check_inst_pipa: false,
+  keterangan_inst_pipa: '',
+  check_buangan: false,
+  keterangan_buangan: '',
+  check_vaccum: false,
+  keterangan_vaccum: '',
+  check_freon: false,
+  keterangan_freon: '',
+  check_arus: false,
+  keterangan_arus: '',
+  check_eva: false,
+  keterangan_eva: '',
+  check_kondensor: false,
+  keterangan_kondensor: '',
+  hasil_pekerjaan: '',
 })
 
 // Ambil data work order
