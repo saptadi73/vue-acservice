@@ -211,6 +211,7 @@
               Ingatkan
             </button>
             <button
+              @click="$router.push({ name: 'wo service baru', params: { id: customer.asset_id } })"
               class="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-gray-700 text-sm font-medium ring-1 ring-gray-200 hover:bg-gray-50"
             >
               <!-- pencil -->
@@ -218,6 +219,7 @@
               Service
             </button>
             <button
+              @click="$router.push({ name: 'wo jual baru', params: { id: customer.asset_id } })"
               class="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-gray-700 text-sm font-medium ring-1 ring-gray-200 hover:bg-gray-50"
             >
               <!-- pencil -->

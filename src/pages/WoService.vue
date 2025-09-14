@@ -25,7 +25,7 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Hari Tanggal</td>
-                <td class="font-semibold text-gray-900">: 15 Oktober 2023</td>
+                <td class="font-semibold text-gray-900">: {{ tanggal }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Type Pelanggan</td>
@@ -621,6 +621,9 @@ const lokasi = ref('')
 const kode_pelanggan = ref('')
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
+const tanggal = ref(
+  new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+)
 
 const formData = ref({
   customer_asset_id: customerAssetId,

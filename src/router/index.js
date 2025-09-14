@@ -96,7 +96,7 @@ const router = createRouter({
         },
         {
           path: 'service/baru/:id',
-          name: 'baru work order',
+          name: 'wo service baru',
           component: () => import('../pages/WoService.vue'),
         },
         {

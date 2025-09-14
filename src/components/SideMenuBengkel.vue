@@ -75,7 +75,7 @@ const navItems = reactive([
         url: '/pelanggan/baru/noasset',
       },
       {
-        text: 'Daftar Unit AC Rental',
+        text: 'Registrasi Unit AC Rental',
         url: '/pelanggan/ac/rental',
       },
       {
@@ -101,7 +101,7 @@ const navItems = reactive([
         },
       },
       {
-        text: 'Buat WO Baru',
+        text: 'Buat WO Rental Baru',
         url: '/wo/new/form',
       },
       {
