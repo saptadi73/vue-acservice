@@ -667,6 +667,7 @@
 <script setup>
 // Import yang diperlukan
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
@@ -675,6 +676,8 @@ import LoadingOverlay from '../components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 
 const loadingStore = useLoadingStore()
+const route = useRoute()
+const workorder_id = route.params.id
 
 const show_toast = ref(false)
 const message_toast = ref('')
@@ -800,6 +803,72 @@ async function getForNewWorkOrder() {
   }
 }
 
+async function getWorkOrderPenyewaanByID() {
+  loadingStore.show()
+  if (!workorder_id) return
+  try {
+    const response = await api.get(`/wo/penyewaan/${workorder_id}`)
+    const dataku = response.data.data
+    formData.value = {
+      customer_id: dataku.customer_id || null,
+      rental_asset_id: dataku.rental_asset_id || null,
+      teknisi_id: dataku.teknisi_id || null,
+      hasil_pekerjaan: dataku.hasil_pekerjaan || '',
+      checkIndoor: dataku.checkIndoor || false,
+      keteranganIndoor: dataku.keteranganIndoor || '',
+      checkOutdoor: dataku.checkOutdoor || false,
+      keteranganOutdoor: dataku.keteranganOutdoor || '',
+      checkPipa: dataku.checkPipa || false,
+      keteranganPipa: dataku.keteranganPipa || '',
+      checkSelang: dataku.checkSelang || false,
+      keteranganSelang: dataku.keteranganSelang || '',
+      checkKabel: dataku.checkKabel || false,
+      keteranganKabel: dataku.keteranganKabel || '',
+      checkInstIndoor: dataku.checkInstIndoor || false,
+      keteranganInstIndoor: dataku.keteranganInstIndoor || '',
+      checkInstOutdoor: dataku.checkInstOutdoor || false,
+      keteranganInstOutdoor: dataku.keteranganInstOutdoor || '',
+      checkInstListrik: dataku.checkInstListrik || false,
+      keteranganInstListrik: dataku.keteranganInstListrik || '',
+      checkInstPipa: dataku.checkInstPipa || false,
+      keteranganInstPipa: dataku.keteranganInstPipa || '',
+      checkBuangan: dataku.checkBuangan || false,
+      keteranganBuangan: dataku.keteranganBuangan || '',
+      checkVaccum: dataku.checkVaccum || false,
+      keteranganVaccum: dataku.keteranganVaccum || '',
+      checkFreon: dataku.checkFreon || false,
+      keteranganFreon: dataku.keteranganFreon || '',
+      checkArus: dataku.checkArus || false,
+      keteranganArus: dataku.keteranganArus || '',
+      checkEva: dataku.checkEva || false,
+      keteranganEva: dataku.keteranganEva || '',
+      checkKondensor: dataku.checkKondensor || false,
+      keteranganKondensor: dataku.keteranganKondensor || '',
+      checkIndoorB: dataku.checkIndoorB || false,
+      keteranganIndoorB: dataku.keteranganIndoorB || '',
+      checkOutdoorB: dataku.checkOutdoorB || false,
+      keteranganOutdoorB: dataku.keteranganOutdoorB || '',
+      checkPipaB: dataku.checkPipaB || false,
+      keteranganPipaB: dataku.keteranganPipaB || '',
+      checkSelangB: dataku.checkSelangB || false,
+      keteranganSelangB: dataku.keteranganSelangB || '',
+      checkKabelB: dataku.checkKabelB || false,
+      keteranganKabelB: dataku.keteranganKabelB || '',
+    }
+    selectedCustomerId.value = dataku.customer_id || ''
+    onSelectCustomer()
+    selectedAssetId.value = dataku.rental_asset_id || ''
+    onSelectAsset()
+    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan || null
+
+    console.log('Fetched work order data:', dataku)
+  } catch (error) {
+    console.error('Error fetching work order by ID:', error)
+  } finally {
+    loadingStore.hide()
+  }
+}
+
 async function createWorkOrder() {
   try {
     loadingStore.show()
@@ -856,6 +925,7 @@ onMounted(() => {
   getForNewWorkOrder()
   getPegawai()
   getCustomers()
+  getWorkOrderPenyewaanByID()
 })
 </script>
 

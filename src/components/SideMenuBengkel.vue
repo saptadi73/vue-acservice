@@ -102,7 +102,7 @@ const navItems = reactive([
       },
       {
         text: 'Buat WO Rental Baru',
-        url: '/wo/new/form',
+        url: '/wo/sewa/baru',
       },
       {
         text: 'Daftar Penjualan',

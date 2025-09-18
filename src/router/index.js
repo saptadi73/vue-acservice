@@ -100,9 +100,24 @@ const router = createRouter({
           component: () => import('../pages/WoService.vue'),
         },
         {
+          path: 'service/update/:id',
+          name: 'wo service baru tanpa pelanggan',
+          component: () => import('../pages/EditWoService.vue'),
+        },
+        {
           path: 'jual/baru/:id',
           name: 'wo jual baru',
           component: () => import('../pages/WoPenjualanAC.vue'),
+        },
+        {
+          path: 'penjualan/update/:id',
+          name: 'wo penjualan update',
+          component: () => import('../pages/EditWoPenjualan.vue'),
+        },
+        {
+          path: 'sewa/update/:id',
+          name: 'wo sewa update',
+          component: () => import('../pages/EditWoPenyewaan.vue'),
         },
         {
           path: 'sewa/baru',

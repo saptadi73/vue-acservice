@@ -4,7 +4,7 @@
       <!-- Judul dan logo -->
       <div class="flex justify-between items-center my-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">WO Penyewaan AC Lestari</h1>
+          <h1 class="text-2xl font-bold text-gray-800">WO Penjualan AC Lestari</h1>
           <p class="text-gray-600">No. Telp. 0859 4321 3369</p>
         </div>
         <div>
@@ -44,20 +44,8 @@
                 <td class="font-semibold text-gray-900">: WO-001</td>
               </tr>
               <tr>
-                <td class="pr-4 font-medium text-gray-700">Pilih Pelanggan</td>
-                <td class="font-semibold text-gray-900">
-                  <select
-                    id="pilihpelanggan"
-                    v-if="customers"
-                    v-model="selectedCustomerId"
-                    @change="onSelectCustomer"
-                  >
-                    <option value="" selected>Pilih Pelanggan</option>
-                    <option v-for="value in customers" :key="value.id" :value="value.id">
-                      {{ value.nama }}
-                    </option>
-                  </select>
-                </td>
+                <td class="pr-4 font-medium text-gray-700">Kode Pelanggan</td>
+                <td class="font-semibold text-gray-900">: {{ kode_pelanggan }}</td>
               </tr>
             </tbody>
           </table>
@@ -77,10 +65,6 @@
                 <td class="pr-4 font-medium text-gray-700">Alamat</td>
                 <td class="font-semibold text-gray-900">: {{ alamat }}</td>
               </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">No. HP</td>
-                <td class="font-semibold text-gray-900">: {{ no_hp }}</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -88,20 +72,8 @@
           <table>
             <tbody>
               <tr>
-                <td class="pr-4 font-medium text-gray-700">AC yang Disewa</td>
-                <td class="font-semibold text-gray-900">
-                  <select
-                    id="sewaAcRental"
-                    class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm"
-                    v-model="selectedAssetId"
-                    @change="onSelectAsset"
-                  >
-                    <option value="" disabled selected>Unit AC yang disewa</option>
-                    <option v-for="asset in assets" :key="asset.id" :value="asset.id">
-                      {{ asset.brand }},{{ asset.model }} - {{ asset.tipe }} - {{ asset.kapasitas }}
-                    </option>
-                  </select>
-                </td>
+                <td class="pr-4 font-medium text-gray-700">No. HP</td>
+                <td class="font-semibold text-gray-900">: {{ no_hp }}</td>
               </tr>
             </tbody>
           </table>
@@ -153,6 +125,7 @@
           </table>
         </div>
       </div>
+
       <hr class="border-t border-gray-300 my-6" />
 
       <div class="bg-slate-200 p-1 rounded-lg shadow-md">
@@ -160,9 +133,7 @@
       </div>
 
       <!-- Pengecekan Teknisi: -->
-
-      <div class="grid grid-cols-1 ipad:grid-cols-3 gap-6">
-        <!-- Card kesatu -->
+      <div class="grid grid-cols-1 ipad:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-lg border border-blue-100 p-6 w-full mt-2">
           <h3
             class="font-Poppins font-semibold mb-2 text-center bg-slate-200 rounded-md text-slate-500"
@@ -174,90 +145,75 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">1. Unit Indoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkIndoor"
-                    type="checkbox"
-                    id="checkIndoor"
-                    value="1"
-                  />
+                  <input type="checkbox" id="checkIndoor" v-model="formData.check_indoor" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkIndoor"
-                    v-model="formData.keteranganIndoor"
+                    v-if="!formData.check_indoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganIndoor"
                     type="text"
+                    v-model="formData.keterangan_indoor"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">2. Unit Outdoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkOutdoor"
-                    type="checkbox"
-                    id="checkOutdoor"
-                    value="1"
-                  />
+                  <input type="checkbox" id="checkOutdoor" v-model="formData.check_outdoor" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkOutdoor"
-                    v-model="formData.keteranganOutdoor"
+                    v-if="!formData.check_outdoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganOutdoor"
                     type="text"
+                    v-model="formData.keterangan_outdoor"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkPipa" id="checkPipa" type="checkbox" value="1" />
+                  <input id="checkPipa" type="checkbox" v-model="formData.check_pipa" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkPipa"
-                    v-model="formData.keteranganPipa"
+                    v-if="!formData.check_pipa"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganPipa"
                     type="text"
+                    v-model="formData.keterangan_pipa"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Selang Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkSelang"
-                    id="checkSelang"
-                    type="checkbox"
-                    value="1"
-                  />
+                  <input id="checkSelang" type="checkbox" v-model="formData.check_selang" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkSelang"
-                    v-model="formData.keteranganSelang"
+                    v-if="!formData.check_selang"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganSelang"
                     type="text"
+                    v-model="formData.keterangan_selang"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkKabel" id="checkKabel" type="checkbox" value="1" />
+                  <input id="checkKabel" type="checkbox" v-model="formData.check_kabel" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkKabel"
-                    v-model="formData.keteranganKabel"
+                    v-if="!formData.check_kabel"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKabel"
                     type="text"
+                    v-model="formData.keterangan_kabel"
                   />
                 </td>
               </tr>
@@ -265,8 +221,7 @@
           </table>
         </div>
 
-        <!-- Card kedua -->
-
+        <!-- Card Kedua -->
         <div
           class="ipad:justify-self-end bg-white rounded-xl shadow-lg border border-blue-100 p-6 w-full mt-2"
         >
@@ -281,19 +236,18 @@
                 <td class="pr-4 font-medium text-gray-700">1. Instalasi Indoor</td>
                 <td class="font-semibold text-gray-900">
                   <input
-                    v-model="formData.checkInstIndoor"
                     type="checkbox"
                     id="checkInstIndoor"
-                    value="1"
+                    v-model="formData.check_inst_indoor"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkInstIndoor"
-                    v-model="formData.keteranganInstIndoor"
+                    v-if="!formData.check_inst_indoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstIndoor"
                     type="text"
+                    v-model="formData.keterangan_inst_indoor"
                   />
                 </td>
               </tr>
@@ -301,19 +255,18 @@
                 <td class="pr-4 font-medium text-gray-700">2. Instalasi Outdoor</td>
                 <td class="font-semibold text-gray-900">
                   <input
-                    v-model="formData.checkInstOutdoor"
                     type="checkbox"
                     id="checkInstOutdoor"
-                    value="1"
+                    v-model="formData.check_inst_outdoor"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkInstOutdoor"
-                    v-model="formData.keteranganInstOutdoor"
+                    v-if="!formData.check_inst_outdoor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstOutdoor"
                     type="text"
+                    v-model="formData.keterangan_inst_outdoor"
                   />
                 </td>
               </tr>
@@ -321,249 +274,123 @@
                 <td class="pr-4 font-medium text-gray-700">3. Instalasi Listrik</td>
                 <td class="font-semibold text-gray-900">
                   <input
-                    v-model="formData.checkInstListrik"
                     id="checkInstListrik"
                     type="checkbox"
-                    value="1"
+                    v-model="formData.check_inst_listrik"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkInstListrik"
-                    v-model="formData.keteranganInstListrik"
+                    v-if="!formData.check_inst_listrik"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstListrik"
                     type="text"
+                    v-model="formData.keterangan_inst_listrik"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Instalasi Pipa</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkInstPipa"
-                    id="checkInstPipa"
-                    type="checkbox"
-                    value="1"
-                  />
+                  <input id="checkInstPipa" type="checkbox" v-model="formData.check_inst_pipa" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkInstPipa"
-                    v-model="formData.keteranganInstPipa"
+                    v-if="!formData.check_inst_pipa"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstPipa"
                     type="text"
+                    v-model="formData.keterangan_inst_pipa"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Instalasi Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkBuangan"
-                    id="checkBuangan"
-                    type="checkbox"
-                    value="1"
-                  />
+                  <input id="checkBuangan" type="checkbox" v-model="formData.check_buangan" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkBuangan"
-                    v-model="formData.keteranganBuangan"
+                    v-if="!formData.check_buangan"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganBuangan"
                     type="text"
+                    v-model="formData.keterangan_buangan"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">6. Vaccum</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkVaccum"
-                    id="checkVaccum"
-                    type="checkbox"
-                    value="1"
-                  />
+                  <input id="checkVaccum" type="checkbox" v-model="formData.check_vaccum" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkVaccum"
-                    v-model="formData.keteranganVaccum"
+                    v-if="!formData.check_vaccum"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganVaccum"
                     type="text"
+                    v-model="formData.keterangan_vaccum"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">7. Tekanan Freon</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkFreon" id="checkFreon" type="checkbox" value="1" />
+                  <input id="checkFreon" type="checkbox" v-model="formData.check_freon" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkFreon"
-                    v-model="formData.keteranganFreon"
+                    v-if="!formData.check_freon"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganFreon"
                     type="text"
+                    v-model="formData.keterangan_freon"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">8. Arus (Ampere)</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkArus" id="checkArus" type="checkbox" value="1" />
+                  <input id="checkArus" type="checkbox" v-model="formData.check_arus" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkArus"
-                    v-model="formData.keteranganArus"
+                    v-if="!formData.check_arus"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganArus"
                     type="text"
+                    v-model="formData.keterangan_arus"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">9. Temperatur Evaporator</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkEva" id="checkEva" type="checkbox" value="1" />
+                  <input id="checkEva" type="checkbox" v-model="formData.check_eva" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkEva"
-                    v-model="formData.keteranganEva"
+                    v-if="!formData.check_eva"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganEva"
                     type="text"
+                    v-model="formData.keterangan_eva"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">10. Temperatur Kondensor</td>
                 <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkKondensor"
-                    id="checkKondensor"
-                    type="checkbox"
-                    value="1"
-                  />
+                  <input id="checkKondensor" type="checkbox" v-model="formData.check_kondensor" />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
-                    v-if="!formData.checkKondensor"
-                    v-model="formData.keteranganKondensor"
+                    v-if="!formData.check_kondensor"
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKondensor"
                     type="text"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Card Ketiga -->
-        <div
-          class="ipad:justify-self-end bg-white rounded-xl shadow-lg border border-blue-100 p-6 w-full mt-2"
-        >
-          <h3
-            class="font-Poppins font-semibold mb-2 text-center bg-slate-200 rounded-md text-slate-500"
-          >
-            Pekerjaan Bongkar
-          </h3>
-          <table class="w-full">
-            <tbody>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">1. Unit Indoor</td>
-                <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkIndoorB"
-                    type="checkbox"
-                    id="checkIndoorB"
-                    value="1"
-                  />
-                </td>
-                <td class="pr-4 font-medium text-gray-700">
-                  <input
-                    v-if="!formData.checkIndoorB"
-                    v-model="formData.keteranganIndoorB"
-                    class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
-                    id="keteranganIndoorB"
-                    type="text"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">2. Unit Outdoor</td>
-                <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkOutdoorB"
-                    type="checkbox"
-                    id="checkOutdoorB"
-                    value="1"
-                  />
-                </td>
-                <td class="pr-4 font-medium text-gray-700">
-                  <input
-                    v-if="!formData.checkOutdoorB"
-                    v-model="formData.keteranganOutdoorB"
-                    class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
-                    id="keteranganOutdoorB"
-                    type="text"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
-                <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkPipaB" id="checkPipaB" type="checkbox" value="1" />
-                </td>
-                <td class="pr-4 font-medium text-gray-700">
-                  <input
-                    v-if="!formData.checkPipaB"
-                    v-model="formData.keteranganPipaB"
-                    class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
-                    id="keteranganPipaB"
-                    type="text"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">4. Selang Buangan</td>
-                <td class="font-semibold text-gray-900">
-                  <input
-                    v-model="formData.checkSelangB"
-                    id="checkSelangB"
-                    type="checkbox"
-                    value="1"
-                  />
-                </td>
-                <td class="pr-4 font-medium text-gray-700">
-                  <input
-                    v-if="!formData.checkSelangB"
-                    v-model="formData.keteranganSelangB"
-                    class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
-                    id="keteranganSelangB"
-                    type="text"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
-                <td class="font-semibold text-gray-900">
-                  <input id="checkKabelB" type="checkbox" value="1" />
-                </td>
-                <td class="pr-4 font-medium text-gray-700">
-                  <input
-                    v-if="!formData.checkKabelB"
-                    v-model="formData.keteranganKabelB"
-                    class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
-                    id="keteranganKabelB"
-                    type="text"
+                    v-model="formData.keterangan_kondensor"
                   />
                 </td>
               </tr>
@@ -580,8 +407,8 @@
       </div>
       <div class="mt-2 p-2 w-full rounded-lg shadow-md bg-white">
         <input
-          v-model="formData.hasil_pekerjaan"
           type="text"
+          v-model="formData.hasil_pekerjaan"
           id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
@@ -613,13 +440,16 @@
             </label>
             <div class="w-full text-center mt-2 text-blue-700 font-semibold">
               (
-              <select id="pilihteknisi" v-if="teknisi" v-model="formData.teknisi_id">
-                <option value="" disabled selected>Pilih Teknisi</option>
-                <option v-for="value in teknisi" :key="value.id" :value="value.id">
-                  {{ value.nama }}
-                </option>
-              </select>
-              )
+              <select
+                id="teknisiSelect"
+                v-model="formData.teknisi_id"
+                class="bg-transparent text-blue-700 font-semibold"
+              >
+                <option value="" disabled selected class="text-sm">Pilih Teknisi</option>
+                <option v-for="tech in teknisi" :key="tech.id" :value="tech.id" class="text-sm">
+                  {{ tech.nama }}
+                </option></select
+              >)
             </div>
           </div>
         </div>
@@ -653,20 +483,21 @@
         </div>
       </div>
     </div>
+    <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="createWorkOrder"
     >
       simpan perubahan
     </button>
-    <loading-overlay />
-    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
 </template>
 
 <script setup>
 // Import yang diperlukan
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
@@ -686,145 +517,128 @@ function tutupToast() {
 }
 
 // Routing dan data utama
+const route = useRoute()
+const customerAssetId = route.params.id
 const nama_pelanggan = ref('')
 const alamat = ref('')
 const no_hp = ref('')
-const selectedCustomerId = ref('')
-const assets = ref([])
-
-function onSelectCustomer() {
-  const selected = customers.value.find((c) => c.id == selectedCustomerId.value)
-  if (selected) {
-    nama_pelanggan.value = selected.nama
-    alamat.value = selected.alamat
-    no_hp.value = selected.hp
-    jenis_pelanggan.value = selected.jenis
-    formData.value.customer_id = selectedCustomerId.value
-  } else {
-    nama_pelanggan.value = ''
-    alamat.value = ''
-    no_hp.value = ''
-    jenis_pelanggan.value = ''
-    formData.value.customer_id = null
-  }
-}
 const brand = ref('')
 const model = ref('')
 const tipe = ref('')
 const kapasitas = ref('')
 const freon = ref('')
 const lokasi = ref('')
-const selectedAssetId = ref('')
-
-function onSelectAsset() {
-  const selected = assets.value.find((a) => a.id == selectedAssetId.value)
-  if (selected) {
-    brand.value = selected.brand
-    model.value = selected.model
-    tipe.value = selected.tipe
-    kapasitas.value = selected.kapasitas
-    lokasi.value = selected.lokasi
-    freon.value = selected.freon
-    formData.value.rental_asset_id = selectedAssetId.value
-  } else {
-    brand.value = ''
-    model.value = ''
-    tipe.value = ''
-    kapasitas.value = ''
-    lokasi.value = ''
-    freon.value = ''
-    formData.value.rental_asset_id = ''
-  }
-}
-
+const kode_pelanggan = ref('')
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
-const customers = ref([])
-const pelangganSignUrl = ref(null)
 
 const formData = ref({
-  customer_id: null,
-  rental_asset_id: null,
+  customer_asset_id: customerAssetId,
   teknisi_id: null,
+  check_indoor: false,
+  keterangan_indoor: '',
+  check_outdoor: false,
+  keterangan_outdoor: '',
+  check_pipa: false,
+  keterangan_pipa: '',
+  check_selang: false,
+  keterangan_selang: '',
+  check_kabel: false,
+  keterangan_kabel: '',
+  check_inst_indoor: false,
+  keterangan_inst_indoor: '',
+  check_inst_outdoor: false,
+  keterangan_inst_outdoor: '',
+  check_inst_listrik: false,
+  keterangan_inst_listrik: '',
+  check_inst_pipa: false,
+  keterangan_inst_pipa: '',
+  check_buangan: false,
+  keterangan_buangan: '',
+  check_vaccum: false,
+  keterangan_vaccum: '',
+  check_freon: false,
+  keterangan_freon: '',
+  check_arus: false,
+  keterangan_arus: '',
+  check_eva: false,
+  keterangan_eva: '',
+  check_kondensor: false,
+  keterangan_kondensor: '',
   hasil_pekerjaan: '',
-  checkIndoor: false,
-  keteranganIndoor: '',
-  checkOutdoor: false,
-  keteranganOutdoor: '',
-  checkPipa: false,
-  keteranganPipa: '',
-  checkSelang: false,
-  keteranganSelang: '',
-  checkKabel: false,
-  keteranganKabel: '',
-  checkInstIndoor: false,
-  keteranganInstIndoor: '',
-  checkInstOutdoor: false,
-  keteranganInstOutdoor: '',
-  checkInstListrik: false,
-  keteranganInstListrik: '',
-  checkInstPipa: false,
-  keteranganInstPipa: '',
-  checkBuangan: false,
-  keteranganBuangan: '',
-  checkVaccum: false,
-  keteranganVaccum: '',
-  checkFreon: false,
-  keteranganFreon: '',
-  checkArus: false,
-  keteranganArus: '',
-  checkEva: false,
-  keteranganEva: '',
-  checkKondensor: false,
-  keteranganKondensor: '',
-  checkIndoorB: false,
-  keteranganIndoorB: '',
-  checkOutdoorB: false,
-  keteranganOutdoorB: '',
-  checkPipaB: false,
-  keteranganPipaB: '',
-  checkSelangB: false,
-  keteranganSelangB: '',
-  checkKabelB: false,
-  keteranganKabelB: '',
 })
 
-// Ambil data work order
-async function getForNewWorkOrder() {
-  try {
-    const response = await axios.get(`${BASE_URL}customers/rentalassets/all`)
-    assets.value = response.data.data
-    console.log('Data Assets: ', assets.value)
-  } catch (error) {
-    console.error('Error fetching work order data:', error)
-  }
-}
-
 async function createWorkOrder() {
+  loadingStore.show()
   try {
-    loadingStore.show()
-    const response = await api.post('/wo/penyewaan/create', formData.value)
+    const response = await api.post('/wo/penjualan/create', formData.value)
     console.log('Work order created:', response.data.data)
-    console.log('Form Data Sent:', formData.value)
-    message_toast.value = response.data.data.message || 'Work order berhasil dibuat.'
+    console.log('Form Data Submitted:', formData.value)
+    message_toast.value = response.data.message || 'Work order berhasil dibuat.'
     show_toast.value = true
   } catch (error) {
     console.error('Error creating work order:', error)
-    message_toast.value = error.message || 'Gagal membuat work order.'
+    message_toast.value = 'Gagal membuat work order. Silakan coba lagi.'
     show_toast.value = true
   } finally {
     loadingStore.hide()
   }
 }
 
-async function getCustomers() {
+// Ambil data work order
+async function getForNewWorkOrder(id) {
+  loadingStore.show()
   try {
-    const res = await axios.get(`${BASE_URL}/customers/all`)
-    customers.value = Array.isArray(res?.data?.data) ? res.data.data : []
-    console.log('Data Customers: ', customers.value)
+    const response = await axios.get(`${BASE_URL}wo/penjualan/${id}`)
+    console.log('Work order data:', response.data.data)
+    formData.value.customer_asset_id = response.data.data.id
+    nama_pelanggan.value = response.data.data.customer_asset.customer.nama
+    alamat.value = response.data.data.customer_asset.customer.alamat
+    no_hp.value = response.data.data.customer_asset.customer.hp
+    brand.value = response.data.data.customer_asset.brand.nama
+    model.value = response.data.data.customer_asset.model
+    tipe.value = response.data.data.customer_asset.tipe.nama
+    formData.value.teknisi_id = response.data.data.teknisi_id
+    kapasitas.value = response.data.data.customer_asset.kapasitas
+    freon.value = response.data.data.customer_asset.freon
+    lokasi.value = response.data.data.customer_asset.lokasi
+    kode_pelanggan.value = response.data.data.customer_asset.customer.kode_pelanggan
+    jenis_pelanggan.value = response.data.data.customer_asset.customer.jenis
+    formData.value.hasil_pekerjaan = response.data.data.hasil_pekerjaan || ''
+    formData.value.check_indoor = response.data.data.check_indoor || false
+    formData.value.keterangan_indoor = response.data.data.keterangan_indoor || ''
+    formData.value.check_outdoor = response.data.data.check_outdoor || false
+    formData.value.keterangan_outdoor = response.data.data.keterangan_outdoor || ''
+    formData.value.check_pipa = response.data.data.check_pipa || false
+    formData.value.keterangan_pipa = response.data.data.keterangan_pipa || ''
+    formData.value.check_selang = response.data.data.check_selang || false
+    formData.value.keterangan_selang = response.data.data.keterangan_selang || ''
+    formData.value.check_kabel = response.data.data.check_kabel || false
+    formData.value.keterangan_kabel = response.data.data.keterangan_kabel || ''
+    formData.value.check_inst_indoor = response.data.data.check_inst_indoor || false
+    formData.value.keterangan_inst_indoor = response.data.data.keterangan_inst_indoor || ''
+    formData.value.check_inst_outdoor = response.data.data.check_inst_outdoor || false
+    formData.value.keterangan_inst_outdoor = response.data.data.keterangan_inst_outdoor || ''
+    formData.value.check_inst_listrik = response.data.data.check_inst_listrik || false
+    formData.value.keterangan_inst_listrik = response.data.data.keterangan_inst_listrik || ''
+    formData.value.check_inst_pipa = response.data.data.check_inst_pipa || false
+    formData.value.keterangan_inst_pipa = response.data.data.keterangan_inst_pipa || ''
+    formData.value.check_buangan = response.data.data.check_buangan || false
+    formData.value.keterangan_buangan = response.data.data.keterangan_buangan || ''
+    formData.value.check_vaccum = response.data.data.check_vaccum || false
+    formData.value.keterangan_vaccum = response.data.data.keterangan_vaccum || ''
+    formData.value.check_freon = response.data.data.check_freon || false
+    formData.value.keterangan_freon = response.data.data.keterangan_freon || ''
+    formData.value.check_arus = response.data.data.check_arus || false
+    formData.value.keterangan_arus = response.data.data.keterangan_arus || ''
+    formData.value.check_eva = response.data.data.check_eva || false
+    formData.value.keterangan_eva = response.data.data.keterangan_eva || ''
+    formData.value.check_kondensor = response.data.data.check_kondensor || false
+    formData.value.keterangan_kondensor = response.data.data.keterangan_kondensor || ''
   } catch (error) {
-    console.error('Error fetching customers:', error)
-    customers.value = []
+    console.error('Error fetching work order data:', error)
+  } finally {
+    loadingStore.hide()
   }
 }
 
@@ -833,8 +647,18 @@ async function getPegawai() {
   try {
     const response = await axios.get(`${BASE_URL}wo/pegawai/list`)
     teknisi.value = response.data.data
+    console.log('Teknisi data:', teknisi.value)
   } catch (error) {
     console.error('Error fetching teknisi data:', error)
+  }
+}
+
+const pelangganSignUrl = ref(null)
+
+function onPelangganSignChange(e) {
+  const file = e.target.files[0]
+  if (file) {
+    pelangganSignUrl.value = URL.createObjectURL(file)
   }
 }
 
@@ -853,9 +677,8 @@ const teknisiSignUrl = computed(() => {
 
 // Lifecycle
 onMounted(() => {
-  getForNewWorkOrder()
+  getForNewWorkOrder(customerAssetId)
   getPegawai()
-  getCustomers()
 })
 </script>
 

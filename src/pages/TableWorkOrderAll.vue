@@ -44,9 +44,9 @@
             <th class="p-4 text-left font-semibold text-blue-700">#</th>
             <th class="p-4 text-left font-semibold text-blue-700">No.</th>
             <th class="p-4 text-left font-semibold text-blue-700">Nama</th>
+            <th class="p-4 text-left font-semibold text-blue-700">HP</th>
             <th class="p-4 text-left font-semibold text-blue-700">Terdaftar</th>
             <th class="p-4 text-left font-semibold text-blue-700">Ditangani</th>
-            <th class="p-4 text-left font-semibold text-blue-700">Selesai</th>
             <th class="p-4 text-left font-semibold text-blue-700">Layanan</th>
             <th class="p-4 text-left font-semibold text-blue-700">Status</th>
             <th class="p-4 text-left font-semibold text-blue-700">Aksi</th>
@@ -62,17 +62,17 @@
             "
           >
             <td class="p-4 font-medium text-gray-800">{{ index + 1 }}</td>
-            <td class="p-4 text-gray-700">{{ order.workOrderNumber }}</td>
-            <td class="p-4 text-gray-700">{{ order.customerName }}</td>
-            <td class="p-4 text-gray-700">{{ order.registerDate }}</td>
-            <td class="p-4 text-gray-700">{{ order.handledBy }}</td>
-            <td class="p-4 text-gray-700">{{ order.estimatedFinish }}</td>
-            <td class="p-4 text-gray-700">{{ order.serviceType }}</td>
+            <td class="p-4 text-gray-700">{{ order.nowo }}</td>
+            <td class="p-4 text-gray-700">{{ order.nama_pelanggan }}</td>
+            <td class="p-4 text-gray-700">{{ order.hp }}</td>
+            <td class="p-4 text-gray-700">{{ formatDateIndo(order.tanggal) }}</td>
+            <td class="p-4 text-gray-700">{{ order.nama_pegawai }}</td>
+            <td class="p-4 text-gray-700">{{ order.jenis }}</td>
             <td class="p-4">
               <span
                 class="inline-block px-3 py-1 rounded-full text-xs font-bold"
                 :class="
-                  order.status === 'Progress'
+                  order.status === 'open'
                     ? 'bg-green-100 text-green-600'
                     : 'bg-blue-100 text-blue-600'
                 "
@@ -82,10 +82,10 @@
             </td>
             <td class="p-4">
               <button
-                @click="showSalesOrder(order)"
+                @click="goToWorkOrder(order)"
                 class="bg-gradient-to-r from-blue-500 to-teal-400 text-white px-4 py-2 rounded-full shadow hover:scale-105 transition-all duration-200 font-bold"
               >
-                SO
+                WO
               </button>
               <button
                 @click="showRepairNotes(order)"
@@ -107,12 +107,12 @@
         class="bg-white border border-blue-100 rounded-2xl shadow-xl p-6 hover:shadow-blue-200 transition-all duration-200"
       >
         <div class="font-semibold text-blue-700 text-lg">#{{ index + 1 }}</div>
-        <div class="mt-2"><strong>Nomor Work Order:</strong> {{ order.workOrderNumber }}</div>
-        <div><strong>Nama Pelanggan:</strong> {{ order.customerName }}</div>
-        <div><strong>Tanggal Terdaftar:</strong> {{ order.registerDate }}</div>
-        <div><strong>Ditangani Oleh:</strong> {{ order.handledBy }}</div>
-        <div><strong>Estimasi Selesai:</strong> {{ order.estimatedFinish }}</div>
-        <div><strong>Jenis Layanan:</strong> {{ order.serviceType }}</div>
+        <div class="mt-2"><strong>Nomor Work Order:</strong> {{ order.nowo }}</div>
+        <div><strong>Nama Pelanggan:</strong> {{ order.nama_pelanggan }}</div>
+        <div><strong>HP:</strong> {{ order.hp }}</div>
+        <div><strong>Tanggal Terdaftar:</strong> {{ formatDateIndo(order.tanggal) }}</div>
+        <div><strong>Ditangani Oleh:</strong> {{ order.nama_pegawai }}</div>
+        <div><strong>Jenis Layanan:</strong> {{ order.jenis }}</div>
         <!-- Status with conditional color -->
         <div class="text-center mt-2">
           <span
@@ -128,10 +128,10 @@
         </div>
         <div class="mt-4 flex gap-2">
           <button
-            @click="showSalesOrder(order)"
+            @click="goToWorkOrder(order)"
             class="bg-gradient-to-r from-blue-500 to-teal-400 text-white px-4 py-2 rounded-full shadow hover:scale-105 transition-all duration-200 font-bold w-full"
           >
-            Sales Order
+            Work Order
           </button>
           <button
             @click="showRepairNotes(order)"
@@ -235,195 +235,113 @@
         </div>
       </div>
     </div>
+    <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
 </template>
 
 <script>
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import axios from 'axios'
+import { BASE_URL } from '@/base.utils.url'
+import { useLoadingStore } from '../stores/loading'
+import LoadingOverlay from '../components/LoadingOverlay.vue'
+import ToastCard from '@/components/ToastCard.vue'
+import { useRouter } from 'vue-router'
+
 export default {
+  components: {
+    LoadingOverlay,
+    ToastCard,
+  },
   data() {
     return {
       searchQuery: '',
       showSalesOrderModal: false,
       showRepairNotesModal: false,
       selectedOrder: null,
-      orders: [
-        {
-          workOrderNumber: 'WO001',
-          customerName: 'John Doe',
-          registerDate: '2025-08-20 10:00',
-          handledBy: 'Alice',
-          estimatedFinish: '2025-08-21 12:00',
-          serviceType: 'Perbaikan',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Suku Cadang A', price: 500000 },
-              { name: 'Jasa Perbaikan', price: 300000 },
-            ],
-          },
-          repairNotes: 'Mengganti bagian mesin.',
-        },
-        {
-          workOrderNumber: 'WO002',
-          customerName: 'Maria Sari',
-          registerDate: '2025-08-19 09:30',
-          handledBy: 'Bob',
-          estimatedFinish: '2025-08-20 14:00',
-          serviceType: 'Modifikasi',
-          status: 'Selesai',
-          salesOrder: {
-            items: [
-              { name: 'Service Rutin', price: 2000000 },
-              { name: 'Jasa Modifikasi', price: 1500000 },
-            ],
-          },
-          repairNotes: 'Service, Menambahkan body kit dan aksesori.',
-        },
-        {
-          workOrderNumber: 'WO003',
-          customerName: 'Ali Rahman',
-          registerDate: '2025-08-18 15:45',
-          handledBy: 'Charlie',
-          estimatedFinish: '2025-08-22 10:00',
-          serviceType: 'Penggantian Suku Cadang',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Suku Cadang B', price: 800000 },
-              { name: 'Jasa Penggantian', price: 400000 },
-            ],
-          },
-          repairNotes: 'Penggantian Freon.',
-        },
-        {
-          workOrderNumber: 'WO004',
-          customerName: 'Tina Amalia',
-          registerDate: '2025-08-17 11:00',
-          handledBy: 'David',
-          estimatedFinish: '2025-08-19 13:00',
-          serviceType: 'Service Rutin',
-          status: 'Selesai',
-          salesOrder: {
-            items: [
-              { name: 'Penggantian Filter', price: 150000 },
-              { name: 'Jasa Service', price: 500000 },
-            ],
-          },
-          repairNotes: 'Service rutin dan penggantian filter.',
-        },
-        {
-          workOrderNumber: 'WO005',
-          customerName: 'Budi Setiawan',
-          registerDate: '2025-08-16 14:00',
-          handledBy: 'Emma',
-          estimatedFinish: '2025-08-18 17:00',
-          serviceType: 'Perbaikan',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Suku Cadang AC', price: 600000 },
-              { name: 'Jasa Perbaikan', price: 350000 },
-            ],
-          },
-          repairNotes: 'Perbaikan mesin dan sistem kelistrikan.',
-        },
-        {
-          workOrderNumber: 'WO006',
-          customerName: 'Siti Fatimah',
-          registerDate: '2025-08-15 13:30',
-          handledBy: 'Grace',
-          estimatedFinish: '2025-08-16 15:00',
-          serviceType: 'Modifikasi',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Body Bracket Custom', price: 1200000 },
-              { name: 'Jasa Modifikasi', price: 1000000 },
-            ],
-          },
-          repairNotes: 'Modifikasi body bracket dan cat .',
-        },
-        {
-          workOrderNumber: 'WO007',
-          customerName: 'Rahmad Hidayat',
-          registerDate: '2025-08-14 10:00',
-          handledBy: 'Harry',
-          estimatedFinish: '2025-08-18 09:00',
-          serviceType: 'Perbaikan',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Pipa Dalam', price: 250000 },
-              { name: 'Jasa Penggantian', price: 200000 },
-            ],
-          },
-          repairNotes: 'Penggantian pipa dalam.',
-        },
-        {
-          workOrderNumber: 'WO008',
-          customerName: 'Fajar Nugroho',
-          registerDate: '2025-08-13 12:30',
-          handledBy: 'Ivy',
-          estimatedFinish: '2025-08-14 16:00',
-          serviceType: 'Service Rutin',
-          status: 'Selesai',
-          salesOrder: {
-            items: [
-              { name: 'Filter Udara', price: 100000 },
-              { name: 'Jasa Service', price: 600000 },
-            ],
-          },
-          repairNotes: 'Pemeriksaan dan penggantian filter udara.',
-        },
-        {
-          workOrderNumber: 'WO009',
-          customerName: 'Dewi Lestari',
-          registerDate: '2025-08-12 10:15',
-          handledBy: 'Jack',
-          estimatedFinish: '2025-08-16 14:00',
-          serviceType: 'Modifikasi',
-          status: 'Progress',
-          salesOrder: {
-            items: [
-              { name: 'Spoiler', price: 500000 },
-              { name: 'Jasa Modifikasi', price: 450000 },
-            ],
-          },
-          repairNotes: 'Menambah spoiler dan pengaturan Rute Pipa Indoor.',
-        },
-        {
-          workOrderNumber: 'WO010',
-          customerName: 'Eko Prasetyo',
-          registerDate: '2025-08-11 09:45',
-          handledBy: 'Liam',
-          estimatedFinish: '2025-08-13 12:00',
-          serviceType: 'Penggantian Suku Cadang',
-          status: 'Selesai',
-          salesOrder: {
-            items: [
-              { name: 'Filter dan Spare Part', price: 150000 },
-              { name: 'Jasa Penggantian', price: 200000 },
-            ],
-          },
-          repairNotes: 'Penggantian filter dan pembersihan sistem pendinginan.',
-        },
-
-        // Add more orders if needed
-      ],
+      orders: [],
     }
+  },
+  created() {
+    this.getWorkOrders()
+    this.router = this.$router || this.router // fallback jika belum ada
   },
   computed: {
     filteredOrders() {
       const searchText = this.searchQuery.toLowerCase()
       return this.orders.filter((order) => {
         return (
-          order.workOrderNumber.toLowerCase().includes(searchText) ||
-          order.customerName.toLowerCase().includes(searchText)
+          order.nowo.toLowerCase().includes(searchText) ||
+          order.nama_pelanggan.toLowerCase().includes(searchText) ||
+          order.nama_pegawai.toLowerCase().includes(searchText)
         )
       })
     },
   },
+  setup() {
+    const route = useRoute()
+    const loadingStore = useLoadingStore()
+    const loading = ref(false)
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    const router = useRouter()
+
+    onMounted(() => {
+      // You can fetch initial data here if needed
+    })
+
+    return {
+      router,
+      route,
+      loadingStore,
+      loading,
+      show_toast,
+      message_toast,
+    }
+  },
   methods: {
+    tutupToast() {
+      this.show_toast = false
+    },
+
+    goToWorkOrder(order) {
+      const link = this.getLinkToWorkOrder(order)
+      // const link = '/pelanggan/all'
+      this.$router.push(link)
+      console.log('Navigating to:', link)
+    },
+
+    getLinkToWorkOrder(order) {
+      switch (order.jenis) {
+        case 'pemeliharaan':
+          return `/wo/service/update/${order.work_order_ac_service.id}`
+        case 'penjualan':
+          return `/wo/penjualan/update/${order.workorder_penjualan.id}`
+        case 'penyewaan':
+          return `/wo/sewa/update/${order.workorder_penyewaan.id}`
+        default:
+          return `/wo/service/update/${order.work_order_ac_service.id}`
+      }
+    },
+    getWorkOrders() {
+      this.loadingStore.show()
+      axios
+        .get(`${BASE_URL}wo/wo/list`)
+        .then((response) => {
+          this.orders = response.data.data
+          console.log('Work Orders fetched:', this.orders)
+        })
+        .catch((error) => {
+          this.message_toast = error.response?.data?.message || 'Gagal memuat data Work Order.'
+          this.show_toast = true
+          console.error('Error fetching work orders:', error)
+        })
+        .finally(() => {
+          this.loadingStore.hide()
+        })
+    },
     formatCurrency(amount) {
       return new Intl.NumberFormat('id-ID', {
         style: 'currency',
@@ -452,6 +370,16 @@ export default {
 
     closeRepairNotesModal() {
       this.showRepairNotesModal = false
+    },
+
+    formatDateIndo(dateStr) {
+      if (!dateStr) return '-'
+      const date = new Date(dateStr)
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
     },
   },
 }

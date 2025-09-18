@@ -65,10 +65,6 @@
                 <td class="pr-4 font-medium text-gray-700">Alamat</td>
                 <td class="font-semibold text-gray-900">: {{ alamat }}</td>
               </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">No. HP</td>
-                <td class="font-semibold text-gray-900">: {{ no_hp }}</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -76,27 +72,8 @@
           <table>
             <tbody>
               <tr>
-                <td class="pr-4 font-medium text-gray-700">Permintaan Khusus</td>
-                <td class="font-semibold text-gray-900">
-                  <select class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm">
-                    <option value="AC Tidak Dingin">Penambahan Pipa</option>
-                    <option value="AC Bocor">Penambahan Plug In Listrik</option>
-                    <option value="AC Bocor">Perpanjangan Kabel Listrik</option>
-                    <option value="AC Berisik">Instalasi Listrik Tambahan</option>
-                    <option value="AC Mati Total">Lain-lain</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td class="pr-4 font-medium text-gray-700">Keterangan</td>
-                <td class="font-semibold text-gray-900">
-                  <input
-                    class="text-sm"
-                    type="text"
-                    id="keterangan"
-                    placeholder="Isikan keterangan Tambahan"
-                  />
-                </td>
+                <td class="pr-4 font-medium text-gray-700">No. HP</td>
+                <td class="font-semibold text-gray-900">: {{ no_hp }}</td>
               </tr>
             </tbody>
           </table>
@@ -468,6 +445,7 @@
                 v-model="formData.teknisi_id"
                 class="bg-transparent text-blue-700 font-semibold"
               >
+                <option value="" disabled selected class="text-sm">Pilih Teknisi</option>
                 <option v-for="tech in teknisi" :key="tech.id" :value="tech.id" class="text-sm">
                   {{ tech.nama }}
                 </option></select
@@ -499,12 +477,20 @@
               </div>
             </label>
             <div class="w-full text-center mt-2 text-blue-700 font-semibold">
-              ( Nama Pelanggan )
+              ( {{ nama_pelanggan }} )
             </div>
           </div>
         </div>
       </div>
     </div>
+    <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+    <button
+      class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
+      @click="createWorkOrder"
+    >
+      simpan perubahan
+    </button>
   </div>
 </template>
 
@@ -514,6 +500,21 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
+import api from '@/user/axios'
+import { useLoadingStore } from '../stores/loading'
+import LoadingOverlay from '../components/LoadingOverlay.vue'
+import ToastCard from '@/components/ToastCard.vue'
+
+const loadingStore = useLoadingStore()
+
+const show_toast = ref(false)
+const message_toast = ref('')
+
+function tutupToast() {
+  show_toast.value = false
+  message_toast.value = ''
+  window.location.reload()
+}
 
 // Routing dan data utama
 const route = useRoute()
@@ -567,6 +568,23 @@ const formData = ref({
   hasil_pekerjaan: '',
 })
 
+async function createWorkOrder() {
+  loadingStore.show()
+  try {
+    const response = await api.post('/wo/penjualan/create', formData.value)
+    console.log('Work order created:', response.data.data)
+    console.log('Form Data Submitted:', formData.value)
+    message_toast.value = response.data.message || 'Work order berhasil dibuat.'
+    show_toast.value = true
+  } catch (error) {
+    console.error('Error creating work order:', error)
+    message_toast.value = 'Gagal membuat work order. Silakan coba lagi.'
+    show_toast.value = true
+  } finally {
+    loadingStore.hide()
+  }
+}
+
 // Ambil data work order
 async function getForNewWorkOrder(id) {
   try {
@@ -591,7 +609,7 @@ async function getForNewWorkOrder(id) {
 // Ambil data teknisi
 async function getPegawai() {
   try {
-    const response = await axios.get(`${BASE_URL}wo/pegawai`)
+    const response = await axios.get(`${BASE_URL}wo/pegawai/list`)
     teknisi.value = response.data.data
     console.log('Teknisi data:', teknisi.value)
   } catch (error) {

@@ -733,22 +733,80 @@ async function createWorkOrder() {
 }
 
 async function getForNewWorkOrder(id) {
+  loadingStore.show()
   try {
-    const response = await axios.get(`${BASE_URL}customers/assets/${id}`)
-    nama_pelanggan.value = response.data.data.customer_nama
-    alamat.value = response.data.data.customer_alamat
-    no_hp.value = response.data.data.customer_hp
-    brand.value = response.data.data.brand
-    model.value = response.data.data.model
-    tipe.value = response.data.data.tipe
-    kapasitas.value = response.data.data.kapasitas
-    freon.value = response.data.data.freon
-    lokasi.value = response.data.data.lokasi
-    kode_pelanggan.value = response.data.data.customer_kode_pelanggan
-    jenis_pelanggan.value = response.data.data.customer_jenis
+    const response = await axios.get(`${BASE_URL}wo/service/${id}`)
+    formData.value.customer_asset_id = response.data.data.customer_asset_id
+    formData.value.teknisi_id = response.data.data.teknisi_id || null
+    formData.value.keluhan = response.data.data.keluhan || ''
+    formData.value.keterangan = response.data.data.keterangan || ''
+    formData.value.pengecekan = response.data.data.pengecekan || ''
+    formData.value.service = response.data.data.service || ''
+    formData.value.tambah_freon = response.data.data.tambah_freon || ''
+    formData.value.isi_freon = response.data.data.isi_freon || ''
+    formData.value.bongkar = response.data.data.bongkar || ''
+    formData.value.pasang = response.data.data.pasang || ''
+    formData.value.bongkar_pasang = response.data.data.bongkar_pasang || ''
+    formData.value.perbaikan = response.data.data.perbaikan || ''
+    formData.value.hasil_pekerjaan = response.data.data.hasil_pekerjaan || ''
+    formData.value.check_evaporator = response.data.data.check_evaporator || false
+    formData.value.keterangan_evaporator = response.data.data.keterangan_evaporator || ''
+    formData.value.check_fan_indoor = response.data.data.check_fan_indoor || false
+    formData.value.keterangan_fan_indoor = response.data.data.keterangan_fan_indoor || ''
+    formData.value.check_swing = response.data.data.check_swing || false
+    formData.value.keterangan_swing = response.data.data.keterangan_swing || ''
+    formData.value.check_tegangan_input = response.data.data.check_tegangan_input || false
+    formData.value.keterangan_tegangan_input = response.data.data.keterangan_tegangan_input || ''
+    formData.value.check_thermis = response.data.data.check_thermis || false
+    formData.value.keterangan_thermis = response.data.data.keterangan_thermis || ''
+    formData.value.check_temperatur_indoor = response.data.data.check_temperatur_indoor || false
+    formData.value.keterangan_temperatur_indoor =
+      response.data.data.keterangan_temperatur_indoor || ''
+    formData.value.check_lain_indoor = response.data.data.check_lain_indoor || false
+    formData.value.keterangan_lain_indoor = response.data.data.keterangan_lain_indoor || ''
+    formData.value.check_kondensor = response.data.data.check_kondensor || false
+    formData.value.keterangan_kondensor = response.data.data.keterangan_kondensor || ''
+    formData.value.check_fan_outdoor = response.data.data.check_fan_outdoor || false
+    formData.value.keterangan_fan_outdoor = response.data.data.keterangan_fan_outdoor || ''
+    formData.value.check_kapasitor = response.data.data.check_kapasitor || false
+    formData.value.keterangan_kapasitor = response.data.data.keterangan_kapasitor || ''
+    formData.value.check_tekanan_freon = response.data.data.check_tekanan_freon || false
+    formData.value.keterangan_tekanan_freon = response.data.data.keterangan_tekanan_freon || ''
+    formData.value.check_arus = response.data.data.check_arus || false
+    formData.value.keterangan_arus = response.data.data.keterangan_arus || ''
+    formData.value.check_temperatur_outdoor = response.data.data.check_temperatur_outdoor || false
+    formData.value.keterangan_temperatur_outdoor =
+      response.data.data.keterangan_temperatur_outdoor || ''
+    formData.value.check_lain_outdoor = response.data.data.check_lain_outdoor || false
+    formData.value.keterangan_lain_outdoor = response.data.data.keterangan_lain_outdoor || ''
+    brand.value = response.data.data.customer_asset.brand.nama || ''
+    model.value = response.data.data.customer_asset.model || ''
+    tipe.value = response.data.data.customer_asset.tipe.nama || ''
+    kapasitas.value = response.data.data.customer_asset.kapasitas || ''
+    freon.value = response.data.data.customer_asset.freon || ''
+    lokasi.value = response.data.data.customer_asset.lokasi || ''
+    nama_pelanggan.value = response.data.data.customer_asset.customer.nama || ''
+    alamat.value = response.data.data.customer_asset.customer.alamat || ''
+    no_hp.value = response.data.data.customer_asset.customer.hp || ''
+    kode_pelanggan.value = response.data.data.customer_asset.customer.kode_pelanggan || ''
+    jenis_pelanggan.value = response.data.data.customer_asset.customer.jenis || ''
+
+    // nama_pelanggan.value = response.data.data.customer_nama
+    // alamat.value = response.data.data.customer_alamat
+    // no_hp.value = response.data.data.customer_hp
+    // brand.value = response.data.data.brand
+    // model.value = response.data.data.model
+    // tipe.value = response.data.data.tipe
+    // kapasitas.value = response.data.data.kapasitas
+    // freon.value = response.data.data.freon
+    // lokasi.value = response.data.data.lokasi
+    // kode_pelanggan.value = response.data.data.customer_kode_pelanggan
+    // jenis_pelanggan.value = response.data.data.customer_jenis
     console.log('Work Order Data:', response.data.data)
   } catch (error) {
     console.error('Error fetching work order data:', error)
+  } finally {
+    loadingStore.hide()
   }
 }
 async function getPegawai() {
