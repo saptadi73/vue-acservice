@@ -491,6 +491,12 @@
     >
       simpan perubahan
     </button>
+    <button
+      class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
+      @click="createPelangganSignLink"
+    >
+      Buat Link untuk Pelanggan
+    </button>
   </div>
 </template>
 
@@ -580,6 +586,23 @@ async function createWorkOrder() {
     console.error('Error creating work order:', error)
     message_toast.value = 'Gagal membuat work order. Silakan coba lagi.'
     show_toast.value = true
+  } finally {
+    loadingStore.hide()
+  }
+}
+
+async function createPelangganSignLink() {
+  loadingStore.show()
+  try {
+    const response = await api.post(`wo/penjualan/sign/${customerAssetId}`)
+    console.log('Link Created:', response.data.data)
+    show_toast.value = true
+    message_toast.value = response.data.message || 'Link created successfully.'
+    // Optionally reset form or provide user feedback here
+  } catch (error) {
+    console.error('Error creating link:', error)
+    show_toast.value = true
+    message_toast.value = error.message || 'Failed to create link.'
   } finally {
     loadingStore.hide()
   }

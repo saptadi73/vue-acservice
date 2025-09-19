@@ -625,6 +625,12 @@
     >
       simpan perubahan
     </button>
+    <button
+      class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
+      @click="createPelangganSignLink"
+    >
+      Buat Link untuk Pelanggan
+    </button>
   </div>
   <loading-overlay />
   <ToastCard v-if="show_toast" :message="message_toast" @close="tutupToast" />

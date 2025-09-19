@@ -659,12 +659,6 @@
     >
       simpan perubahan
     </button>
-    <button
-      class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createPelangganSignLink"
-    >
-      Buat Link untuk Pelanggan
-    </button>
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
@@ -673,7 +667,6 @@
 <script setup>
 // Import yang diperlukan
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
@@ -682,8 +675,6 @@ import LoadingOverlay from '../components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 
 const loadingStore = useLoadingStore()
-const route = useRoute()
-const workorder_id = route.params.id
 
 const show_toast = ref(false)
 const message_toast = ref('')
@@ -809,95 +800,10 @@ async function getForNewWorkOrder() {
   }
 }
 
-async function createPelangganSignLink() {
-  loadingStore.show()
-  try {
-    const response = await api.post(`wo/penyewaan/sign/${workorder_id}`, {
-      customer_id: formData.value.customer_id,
-    })
-    console.log('Link Created:', response.data.data)
-    show_toast.value = true
-    message_toast.value = response.data.message || 'Link created successfully.'
-    // Optionally reset form or provide user feedback here
-  } catch (error) {
-    console.error('Error creating link:', error)
-    show_toast.value = true
-    message_toast.value = error.message || 'Failed to create link.'
-  } finally {
-    loadingStore.hide()
-  }
-}
-
-async function getWorkOrderPenyewaanByID() {
-  loadingStore.show()
-  if (!workorder_id) return
-  try {
-    const response = await api.get(`/wo/penyewaan/${workorder_id}`)
-    const dataku = response.data.data
-    formData.value = {
-      customer_id: dataku.customer_id || null,
-      rental_asset_id: dataku.rental_asset_id || null,
-      teknisi_id: dataku.teknisi_id || null,
-      hasil_pekerjaan: dataku.hasil_pekerjaan || '',
-      checkIndoor: dataku.checkIndoor || false,
-      keteranganIndoor: dataku.keteranganIndoor || '',
-      checkOutdoor: dataku.checkOutdoor || false,
-      keteranganOutdoor: dataku.keteranganOutdoor || '',
-      checkPipa: dataku.checkPipa || false,
-      keteranganPipa: dataku.keteranganPipa || '',
-      checkSelang: dataku.checkSelang || false,
-      keteranganSelang: dataku.keteranganSelang || '',
-      checkKabel: dataku.checkKabel || false,
-      keteranganKabel: dataku.keteranganKabel || '',
-      checkInstIndoor: dataku.checkInstIndoor || false,
-      keteranganInstIndoor: dataku.keteranganInstIndoor || '',
-      checkInstOutdoor: dataku.checkInstOutdoor || false,
-      keteranganInstOutdoor: dataku.keteranganInstOutdoor || '',
-      checkInstListrik: dataku.checkInstListrik || false,
-      keteranganInstListrik: dataku.keteranganInstListrik || '',
-      checkInstPipa: dataku.checkInstPipa || false,
-      keteranganInstPipa: dataku.keteranganInstPipa || '',
-      checkBuangan: dataku.checkBuangan || false,
-      keteranganBuangan: dataku.keteranganBuangan || '',
-      checkVaccum: dataku.checkVaccum || false,
-      keteranganVaccum: dataku.keteranganVaccum || '',
-      checkFreon: dataku.checkFreon || false,
-      keteranganFreon: dataku.keteranganFreon || '',
-      checkArus: dataku.checkArus || false,
-      keteranganArus: dataku.keteranganArus || '',
-      checkEva: dataku.checkEva || false,
-      keteranganEva: dataku.keteranganEva || '',
-      checkKondensor: dataku.checkKondensor || false,
-      keteranganKondensor: dataku.keteranganKondensor || '',
-      checkIndoorB: dataku.checkIndoorB || false,
-      keteranganIndoorB: dataku.keteranganIndoorB || '',
-      checkOutdoorB: dataku.checkOutdoorB || false,
-      keteranganOutdoorB: dataku.keteranganOutdoorB || '',
-      checkPipaB: dataku.checkPipaB || false,
-      keteranganPipaB: dataku.keteranganPipaB || '',
-      checkSelangB: dataku.checkSelangB || false,
-      keteranganSelangB: dataku.keteranganSelangB || '',
-      checkKabelB: dataku.checkKabelB || false,
-      keteranganKabelB: dataku.keteranganKabelB || '',
-    }
-    selectedCustomerId.value = dataku.customer_id || ''
-    onSelectCustomer()
-    selectedAssetId.value = dataku.rental_asset_id || ''
-    onSelectAsset()
-    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan || null
-
-    console.log('Fetched work order data:', dataku)
-  } catch (error) {
-    console.error('Error fetching work order by ID:', error)
-  } finally {
-    loadingStore.hide()
-  }
-}
-
 async function createWorkOrder() {
   try {
     loadingStore.show()
-    const response = await api.post(`wo/penyewaan/update/${workorder_id}`, formData.value)
+    const response = await api.post('/wo/penyewaan/create', formData.value)
     console.log('Work order created:', response.data.data)
     console.log('Form Data Sent:', formData.value)
     message_toast.value = response.data.message || 'Work order berhasil diperbaharui.'
@@ -950,7 +856,6 @@ onMounted(() => {
   getForNewWorkOrder()
   getPegawai()
   getCustomers()
-  getWorkOrderPenyewaanByID()
 })
 </script>
 

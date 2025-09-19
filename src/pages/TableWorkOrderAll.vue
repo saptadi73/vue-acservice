@@ -71,11 +71,11 @@
             <td class="p-4">
               <span
                 class="inline-block px-3 py-1 rounded-full text-xs font-bold"
-                :class="
-                  order.status === 'open'
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-blue-100 text-blue-600'
-                "
+                :class="{
+                  'bg-green-100 text-green-600': order.status === 'open',
+                  'bg-yellow-100 text-yellow-700': order.status === 'waiting signature',
+                  'bg-red-100 text-red-600': order.status === 'close',
+                }"
               >
                 {{ order.status }}
               </span>
@@ -117,11 +117,11 @@
         <div class="text-center mt-2">
           <span
             class="inline-block px-3 py-1 rounded-full text-xs font-bold"
-            :class="
-              order.status === 'Progress'
-                ? 'bg-green-100 text-green-600'
-                : 'bg-blue-100 text-blue-600'
-            "
+            :class="{
+              'bg-green-100 text-green-600': order.status === 'open',
+              'bg-yellow-100 text-yellow-700': order.status === 'waiting signature',
+              'bg-red-100 text-red-600': order.status === 'close',
+            }"
           >
             {{ order.status }}
           </span>
