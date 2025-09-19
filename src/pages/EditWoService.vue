@@ -671,7 +671,7 @@ const tanggal = ref(
 )
 
 const formData = ref({
-  customer_asset_id: customerAssetId,
+  customer_asset_id: '',
   teknisi_id: null,
   keluhan: '',
   keterangan: '',
@@ -717,7 +717,7 @@ const formData = ref({
 async function createWorkOrder() {
   loadingStore.show()
   try {
-    const response = await api.post(`${BASE_URL}wo/pemeliharaan/create`, formData.value)
+    const response = await api.post(`wo/service/update/${customerAssetId}`, formData.value)
     console.log('Work Order Created:', response.data.data)
     console.log('Form datanya :', formData.value)
     show_toast.value = true

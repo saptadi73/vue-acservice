@@ -717,7 +717,7 @@ const formData = ref({
 async function createWorkOrder() {
   loadingStore.show()
   try {
-    const response = await api.post(`${BASE_URL}wo/pemeliharaan/create`, formData.value)
+    const response = await api.post('wo/pemeliharaan/create', formData.value)
     console.log('Work Order Created:', response.data.data)
     console.log('Form datanya :', formData.value)
     show_toast.value = true

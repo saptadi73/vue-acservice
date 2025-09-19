@@ -872,10 +872,10 @@ async function getWorkOrderPenyewaanByID() {
 async function createWorkOrder() {
   try {
     loadingStore.show()
-    const response = await api.post('/wo/penyewaan/create', formData.value)
+    const response = await api.post(`wo/penyewaan/update/${workorder_id}`, formData.value)
     console.log('Work order created:', response.data.data)
     console.log('Form Data Sent:', formData.value)
-    message_toast.value = response.data.data.message || 'Work order berhasil dibuat.'
+    message_toast.value = response.data.message || 'Work order berhasil diperbaharui.'
     show_toast.value = true
   } catch (error) {
     console.error('Error creating work order:', error)

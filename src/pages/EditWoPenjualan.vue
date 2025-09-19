@@ -533,7 +533,7 @@ const jenis_pelanggan = ref('')
 const teknisi = ref([])
 
 const formData = ref({
-  customer_asset_id: customerAssetId,
+  customer_asset_id: '',
   teknisi_id: null,
   check_indoor: false,
   keterangan_indoor: '',
@@ -569,9 +569,9 @@ const formData = ref({
 })
 
 async function createWorkOrder() {
-  loadingStore.show()
+  // loadingStore.show()
   try {
-    const response = await api.post('/wo/penjualan/create', formData.value)
+    const response = await api.post(`wo/penjualan/update/${customerAssetId}`, formData.value)
     console.log('Work order created:', response.data.data)
     console.log('Form Data Submitted:', formData.value)
     message_toast.value = response.data.message || 'Work order berhasil dibuat.'
@@ -591,7 +591,6 @@ async function getForNewWorkOrder(id) {
   try {
     const response = await axios.get(`${BASE_URL}wo/penjualan/${id}`)
     console.log('Work order data:', response.data.data)
-    formData.value.customer_asset_id = response.data.data.id
     nama_pelanggan.value = response.data.data.customer_asset.customer.nama
     alamat.value = response.data.data.customer_asset.customer.alamat
     no_hp.value = response.data.data.customer_asset.customer.hp
@@ -635,6 +634,7 @@ async function getForNewWorkOrder(id) {
     formData.value.keterangan_eva = response.data.data.keterangan_eva || ''
     formData.value.check_kondensor = response.data.data.check_kondensor || false
     formData.value.keterangan_kondensor = response.data.data.keterangan_kondensor || ''
+    formData.value.customer_asset_id = response.data.data.customer_asset.id
   } catch (error) {
     console.error('Error fetching work order data:', error)
   } finally {

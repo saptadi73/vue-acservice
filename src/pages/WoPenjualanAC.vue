@@ -571,7 +571,7 @@ const formData = ref({
 async function createWorkOrder() {
   loadingStore.show()
   try {
-    const response = await api.post('/wo/penjualan/create', formData.value)
+    const response = await api.post('wo/penjualan/create', formData.value)
     console.log('Work order created:', response.data.data)
     console.log('Form Data Submitted:', formData.value)
     message_toast.value = response.data.message || 'Work order berhasil dibuat.'
