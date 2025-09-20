@@ -145,7 +145,12 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">1. Unit Indoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkIndoor" v-model="formData.check_indoor" />
+                  <input
+                    type="checkbox"
+                    id="checkIndoor"
+                    v-model="formData.check_indoor"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -154,13 +159,19 @@
                     id="keteranganIndoor"
                     type="text"
                     v-model="formData.keterangan_indoor"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">2. Unit Outdoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkOutdoor" v-model="formData.check_outdoor" />
+                  <input
+                    type="checkbox"
+                    id="checkOutdoor"
+                    v-model="formData.check_outdoor"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -169,13 +180,14 @@
                     id="keteranganOutdoor"
                     type="text"
                     v-model="formData.keterangan_outdoor"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkPipa" type="checkbox" v-model="formData.check_pipa" />
+                  <input id="checkPipa" type="checkbox" v-model="formData.check_pipa" disabled />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -184,13 +196,19 @@
                     id="keteranganPipa"
                     type="text"
                     v-model="formData.keterangan_pipa"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Selang Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkSelang" type="checkbox" v-model="formData.check_selang" />
+                  <input
+                    id="checkSelang"
+                    type="checkbox"
+                    v-model="formData.check_selang"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -199,13 +217,14 @@
                     id="keteranganSelang"
                     type="text"
                     v-model="formData.keterangan_selang"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKabel" type="checkbox" v-model="formData.check_kabel" />
+                  <input id="checkKabel" type="checkbox" v-model="formData.check_kabel" disabled />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -214,6 +233,7 @@
                     id="keteranganKabel"
                     type="text"
                     v-model="formData.keterangan_kabel"
+                    disabled
                   />
                 </td>
               </tr>
@@ -239,6 +259,7 @@
                     type="checkbox"
                     id="checkInstIndoor"
                     v-model="formData.check_inst_indoor"
+                    disabled
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -248,6 +269,7 @@
                     id="keteranganInstIndoor"
                     type="text"
                     v-model="formData.keterangan_inst_indoor"
+                    disabled
                   />
                 </td>
               </tr>
@@ -277,6 +299,7 @@
                     id="checkInstListrik"
                     type="checkbox"
                     v-model="formData.check_inst_listrik"
+                    disabled
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -286,13 +309,19 @@
                     id="keteranganInstListrik"
                     type="text"
                     v-model="formData.keterangan_inst_listrik"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Instalasi Pipa</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkInstPipa" type="checkbox" v-model="formData.check_inst_pipa" />
+                  <input
+                    id="checkInstPipa"
+                    type="checkbox"
+                    v-model="formData.check_inst_pipa"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -301,13 +330,19 @@
                     id="keteranganInstPipa"
                     type="text"
                     v-model="formData.keterangan_inst_pipa"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Instalasi Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkBuangan" type="checkbox" v-model="formData.check_buangan" />
+                  <input
+                    id="checkBuangan"
+                    type="checkbox"
+                    v-model="formData.check_buangan"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -316,6 +351,7 @@
                     id="keteranganBuangan"
                     type="text"
                     v-model="formData.keterangan_buangan"
+                    disabled
                   />
                 </td>
               </tr>
@@ -331,13 +367,14 @@
                     id="keteranganVaccum"
                     type="text"
                     v-model="formData.keterangan_vaccum"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">7. Tekanan Freon</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkFreon" type="checkbox" v-model="formData.check_freon" />
+                  <input id="checkFreon" type="checkbox" v-model="formData.check_freon" disabled />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -346,13 +383,14 @@
                     id="keteranganFreon"
                     type="text"
                     v-model="formData.keterangan_freon"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">8. Arus (Ampere)</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkArus" type="checkbox" v-model="formData.check_arus" />
+                  <input id="checkArus" type="checkbox" v-model="formData.check_arus" disabled />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -361,6 +399,7 @@
                     id="keteranganArus"
                     type="text"
                     v-model="formData.keterangan_arus"
+                    disabled
                   />
                 </td>
               </tr>
@@ -376,13 +415,19 @@
                     id="keteranganEva"
                     type="text"
                     v-model="formData.keterangan_eva"
+                    disabled
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">10. Temperatur Kondensor</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKondensor" type="checkbox" v-model="formData.check_kondensor" />
+                  <input
+                    id="checkKondensor"
+                    type="checkbox"
+                    v-model="formData.check_kondensor"
+                    disabled
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -391,6 +436,7 @@
                     id="keteranganKondensor"
                     type="text"
                     v-model="formData.keterangan_kondensor"
+                    disabled
                   />
                 </td>
               </tr>
@@ -412,6 +458,7 @@
           id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
+          disabled
         />
       </div>
 
@@ -444,6 +491,7 @@
                 id="teknisiSelect"
                 v-model="formData.teknisi_id"
                 class="bg-transparent text-blue-700 font-semibold"
+                disabled
               >
                 <option value="" disabled selected class="text-sm">Pilih Teknisi</option>
                 <option v-for="tech in teknisi" :key="tech.id" :value="tech.id" class="text-sm">
@@ -487,15 +535,9 @@
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createWorkOrder"
+      @click="signatureSend"
     >
-      simpan perubahan
-    </button>
-    <button
-      class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createPelangganSignLink"
-    >
-      Buat Link untuk Pelanggan
+      tanda tangan dan tutup work order
     </button>
   </div>
 </template>
@@ -574,28 +616,11 @@ const formData = ref({
   hasil_pekerjaan: '',
 })
 
-async function createWorkOrder() {
-  // loadingStore.show()
-  try {
-    const response = await api.post(`wo/penjualan/update/${customerAssetId}`, formData.value)
-    console.log('Work order created:', response.data.data)
-    console.log('Form Data Submitted:', formData.value)
-    message_toast.value = response.data.message || 'Work order berhasil dibuat.'
-    show_toast.value = true
-  } catch (error) {
-    console.error('Error creating work order:', error)
-    message_toast.value = 'Gagal membuat work order. Silakan coba lagi.'
-    show_toast.value = true
-  } finally {
-    loadingStore.hide()
-  }
-}
-
 // Ambil data work order
 async function getForNewWorkOrder(id) {
   loadingStore.show()
   try {
-    const response = await axios.get(`${BASE_URL}wo/penjualan/${id}`)
+    const response = await axios.get(`${BASE_URL}wo/penjualan/customercode/${id}`)
     console.log('Work order data:', response.data.data)
     nama_pelanggan.value = response.data.data.customer_asset.customer.nama
     alamat.value = response.data.data.customer_asset.customer.alamat
@@ -661,11 +686,32 @@ async function getPegawai() {
 
 const pelangganSignUrl = ref(null)
 
+async function signatureSend() {
+  const payload = new FormData()
+  if (formData.value.file) payload.append('file', formData.value.file)
+  loadingStore.show()
+  try {
+    const response = await api.post(`wo/penjualan/close/${customerAssetId}`, payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    console.log('Signature uploaded:', response.data)
+    show_toast.value = true
+    message_toast.value = response.data.message || 'Signature uploaded successfully.'
+  } catch (error) {
+    console.error('Error uploading signature:', error)
+    show_toast.value = true
+    message_toast.value = error.message || 'Failed to upload signature.'
+  } finally {
+    loadingStore.hide()
+  }
+}
+
 function onPelangganSignChange(e) {
   const file = e.target.files[0]
   if (file) {
     pelangganSignUrl.value = URL.createObjectURL(file)
   }
+  formData.value.file = file
 }
 
 // Tanda tangan teknisi (otomatis preview sesuai teknisi_id)

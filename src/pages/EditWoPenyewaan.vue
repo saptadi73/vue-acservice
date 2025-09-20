@@ -555,7 +555,12 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKabelB" type="checkbox" value="1" />
+                  <input
+                    id="checkKabelB"
+                    type="checkbox"
+                    value="1"
+                    v-model="formData.checkKabelB"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input

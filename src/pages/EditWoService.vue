@@ -723,7 +723,10 @@ const formData = ref({
 async function createWorkOrder() {
   loadingStore.show()
   try {
-    const response = await api.post(`wo/service/update/${customerAssetId}`, formData.value)
+    const response = await api.post(
+      `${BASE_URL}wo/service/update/${customerAssetId}`,
+      formData.value,
+    )
     console.log('Work Order Created:', response.data.data)
     console.log('Form datanya :', formData.value)
     show_toast.value = true
@@ -733,6 +736,23 @@ async function createWorkOrder() {
     console.error('Error creating work order:', error)
     show_toast.value = true
     message_toast.value = error.message || 'Failed to create work order.'
+  } finally {
+    loadingStore.hide()
+  }
+}
+
+async function createPelangganSignLink() {
+  loadingStore.show()
+  try {
+    const response = await api.post(`wo/service/sign/${customerAssetId}`)
+    console.log('Link Created:', response.data.data)
+    show_toast.value = true
+    message_toast.value = response.data.message || 'Link created successfully.'
+    // Optionally reset form or provide user feedback here
+  } catch (error) {
+    console.error('Error creating link:', error)
+    show_toast.value = true
+    message_toast.value = error.message || 'Failed to create link.'
   } finally {
     loadingStore.hide()
   }

@@ -159,6 +159,21 @@ const router = createRouter({
           name: 'Laporan Jasa',
           component: () => import('../pages/LaporanJasaBengkel.vue'),
         },
+        {
+          path: 'service/sign/:id',
+          name: 'customer pemeliharaan sign',
+          component: () => import('../pages/SignWoService.vue'),
+        },
+        {
+          path: 'penjualan/sign/:id',
+          name: 'customer penjualan sign',
+          component: () => import('../pages/SignWoPenjualan.vue'),
+        },
+        {
+          path: 'penyewaan/sign/:id',
+          name: 'customer penyewaan sign',
+          component: () => import('../pages/SignWoPenyewaan.vue'),
+        },
       ],
     },
     {

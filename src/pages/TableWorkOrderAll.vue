@@ -74,7 +74,7 @@
                 :class="{
                   'bg-green-100 text-green-600': order.status === 'open',
                   'bg-yellow-100 text-yellow-700': order.status === 'waiting signature',
-                  'bg-red-100 text-red-600': order.status === 'close',
+                  'bg-red-100 text-red-600': order.status === 'selesai',
                 }"
               >
                 {{ order.status }}
@@ -88,10 +88,11 @@
                 WO
               </button>
               <button
-                @click="showRepairNotes(order)"
+                v-if="order.status === 'waiting signature'"
+                @click="goToSignWorkOrder(order)"
                 class="bg-gradient-to-r from-green-500 to-teal-400 text-white px-4 py-2 rounded-full shadow hover:scale-105 transition-all duration-200 font-bold ml-2"
               >
-                Catatan
+                Tanda Tangan
               </button>
             </td>
           </tr>
@@ -120,7 +121,7 @@
             :class="{
               'bg-green-100 text-green-600': order.status === 'open',
               'bg-yellow-100 text-yellow-700': order.status === 'waiting signature',
-              'bg-red-100 text-red-600': order.status === 'close',
+              'bg-red-100 text-red-600': order.status === 'selesai',
             }"
           >
             {{ order.status }}
@@ -134,10 +135,11 @@
             Work Order
           </button>
           <button
-            @click="showRepairNotes(order)"
+            v-if="order.status === 'waiting signature'"
+            @click="goToSignWorkOrder(order)"
             class="bg-gradient-to-r from-green-500 to-teal-400 text-white px-4 py-2 rounded-full shadow hover:scale-105 transition-all duration-200 font-bold w-full"
           >
-            Catatan Perbaikan
+            Tanda Tangan
           </button>
         </div>
       </div>
@@ -313,6 +315,13 @@ export default {
       console.log('Navigating to:', link)
     },
 
+    goToSignWorkOrder(order) {
+      const link = this.getLinkToSignWorkOrder(order)
+      // const link = '/pelanggan/all'
+      this.$router.push(link)
+      console.log('Navigating to:', link)
+    },
+
     getLinkToWorkOrder(order) {
       switch (order.jenis) {
         case 'pemeliharaan':
@@ -325,6 +334,20 @@ export default {
           return `/wo/service/update/${order.work_order_ac_service.id}`
       }
     },
+
+    getLinkToSignWorkOrder(order) {
+      switch (order.jenis) {
+        case 'pemeliharaan':
+          return `/wo/service/sign/${order.work_order_ac_service.customerCode}`
+        case 'penjualan':
+          return `/wo/penjualan/sign/${order.workorder_penjualan.customerCode}`
+        case 'penyewaan':
+          return `/wo/penyewaan/sign/${order.workorder_penyewaan.customerCode}`
+        default:
+          return `/wo/service/sign/${order.work_order_ac_service.customerCode}`
+      }
+    },
+
     getWorkOrders() {
       this.loadingStore.show()
       axios
