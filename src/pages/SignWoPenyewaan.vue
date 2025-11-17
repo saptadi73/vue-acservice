@@ -740,6 +740,7 @@
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="signatureSend"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       Tanda Tangan dan Selesaikan WO
     </button>
@@ -858,6 +859,7 @@ function onSelectAsset() {
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
 const customers = ref([])
+const status = ref('')
 
 const formData = ref({
   customer_id: null,
@@ -973,7 +975,10 @@ async function getWorkOrderPenyewaanByID() {
     onSelectCustomer()
     selectedAssetId.value = dataku.rental_asset_id || ''
     onSelectAsset()
-    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan || null
+    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan
+      ? BASE_URL + dataku.tanda_tangan_pelanggan
+      : null
+    status.value = dataku.status || ''
 
     console.log('Fetched work order data:', dataku)
   } catch (error) {

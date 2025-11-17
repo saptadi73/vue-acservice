@@ -679,6 +679,7 @@
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="signatureSend"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       simpan tanda tangan dan tutup work order
     </button>
@@ -723,6 +724,7 @@ const lokasi = ref('')
 const kode_pelanggan = ref('')
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
+const status = ref('')
 const tanggal = ref(
   new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
 )
@@ -849,6 +851,10 @@ async function getForNewWorkOrder(id) {
     no_hp.value = response.data.data.customer_asset.customer.hp || ''
     kode_pelanggan.value = response.data.data.customer_asset.customer.kode_pelanggan || ''
     jenis_pelanggan.value = response.data.data.customer_asset.customer.jenis || ''
+    status.value = response.data.data.status || ''
+    pelangganSignUrl.value = response.data.data.tanda_tangan_pelanggan
+      ? BASE_URL + response.data.data.tanda_tangan_pelanggan
+      : null
 
     // nama_pelanggan.value = response.data.data.customer_nama
     // alamat.value = response.data.data.customer_alamat

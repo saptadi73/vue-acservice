@@ -145,7 +145,12 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">1. Unit Indoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkIndoor" v-model="formData.check_indoor" />
+                  <input
+                    type="checkbox"
+                    id="checkIndoor"
+                    v-model="formData.check_indoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -154,13 +159,19 @@
                     id="keteranganIndoor"
                     type="text"
                     v-model="formData.keterangan_indoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">2. Unit Outdoor</td>
                 <td class="font-semibold text-gray-900">
-                  <input type="checkbox" id="checkOutdoor" v-model="formData.check_outdoor" />
+                  <input
+                    type="checkbox"
+                    id="checkOutdoor"
+                    v-model="formData.check_outdoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -169,13 +180,19 @@
                     id="keteranganOutdoor"
                     type="text"
                     v-model="formData.keterangan_outdoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkPipa" type="checkbox" v-model="formData.check_pipa" />
+                  <input
+                    id="checkPipa"
+                    type="checkbox"
+                    v-model="formData.check_pipa"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -184,13 +201,19 @@
                     id="keteranganPipa"
                     type="text"
                     v-model="formData.keterangan_pipa"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Selang Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkSelang" type="checkbox" v-model="formData.check_selang" />
+                  <input
+                    id="checkSelang"
+                    type="checkbox"
+                    v-model="formData.check_selang"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -199,13 +222,19 @@
                     id="keteranganSelang"
                     type="text"
                     v-model="formData.keterangan_selang"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKabel" type="checkbox" v-model="formData.check_kabel" />
+                  <input
+                    id="checkKabel"
+                    type="checkbox"
+                    v-model="formData.check_kabel"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -214,6 +243,7 @@
                     id="keteranganKabel"
                     type="text"
                     v-model="formData.keterangan_kabel"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -239,6 +269,7 @@
                     type="checkbox"
                     id="checkInstIndoor"
                     v-model="formData.check_inst_indoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -248,6 +279,7 @@
                     id="keteranganInstIndoor"
                     type="text"
                     v-model="formData.keterangan_inst_indoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -258,6 +290,7 @@
                     type="checkbox"
                     id="checkInstOutdoor"
                     v-model="formData.check_inst_outdoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -267,6 +300,7 @@
                     id="keteranganInstOutdoor"
                     type="text"
                     v-model="formData.keterangan_inst_outdoor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -277,6 +311,7 @@
                     id="checkInstListrik"
                     type="checkbox"
                     v-model="formData.check_inst_listrik"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -286,13 +321,19 @@
                     id="keteranganInstListrik"
                     type="text"
                     v-model="formData.keterangan_inst_listrik"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">4. Instalasi Pipa</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkInstPipa" type="checkbox" v-model="formData.check_inst_pipa" />
+                  <input
+                    id="checkInstPipa"
+                    type="checkbox"
+                    v-model="formData.check_inst_pipa"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -301,13 +342,19 @@
                     id="keteranganInstPipa"
                     type="text"
                     v-model="formData.keterangan_inst_pipa"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Instalasi Buangan</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkBuangan" type="checkbox" v-model="formData.check_buangan" />
+                  <input
+                    id="checkBuangan"
+                    type="checkbox"
+                    v-model="formData.check_buangan"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -316,13 +363,19 @@
                     id="keteranganBuangan"
                     type="text"
                     v-model="formData.keterangan_buangan"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">6. Vaccum</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkVaccum" type="checkbox" v-model="formData.check_vaccum" />
+                  <input
+                    id="checkVaccum"
+                    type="checkbox"
+                    v-model="formData.check_vaccum"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -331,13 +384,19 @@
                     id="keteranganVaccum"
                     type="text"
                     v-model="formData.keterangan_vaccum"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">7. Tekanan Freon</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkFreon" type="checkbox" v-model="formData.check_freon" />
+                  <input
+                    id="checkFreon"
+                    type="checkbox"
+                    v-model="formData.check_freon"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -346,13 +405,19 @@
                     id="keteranganFreon"
                     type="text"
                     v-model="formData.keterangan_freon"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">8. Arus (Ampere)</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkArus" type="checkbox" v-model="formData.check_arus" />
+                  <input
+                    id="checkArus"
+                    type="checkbox"
+                    v-model="formData.check_arus"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -361,13 +426,19 @@
                     id="keteranganArus"
                     type="text"
                     v-model="formData.keterangan_arus"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">9. Temperatur Evaporator</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkEva" type="checkbox" v-model="formData.check_eva" />
+                  <input
+                    id="checkEva"
+                    type="checkbox"
+                    v-model="formData.check_eva"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -376,13 +447,19 @@
                     id="keteranganEva"
                     type="text"
                     v-model="formData.keterangan_eva"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">10. Temperatur Kondensor</td>
                 <td class="font-semibold text-gray-900">
-                  <input id="checkKondensor" type="checkbox" v-model="formData.check_kondensor" />
+                  <input
+                    id="checkKondensor"
+                    type="checkbox"
+                    v-model="formData.check_kondensor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -391,6 +468,7 @@
                     id="keteranganKondensor"
                     type="text"
                     v-model="formData.keterangan_kondensor"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -412,6 +490,7 @@
           id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
+          :disabled="status === 'selesai' && pelangganSignUrl"
         />
       </div>
 
@@ -425,7 +504,13 @@
             <h3 class="font-bold text-blue-700 text-lg mb-6 tracking-wide">Tanda Tangan Teknisi</h3>
             <label class="w-full flex flex-col items-center cursor-pointer mb-2">
               <span class="text-xs text-blue-500 mb-1">Upload Tanda Tangan</span>
-              <input type="file" accept="image/*" class="hidden" @change="onTeknisiSignChange" />
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onTeknisiSignChange"
+                :disabled="status === 'selesai' && pelangganSignUrl"
+              />
               <div
                 class="w-full h-24 flex items-center justify-center border-b-2 border-blue-200 bg-blue-50 rounded-md overflow-hidden"
               >
@@ -444,6 +529,7 @@
                 id="teknisiSelect"
                 v-model="formData.teknisi_id"
                 class="bg-transparent text-blue-700 font-semibold"
+                :disabled="status === 'selesai' && pelangganSignUrl"
               >
                 <option value="" disabled selected class="text-sm">Pilih Teknisi</option>
                 <option v-for="tech in teknisi" :key="tech.id" :value="tech.id" class="text-sm">
@@ -463,7 +549,13 @@
             </h3>
             <label class="w-full flex flex-col items-center cursor-pointer mb-2">
               <span class="text-xs text-blue-500 mb-1">Upload Tanda Tangan</span>
-              <input type="file" accept="image/*" class="hidden" @change="onPelangganSignChange" />
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="onPelangganSignChange"
+                :disabled="status === 'selesai' && pelangganSignUrl"
+              />
               <div
                 class="w-full h-24 flex items-center justify-center border-b-2 border-blue-200 bg-blue-50 rounded-md overflow-hidden"
               >
@@ -488,12 +580,14 @@
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="createWorkOrder"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       simpan perubahan
     </button>
     <button
       class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="createPelangganSignLink"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       Buat Link untuk Pelanggan
     </button>
@@ -537,6 +631,7 @@ const lokasi = ref('')
 const kode_pelanggan = ref('')
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
+const status = ref('')
 
 const formData = ref({
   customer_asset_id: '',
@@ -658,6 +753,10 @@ async function getForNewWorkOrder(id) {
     formData.value.check_kondensor = response.data.data.check_kondensor || false
     formData.value.keterangan_kondensor = response.data.data.keterangan_kondensor || ''
     formData.value.customer_asset_id = response.data.data.customer_asset.id
+    pelangganSignUrl.value = response.data.data.tanda_tangan_pelanggan
+      ? BASE_URL + response.data.data.tanda_tangan_pelanggan
+      : null
+    status.value = response.data.data.status || ''
   } catch (error) {
     console.error('Error fetching work order data:', error)
   } finally {

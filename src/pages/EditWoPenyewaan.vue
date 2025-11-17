@@ -51,6 +51,7 @@
                     v-if="customers"
                     v-model="selectedCustomerId"
                     @change="onSelectCustomer"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   >
                     <option value="" selected>Pilih Pelanggan</option>
                     <option v-for="value in customers" :key="value.id" :value="value.id">
@@ -95,6 +96,7 @@
                     class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm"
                     v-model="selectedAssetId"
                     @change="onSelectAsset"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   >
                     <option value="" disabled selected>Unit AC yang disewa</option>
                     <option v-for="asset in assets" :key="asset.id" :value="asset.id">
@@ -179,6 +181,7 @@
                     type="checkbox"
                     id="checkIndoor"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -188,6 +191,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganIndoor"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -199,6 +203,7 @@
                     type="checkbox"
                     id="checkOutdoor"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -208,13 +213,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganOutdoor"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkPipa" id="checkPipa" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkPipa"
+                    id="checkPipa"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -223,6 +235,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganPipa"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -234,6 +247,7 @@
                     id="checkSelang"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -243,13 +257,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganSelang"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">5. Kabel dan Asesori</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkKabel" id="checkKabel" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkKabel"
+                    id="checkKabel"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -258,6 +279,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKabel"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -285,6 +307,7 @@
                     type="checkbox"
                     id="checkInstIndoor"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -294,6 +317,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstIndoor"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -305,6 +329,7 @@
                     type="checkbox"
                     id="checkInstOutdoor"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -314,6 +339,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstOutdoor"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -325,6 +351,7 @@
                     id="checkInstListrik"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -334,6 +361,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstListrik"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -345,6 +373,7 @@
                     id="checkInstPipa"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -354,6 +383,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganInstPipa"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -365,6 +395,7 @@
                     id="checkBuangan"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -374,6 +405,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganBuangan"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -385,6 +417,7 @@
                     id="checkVaccum"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -394,13 +427,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganVaccum"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">7. Tekanan Freon</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkFreon" id="checkFreon" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkFreon"
+                    id="checkFreon"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -409,13 +449,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganFreon"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">8. Arus (Ampere)</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkArus" id="checkArus" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkArus"
+                    id="checkArus"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -424,13 +471,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganArus"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">9. Temperatur Evaporator</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkEva" id="checkEva" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkEva"
+                    id="checkEva"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -439,6 +493,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganEva"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -450,6 +505,7 @@
                     id="checkKondensor"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -459,6 +515,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKondensor"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -485,6 +542,7 @@
                     type="checkbox"
                     id="checkIndoorB"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -494,6 +552,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganIndoorB"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -505,6 +564,7 @@
                     type="checkbox"
                     id="checkOutdoorB"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -514,13 +574,20 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganOutdoorB"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">3. Pipa AC</td>
                 <td class="font-semibold text-gray-900">
-                  <input v-model="formData.checkPipaB" id="checkPipaB" type="checkbox" value="1" />
+                  <input
+                    v-model="formData.checkPipaB"
+                    id="checkPipaB"
+                    type="checkbox"
+                    value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
+                  />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
                   <input
@@ -529,6 +596,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganPipaB"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -540,6 +608,7 @@
                     id="checkSelangB"
                     type="checkbox"
                     value="1"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -549,6 +618,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganSelangB"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -560,6 +630,7 @@
                     type="checkbox"
                     value="1"
                     v-model="formData.checkKabelB"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
                 <td class="pr-4 font-medium text-gray-700">
@@ -569,6 +640,7 @@
                     class="text-sm border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none px-2 py-1 w-full sm:w-auto"
                     id="keteranganKabelB"
                     type="text"
+                    :disabled="status === 'selesai' && pelangganSignUrl"
                   />
                 </td>
               </tr>
@@ -590,6 +662,7 @@
           id="hasil_pekerjaan"
           class="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Informasi Tambahan dan Hasil Pekerjaan"
+          :disabled="status === 'selesai' && pelangganSignUrl"
         />
       </div>
 
@@ -661,12 +734,14 @@
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="createWorkOrder"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       simpan perubahan
     </button>
     <button
       class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="createPelangganSignLink"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       Buat Link untuk Pelanggan
     </button>
@@ -755,6 +830,7 @@ const jenis_pelanggan = ref('')
 const teknisi = ref([])
 const customers = ref([])
 const pelangganSignUrl = ref(null)
+const status = ref('')
 
 const formData = ref({
   customer_id: null,
@@ -889,7 +965,10 @@ async function getWorkOrderPenyewaanByID() {
     onSelectCustomer()
     selectedAssetId.value = dataku.rental_asset_id || ''
     onSelectAsset()
-    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan || null
+    pelangganSignUrl.value = dataku.tanda_tangan_pelanggan
+      ? BASE_URL + dataku.tanda_tangan_pelanggan
+      : null
+    status.value = dataku.status || ''
 
     console.log('Fetched work order data:', dataku)
   } catch (error) {

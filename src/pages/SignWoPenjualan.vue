@@ -536,6 +536,7 @@
     <button
       class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
       @click="signatureSend"
+      :disabled="status === 'selesai' && pelangganSignUrl"
     >
       tanda tangan dan tutup work order
     </button>
@@ -579,6 +580,7 @@ const lokasi = ref('')
 const kode_pelanggan = ref('')
 const jenis_pelanggan = ref('')
 const teknisi = ref([])
+const status = ref('')
 
 const formData = ref({
   customer_asset_id: '',
@@ -666,6 +668,7 @@ async function getForNewWorkOrder(id) {
     formData.value.check_kondensor = response.data.data.check_kondensor || false
     formData.value.keterangan_kondensor = response.data.data.keterangan_kondensor || ''
     formData.value.customer_asset_id = response.data.data.customer_asset.id
+    status.value = response.data.data.status || ''
   } catch (error) {
     console.error('Error fetching work order data:', error)
   } finally {
