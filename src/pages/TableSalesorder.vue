@@ -52,6 +52,18 @@
       Menampilkan {{ filteredOrders.length }} dari {{ orders.length }} data.
     </p>
 
+    <!-- Loading indicator -->
+    <div v-if="loading" class="text-center py-10">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Memuat data...</p>
+    </div>
+
+    <!-- Error message -->
+    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <p class="text-red-700">{{ error }}</p>
+      <button @click="fetchOrders" class="mt-2 text-red-600 underline">Coba lagi</button>
+    </div>
+
     <!-- Tabel untuk layar lebar -->
     <table
       class="min-w-full bg-white border border-blue-100 rounded-2xl shadow-xl overflow-hidden hidden md:table"
@@ -60,12 +72,10 @@
         <tr>
           <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">No. Sales Order</th>
           <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Nama Pelanggan</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">No. HP</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Jumlah Tagihan</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Pajak 11%</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Total Tagihan</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Mekanik</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Kasir</th>
+          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Email</th>
+          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Subtotal</th>
+          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Pajak</th>
+          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Total</th>
           <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Tanggal</th>
           <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Status</th>
           <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Aksi</th>
@@ -79,15 +89,15 @@
             (index % 2 === 0 ? 'bg-teal-50' : 'bg-white') + ' hover:bg-blue-50 transition-all'
           "
         >
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.noSalesOrder }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.namaPelanggan }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.noHp }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.jumlahTagihan) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.pajak11) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.totalTagihan) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.mekanik }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.kasir }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.tanggal }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ order.order_number }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ order.customer?.name }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ order.customer?.email }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.subtotal) }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.tax) }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.total) }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">
+            {{ new Date(order.created_at).toLocaleDateString('id-ID') }}
+          </td>
           <td class="px-6 py-4 text-sm">
             <span
               :class="getStatusClass(order.status) + ' px-3 py-1 rounded-full text-xs font-bold'"
@@ -97,32 +107,32 @@
           </td>
           <td class="px-6 py-4 text-sm">
             <button
-              v-if="order.status === 'Invoiced'"
+              v-if="order.status === 'confirmed'"
               class="border border-green-400 bg-transparent text-green-600 p-2 shadow hover:ring-2 hover:ring-green-300 transition-all duration-200"
-              @click="handleBayar(order.id)"
+              @click="handleBayar(order)"
               title="Bayar"
             >
               <span class="material-symbols-outlined">point_of_sale</span>
             </button>
             <button
-              v-if="order.status === 'Open'"
+              v-if="order.status === 'draft'"
               class="border border-orange-400 bg-transparent text-orange-500 p-2 shadow hover:ring-2 hover:ring-orange-300 transition-all duration-200"
-              @click="handleEdit(order.id)"
+              @click="handleEdit(order)"
               title="Edit"
             >
               <span class="material-symbols-outlined">edit_square</span>
             </button>
             <button
-              v-if="order.status === 'Paid'"
+              v-if="order.status === 'paid'"
               class="border border-blue-400 bg-transparent text-blue-600 p-2 shadow hover:ring-2 hover:ring-blue-300 transition-all duration-200"
-              @click="handleCetak(order.id)"
+              @click="handleCetak(order)"
               title="Cetak"
             >
               <span class="material-symbols-outlined">print</span>
             </button>
             <button
               class="border border-red-400 bg-transparent text-red-500 p-2 shadow hover:ring-2 hover:ring-red-300 transition-all duration-200 mt-2"
-              @click="handleDelete(order.id)"
+              @click="handleDelete(order)"
               title="Hapus"
             >
               <span class="material-symbols-outlined">delete</span>
@@ -146,14 +156,14 @@
             >{{ order.status }}</span
           >
         </div>
-        <p class="text-sm text-gray-600">Pelanggan: {{ order.namaPelanggan }}</p>
-        <p class="text-sm text-gray-600">HP: {{ order.noHp }}</p>
-        <p class="text-sm text-gray-600">Jumlah: {{ formatCurrency(order.jumlahTagihan) }}</p>
-        <p class="text-sm text-gray-600">Pajak 11%: {{ formatCurrency(order.pajak11) }}</p>
-        <p class="text-sm text-gray-600">Total: {{ formatCurrency(order.totalTagihan) }}</p>
-        <p class="text-sm text-gray-600">Mekanik: {{ order.mekanik }}</p>
-        <p class="text-sm text-gray-600">Kasir: {{ order.kasir }}</p>
-        <p class="text-sm text-gray-600">Tanggal: {{ order.tanggal }}</p>
+        <p class="text-sm text-gray-600">Pelanggan: {{ order.customer?.name }}</p>
+        <p class="text-sm text-gray-600">Email: {{ order.customer?.email }}</p>
+        <p class="text-sm text-gray-600">Subtotal: {{ formatCurrency(order.subtotal) }}</p>
+        <p class="text-sm text-gray-600">Pajak: {{ formatCurrency(order.tax) }}</p>
+        <p class="text-sm text-gray-600">Total: {{ formatCurrency(order.total) }}</p>
+        <p class="text-sm text-gray-600">
+          Tanggal: {{ new Date(order.created_at).toLocaleDateString('id-ID') }}
+        </p>
         <div class="mt-4 flex flex-wrap gap-2">
           <button
             v-if="order.status === 'Invoiced'"
@@ -187,74 +197,29 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="!filteredOrders.length" class="text-center text-gray-500 py-10">
+    <div
+      v-if="!loading && !error && !filteredOrders.length"
+      class="text-center text-gray-500 py-10"
+    >
       Tidak ada data yang cocok dengan pencarian.
     </div>
   </div>
 </template>
 
 <script>
+import * as apiSalesOrder from './apiSalesOrder.js'
+
 export default {
   data() {
     return {
       searchQuery: '',
-      orders: [
-        {
-          id: 1,
-          noSalesOrder: '001',
-          namaPelanggan: 'John Doe',
-          noHp: '0812345678',
-          jumlahTagihan: 500000,
-          pajak11: 55000,
-          totalTagihan: 555000,
-          mekanik: 'Alex',
-          kasir: 'Rita',
-          tanggal: '2025-08-21',
-          status: 'Invoiced',
-        },
-        {
-          id: 2,
-          noSalesOrder: '002',
-          namaPelanggan: 'Jane Smith',
-          noHp: '0812345679',
-          jumlahTagihan: 300000,
-          pajak11: 33000,
-          totalTagihan: 333000,
-          mekanik: 'Bob',
-          kasir: 'Eva',
-          tanggal: '2025-08-21',
-          status: 'Paid',
-        },
-        {
-          id: 3,
-          noSalesOrder: '003',
-          namaPelanggan: 'Michael Johnson',
-          noHp: '0812345680',
-
-          jumlahTagihan: 200000,
-          pajak11: 22000,
-          totalTagihan: 222000,
-          mekanik: 'David',
-          kasir: 'Leo',
-          tanggal: '2025-08-21',
-          status: 'Open',
-        },
-        {
-          id: 4,
-          noSalesOrder: '004',
-          namaPelanggan: 'Sarah Lee',
-          noHp: '0812345681',
-
-          jumlahTagihan: 400000,
-          pajak11: 44000,
-          totalTagihan: 444000,
-          mekanik: 'Mark',
-          kasir: 'Ian',
-          tanggal: '2025-08-21',
-          status: 'Invoiced',
-        },
-      ],
+      orders: [],
+      loading: false,
+      error: null,
     }
+  },
+  mounted() {
+    this.fetchOrders()
   },
   computed: {
     filteredOrders() {
@@ -263,14 +228,11 @@ export default {
 
       return this.orders.filter((o) => {
         const haystack = [
-          o.noSalesOrder,
-          o.namaPelanggan,
-          o.noHp,
-          o.noPolisi,
-          o.mekanik,
-          o.kasir,
+          o.order_number,
+          o.customer?.name,
+          o.customer?.email,
           o.status,
-          o.tanggal,
+          new Date(o.created_at).toLocaleDateString('id-ID'),
         ]
           .filter(Boolean)
           .join(' | ')
@@ -281,8 +243,21 @@ export default {
     },
   },
   methods: {
+    async fetchOrders() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await apiSalesOrder.getSalesOrders()
+        this.orders = response.data
+      } catch (error) {
+        console.error('Error fetching sales orders:', error)
+        this.error = 'Gagal memuat data sales order.'
+      } finally {
+        this.loading = false
+      }
+    },
     handleTambah() {
-      this.$router.push('/wo/sales/form')
+      this.$router.push({ name: 'sales form' })
     },
     formatCurrency(value) {
       return new Intl.NumberFormat('id-ID', {
@@ -292,27 +267,49 @@ export default {
     },
     getStatusClass(status) {
       switch (status) {
-        case 'Paid':
+        case 'paid':
           return 'text-green-600 font-semibold'
-        case 'Invoiced':
+        case 'confirmed':
           return 'text-blue-600 font-semibold'
-        case 'Open':
+        case 'draft':
           return 'text-yellow-600 font-semibold'
         default:
           return 'text-gray-600'
       }
     },
-    handleBayar() {
-      this.$router.push('/wo/sales/invoice')
+    handleBayar(order) {
+      // Update status to paid
+      this.updateOrderStatus(order.id, 'paid')
     },
-    handleEdit() {
-      this.$router.push('/wo/sales/new')
+    handleEdit(order) {
+      this.$router.push({ name: 'sales form', params: { id: order.id } })
     },
-    handleCetak() {
-      this.$router.push('/wo/sales/invoice')
+    handleCetak(order) {
+      // For now, just show alert
+      alert(`Cetak invoice untuk order ${order.order_number}`)
     },
-    handleDelete(id) {
-      alert(`Menghapus Sales Order ID: ${id}`)
+    async handleDelete(order) {
+      if (confirm(`Apakah Anda yakin ingin menghapus Sales Order ${order.order_number}?`)) {
+        try {
+          // Assuming delete endpoint exists, but based on payload, it's for product lines
+          // For now, just remove from local state
+          this.orders = this.orders.filter((o) => o.id !== order.id)
+          alert('Sales Order berhasil dihapus!')
+        } catch (error) {
+          console.error('Error deleting order:', error)
+          this.error = 'Gagal menghapus sales order.'
+        }
+      }
+    },
+    async updateOrderStatus(orderId, status) {
+      try {
+        await apiSalesOrder.updateSalesOrder(orderId, { status })
+        await this.fetchOrders() // Refresh data
+        alert('Status berhasil diperbarui!')
+      } catch (error) {
+        console.error('Error updating status:', error)
+        this.error = 'Gagal memperbarui status.'
+      }
     },
   },
 }

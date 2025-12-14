@@ -5,131 +5,34 @@
       <div
         class="bg-[#1E64A3] text-white rounded-t-lg px-6 py-3 font-semibold tracking-widest text-center"
       >
-        SALES ORDER
+        PURCHASE ORDER
       </div>
 
       <!-- PDF Area -->
       <div ref="pdfArea" class="bg-white shadow rounded-b-lg p-6 border border-slate-200">
-        <!-- Top Row: Customer -->
+        <!-- Top Row: Vendor -->
         <div class="grid grid-cols-12 gap-4 items-center text-sm">
           <div class="col-span-12 md:col-span-6 flex items-center gap-2">
-            <label class="font-semibold whitespace-nowrap">CUSTOMER NAME:</label>
+            <label class="font-semibold whitespace-nowrap">VENDOR NAME:</label>
             <input
-              v-model="form.customerName"
+              v-model="form.vendorName"
               type="text"
-              placeholder="Netsuite Customer"
+              placeholder="Vendor Name"
               class="border border-slate-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 w-full"
+              readonly
             />
           </div>
           <div class="col-span-12 md:col-span-6 flex items-center gap-2">
-            <label class="font-semibold whitespace-nowrap">CUSTOMER ID:</label>
-            <input
-              v-model="form.customerId"
-              type="text"
-              placeholder="##########"
+            <label class="font-semibold whitespace-nowrap">VENDOR:</label>
+            <select
+              v-model="form.vendorId"
               class="border border-slate-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 w-full"
-            />
-          </div>
-        </div>
-
-        <!-- Bill To & Ship To -->
-        <div class="grid grid-cols-12 gap-6 mt-6 text-sm">
-          <div class="col-span-12 md:col-span-6">
-            <div class="font-semibold mb-2 tracking-wide">BILL TO:</div>
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="w-24">Name:</span>
-                <input
-                  v-model="form.billTo.name"
-                  placeholder="Netsuite Customer"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-24">Address 1:</span>
-                <input
-                  v-model="form.billTo.addr1"
-                  placeholder="123 Main St"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-24">Address 2:</span>
-                <input
-                  v-model="form.billTo.addr2"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="grid grid-cols-12 gap-2 items-center">
-                <span class="col-span-2">City:</span>
-                <input
-                  v-model="form.billTo.city"
-                  placeholder="Somewhere"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-4 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-                <span class="col-span-3 text-right pr-1">State/Region:</span>
-                <input
-                  v-model="form.billTo.state"
-                  placeholder="NY"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-1 text-center focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-                <span class="col-span-2 text-right pr-1">Postal Code:</span>
-                <input
-                  v-model="form.billTo.postal"
-                  placeholder="12345"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-1 min-w-24 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="col-span-12 md:col-span-6">
-            <div class="font-semibold mb-2 tracking-wide">SHIP TO:</div>
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="w-24">Name:</span>
-                <input
-                  v-model="form.shipTo.name"
-                  placeholder="Netsuite Customer"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-24">Address 1:</span>
-                <input
-                  v-model="form.shipTo.addr1"
-                  placeholder="PO Box 456"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-24">Address 2:</span>
-                <input
-                  v-model="form.shipTo.addr2"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-              <div class="grid grid-cols-12 gap-2 items-center">
-                <span class="col-span-2">City:</span>
-                <input
-                  v-model="form.shipTo.city"
-                  placeholder="Somewhere"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-4 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-                <span class="col-span-3 text-right pr-1">State/Region:</span>
-                <input
-                  v-model="form.shipTo.state"
-                  placeholder="NY"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-1 text-center focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-                <span class="col-span-2 text-right pr-1">Postal Code:</span>
-                <input
-                  v-model="form.shipTo.postal"
-                  placeholder="12345"
-                  class="border border-slate-300 rounded-md px-2 py-1.5 col-span-1 min-w-24 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-                />
-              </div>
-            </div>
+            >
+              <option value="">Pilih Vendor</option>
+              <option v-for="vendor in vendors" :key="vendor.id" :value="vendor.id">
+                {{ vendor.name }} ({{ vendor.email }})
+              </option>
+            </select>
           </div>
         </div>
 
@@ -137,11 +40,11 @@
         <div class="grid grid-cols-12 gap-6 mt-6 text-sm">
           <div class="col-span-12 md:col-span-6"></div>
           <div class="col-span-12 md:col-span-6 grid grid-cols-12 gap-2">
-            <div class="col-span-5 flex items-center justify-end pr-2">Sales Order No.</div>
+            <div class="col-span-5 flex items-center justify-end pr-2">Purchase Order No.</div>
             <div class="col-span-7">
               <input
                 v-model="form.orderNo"
-                placeholder="##########"
+                placeholder="PO-2025-001"
                 class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
               />
             </div>
@@ -151,15 +54,6 @@
               <input
                 v-model="form.date"
                 type="date"
-                class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
-              />
-            </div>
-
-            <div class="col-span-5 flex items-center justify-end pr-2">Purchase Order No.</div>
-            <div class="col-span-7">
-              <input
-                v-model="form.poNo"
-                placeholder="##########"
                 class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
               />
             </div>
@@ -206,7 +100,7 @@
                   <td class="px-3 py-2">
                     <input
                       v-model="it.itemId"
-                      placeholder="Product/Service ID"
+                      placeholder="Product ID"
                       class="border border-slate-300 rounded-md px-2 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400"
                     />
                   </td>
@@ -295,9 +189,11 @@
         <!-- Actions -->
         <div class="mt-6 flex flex-wrap gap-3">
           <button
+            @click="submitOrder"
+            :disabled="loading"
             class="bg-slate-700 text-white px-4 py-2 rounded-md shadow hover:bg-slate-800 transition"
           >
-            Submit Sales Order
+            {{ loading ? 'Menyimpan...' : 'Submit Purchase Order' }}
           </button>
           <button
             class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-md shadow hover:bg-slate-50 transition"
@@ -305,6 +201,11 @@
           >
             Download PDF
           </button>
+        </div>
+
+        <!-- Error message -->
+        <div v-if="error" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p class="text-red-700">{{ error }}</p>
         </div>
 
         <div class="mt-10 text-xs text-right text-slate-500">ArcESB™ 2017 • 17.0.6483.0</div>
@@ -317,8 +218,7 @@
 import { reactive, computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import html2pdf from 'html2pdf.js'
-import * as apiSalesOrder from './apiSalesOrder.js'
-import * as apiCustomer from './apiCustomerInstance.js'
+import * as apiPurchaseOrder from './apiPurchaseOrder.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -334,39 +234,22 @@ const newItem = () => ({
 })
 
 const form = reactive({
-  customerName: 'Netsuite Customer',
-  customerId: '',
-  billTo: {
-    name: 'Netsuite Customer',
-    addr1: '123 Main St',
-    addr2: '',
-    city: 'Somewhere',
-    state: 'NY',
-    postal: '12345',
-  },
-  shipTo: {
-    name: 'Netsuite Customer',
-    addr1: 'PO Box 456',
-    addr2: '',
-    city: 'Somewhere',
-    state: 'NY',
-    postal: '12345',
-  },
+  vendorName: '',
+  vendorId: '',
   orderNo: '',
   date: new Date().toISOString().slice(0, 10),
-  poNo: '',
   items: [newItem(), newItem()],
   taxRate: 11,
   terms:
     'ENTER TERMS HERE: NET 30 Days. Finance charge of 1.5% will be made on unpaid balances after 30 days.',
 })
 
-const customers = ref([])
+const vendors = ref([])
 const loading = ref(false)
 const error = ref(null)
 
 onMounted(async () => {
-  await fetchCustomers()
+  await fetchVendors()
   if (route.params.id) {
     await fetchOrder(route.params.id)
   }
@@ -378,31 +261,29 @@ const subtotal = computed(() =>
 const tax = computed(() => (subtotal.value * (Number(form.taxRate) || 0)) / 100)
 const total = computed(() => subtotal.value + tax.value)
 
-async function fetchCustomers() {
+async function fetchVendors() {
   try {
-    const response = await apiCustomer.getCustomers()
-    customers.value = response
+    // For now, using dummy vendors. In real app, fetch from API
+    vendors.value = [
+      { id: 'vendor-1', name: 'PT. Supplier AC Indonesia', email: 'supplier@example.com' },
+      { id: 'vendor-2', name: 'CV. Distributor Elektronik', email: 'info@distributor.com' },
+    ]
   } catch (error) {
-    console.error('Error fetching customers:', error)
+    console.error('Error fetching vendors:', error)
   }
 }
 
 async function fetchOrder(id) {
   loading.value = true
   try {
-    const response = await apiSalesOrder.getSalesOrderById(id)
+    const response = await apiPurchaseOrder.getPurchaseOrderById(id)
     const order = response.data
     // Populate form with order data
     form.orderNo = order.order_number
     form.date = order.order_date
-    form.customerId = order.customer_id
-    form.customerName = order.customer?.name || ''
-    // Populate billTo and shipTo if available
-    if (order.customer) {
-      form.billTo.name = order.customer.name
-      form.shipTo.name = order.customer.name
-    }
-    // Populate items from product_lines and service_lines
+    form.vendorId = order.vendor_id
+    form.vendorName = order.vendor?.name || ''
+    // Populate items from product_lines
     form.items = []
     if (order.product_lines) {
       order.product_lines.forEach((line) => {
@@ -410,18 +291,6 @@ async function fetchOrder(id) {
           uid: crypto.randomUUID(),
           name: line.product?.name || 'Product',
           itemId: line.product_id,
-          desc: line.description,
-          unitCost: parseFloat(line.unit_price),
-          qty: parseFloat(line.qty),
-        })
-      })
-    }
-    if (order.service_lines) {
-      order.service_lines.forEach((line) => {
-        form.items.push({
-          uid: crypto.randomUUID(),
-          name: line.service?.name || 'Service',
-          itemId: line.service_id,
           desc: line.description,
           unitCost: parseFloat(line.unit_price),
           qty: parseFloat(line.qty),
@@ -457,7 +326,7 @@ async function submitOrder() {
       subtotal: subtotal.value,
       tax: tax.value,
       total: total.value,
-      customer_id: form.customerId,
+      vendor_id: form.vendorId,
       product_lines: form.items
         .filter((item) => item.itemId)
         .map((item, index) => ({
@@ -469,20 +338,19 @@ async function submitOrder() {
           discount: 0,
           line_total: item.qty * item.unitCost,
         })),
-      service_lines: [], // For now, assuming all are products
     }
 
     if (route.params.id) {
-      await apiSalesOrder.updateSalesOrder(route.params.id, orderData)
-      alert('Sales Order berhasil diperbarui!')
+      await apiPurchaseOrder.updatePurchaseOrder(route.params.id, orderData)
+      alert('Purchase Order berhasil diperbarui!')
     } else {
-      await apiSalesOrder.createSalesOrder(orderData)
-      alert('Sales Order berhasil dibuat!')
+      await apiPurchaseOrder.createPurchaseOrder(orderData)
+      alert('Purchase Order berhasil dibuat!')
     }
-    router.push({ name: 'daftar Sales Order' })
+    router.push({ name: 'pembelian' })
   } catch (error) {
     console.error('Error submitting order:', error)
-    error.value = 'Gagal menyimpan sales order.'
+    error.value = 'Gagal menyimpan purchase order.'
   } finally {
     loading.value = false
   }
@@ -491,7 +359,7 @@ async function submitOrder() {
 async function downloadPDF() {
   const opt = {
     margin: 8,
-    filename: `SalesOrder_${form.orderNo || 'Draft'}.pdf`,
+    filename: `PurchaseOrder_${form.orderNo || 'Draft'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },

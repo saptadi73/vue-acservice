@@ -199,6 +199,10 @@ const navItems = reactive([
     haschildren: true,
     children: [
       {
+        text: 'coa',
+        url: '/finansial/coa',
+      },
+      {
         text: 'Cash',
         url: '/finansial/cashflow',
       },
