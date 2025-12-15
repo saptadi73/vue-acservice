@@ -192,6 +192,24 @@ const navItems = reactive([
         text: 'Daftar Vendor',
         url: '/inventory/vendors',
       },
+      {
+        text: 'Buat Pembelian Baru',
+        url: '/inventory/purchase/new',
+      },
+    ],
+  },
+  {
+    text: 'Jasa',
+    url: '/services',
+    icon: 'fa-solid fa-screwdriver-wrench',
+    open: false,
+    title: false,
+    haschildren: true,
+    children: [
+      {
+        text: 'Daftar Jasa',
+        url: '/services/list',
+      },
     ],
   },
   {

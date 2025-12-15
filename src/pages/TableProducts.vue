@@ -1,104 +1,76 @@
 <template>
-  <div class="p-4">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-xl font-semibold text-gray-800">Daftar Produk</h1>
-      <button class="bg-blue-600 text-white px-3 py-2 rounded-md" @click="openCreateModal">
+  <div class="p-6 space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold text-gray-800">Inventory</h1>
+      <button
+        class="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition"
+        @click="openCreateModal"
+      >
         Tambah Produk
       </button>
     </div>
 
-    <div class="flex items-center gap-2 mb-4">
+    <div class="flex items-center gap-2">
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Cari nama/kode/brand/kategori..."
-        class="border rounded px-3 py-2 w-full max-w-md"
+        class="block w-full max-w-lg px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        @input="resetToFirstPage"
       />
       <button class="bg-gray-100 border px-3 py-2 rounded" @click="fetchAll">Refresh</button>
     </div>
 
-    <div class="overflow-x-auto bg-white rounded shadow">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Gambar
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Nama
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Kode
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Harga
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Stok
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Brand
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Kategori
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Satuan
-            </th>
-            <th
-              class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Aksi
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr v-for="p in paginatedProducts" :key="p.id">
-            <td class="px-4 py-2">
-              <img
-                v-if="p.gambar"
-                :src="resolveImage(p.gambar)"
-                alt="Produk"
-                class="h-12 w-12 object-cover rounded"
-              />
-              <div v-else class="h-12 w-12 bg-gray-100 rounded" />
-            </td>
-            <td class="px-4 py-2 font-medium text-gray-800">{{ p.nama }}</td>
-            <td class="px-4 py-2 text-gray-600">{{ p.kode }}</td>
-            <td class="px-4 py-2 text-gray-800">{{ formatCurrency(p.harga) }}</td>
-            <td class="px-4 py-2 text-gray-800">{{ p.stok }}</td>
-            <td class="px-4 py-2 text-gray-700">{{ p.brand?.nama || '-' }}</td>
-            <td class="px-4 py-2 text-gray-700">{{ p.kategori?.nama || '-' }}</td>
-            <td class="px-4 py-2 text-gray-700">{{ p.satuan?.nama || '-' }}</td>
-            <td class="px-4 py-2 text-right">
-              <button class="text-blue-600 mr-2" @click="openEditModal(p.id)">Edit</button>
-              <button class="text-red-600" @click="openDeleteModal(p.id, p.nama)">Delete</button>
-            </td>
-          </tr>
-          <tr v-if="paginatedProducts.length === 0">
-            <td class="px-4 py-6 text-center text-gray-500" colspan="9">Tidak ada data</td>
-          </tr>
-        </tbody>
-      </table>
+    <div
+      v-if="paginatedProducts.length"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <div
+        v-for="p in paginatedProducts"
+        :key="p.id"
+        class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg card-hover transition-transform duration-300"
+      >
+        <img
+          :src="
+            p.gambar ? resolveImage(p.gambar) : 'https://via.placeholder.com/400x250?text=No+Image'
+          "
+          alt="Gambar produk"
+          class="w-full h-48 object-cover"
+        />
+        <div class="p-4 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="text-lg font-semibold text-gray-800 leading-tight">{{ p.nama }}</h3>
+            <span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+              {{ p.kategori?.nama || 'Tanpa kategori' }}
+            </span>
+          </div>
+          <p class="text-gray-600 text-sm">Kode: {{ p.kode || '-' }}</p>
+          <p class="text-gray-700 text-sm">Brand: {{ p.brand?.nama || '-' }}</p>
+          <p class="text-gray-700 text-sm">Satuan: {{ p.satuan?.nama || '-' }}</p>
+          <p class="text-gray-700 text-sm">Stok: {{ p.stok ?? 0 }}</p>
+          <p class="text-gray-800 font-semibold">Harga: {{ formatCurrency(p.harga) }}</p>
+          <p class="text-gray-600 text-sm">HPP: {{ formatCurrency(p.hpp) }}</p>
+          <p class="text-gray-600 text-sm" v-if="p.tipe || p.model">
+            {{ [p.tipe || p.type, p.model].filter(Boolean).join(' • ') }}
+          </p>
+          <div class="flex items-center justify-between pt-3">
+            <button class="text-blue-600 font-medium" @click="openEditModal(p.id)">Edit</button>
+            <button class="text-red-600 font-medium" @click="openDeleteModal(p.id, p.nama)">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="flex items-center justify-between mt-4">
+    <div
+      v-else
+      class="bg-white border border-dashed border-gray-300 rounded-lg p-10 text-center text-gray-500"
+    >
+      Tidak ada data.
+    </div>
+
+    <div class="flex items-center justify-between">
       <div class="text-sm text-gray-600">Halaman {{ currentPage }} dari {{ totalPages }}</div>
       <div class="flex items-center gap-2">
         <button
@@ -834,4 +806,8 @@ onMounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+</style>

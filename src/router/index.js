@@ -211,17 +211,12 @@ const router = createRouter({
         {
           path: 'list',
           name: 'list',
-          component: () => import('../pages/ListInventory.vue'),
+          component: () => import('../pages/TableProducts.vue'),
         },
         {
           path: 'vendors',
           name: 'vendors',
           component: () => import('../pages/TableVendors.vue'),
-        },
-        {
-          path: 'products',
-          name: 'products',
-          component: () => import('../pages/TableProducts.vue'),
         },
         {
           path: 'keluar',
@@ -294,6 +289,18 @@ const router = createRouter({
           path: 'coa',
           name: 'chart of accounts',
           component: () => import('../pages/TableChartOfAccounts.vue'),
+        },
+      ],
+    },
+    {
+      path: '/services',
+      name: 'services',
+      component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      children: [
+        {
+          path: 'list',
+          name: 'services list',
+          component: () => import('../pages/TableServices.vue'),
         },
       ],
     },
