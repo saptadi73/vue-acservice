@@ -244,6 +244,16 @@ const router = createRouter({
           component: () => import('../pages/PurchaseOrderSample.vue'),
         },
         {
+          path: 'purchase/new',
+          name: 'purchase new',
+          component: () => import('../pages/PurchaseOrderQuick.vue'),
+        },
+        {
+          path: 'purchase/:id',
+          name: 'purchase edit',
+          component: () => import('../pages/PurchaseOrderQuick.vue'),
+        },
+        {
           path: 'pembelian',
           name: 'pembelian',
           component: () => import('../pages/TablePurchasingOrder.vue'),
