@@ -188,6 +188,10 @@ const navItems = reactive([
         text: 'Adjustment',
         url: '/inventory/adjust',
       },
+      {
+        text: 'Daftar Vendor',
+        url: '/inventory/vendors',
+      },
     ],
   },
   {

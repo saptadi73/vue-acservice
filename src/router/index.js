@@ -219,6 +219,11 @@ const router = createRouter({
           component: () => import('../pages/TableVendors.vue'),
         },
         {
+          path: 'products',
+          name: 'products',
+          component: () => import('../pages/TableProducts.vue'),
+        },
+        {
           path: 'keluar',
           name: 'pengeluaran',
           component: () => import('../pages/TablePengeluaranBarang.vue'),
