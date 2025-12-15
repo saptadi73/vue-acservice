@@ -221,9 +221,9 @@
           Reset
         </button>
         <button
-          class="px-3 py-2 bg-blue-600 text-white rounded"
+          class="px-3 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
           @click="submit"
-          :disabled="loading"
+          :disabled="loading || isConfirmed"
         >
           {{ loading ? 'Menyimpan...' : isEdit ? 'Update PO' : 'Simpan PO' }}
         </button>
@@ -258,6 +258,8 @@ const orderNumber = ref('')
 const orderDate = ref(new Date().toISOString().slice(0, 10))
 const status = ref('draft')
 const taxEnabled = ref(true)
+
+const isConfirmed = computed(() => status.value !== 'draft')
 const loading = ref(false)
 const subtotal = computed(() => items.reduce((sum, it) => sum + (it.subtotal || 0), 0))
 const taxTotal = computed(() =>
@@ -474,13 +476,13 @@ function buildLinesPayload() {
       product_id: it.product_id,
       line_number: idx + 1,
       description: it.nama || '',
-      qty: Number(it.qty) || 0,
-      unit_price: Number(it.harga) || 0,
-      discount: Number(it.discount) || 0,
+      qty: (Number(it.qty) || 0).toFixed(2),
+      unit_price: (Number(it.harga) || 0).toFixed(2),
+      discount: (Number(it.discount) || 0).toFixed(2),
       line_total: Math.max(
         0,
         (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
-      ),
+      ).toFixed(2),
     }))
 }
 
@@ -517,9 +519,9 @@ async function createOrder() {
     order_number: orderNumber.value || `PO-${Date.now()}`,
     order_date: orderDate.value,
     status: status.value || 'draft',
-    subtotal: subtotalVal,
-    tax: taxVal,
-    total: subtotalVal + taxVal,
+    subtotal: subtotalVal.toFixed(2),
+    tax: taxVal.toFixed(2),
+    total: (subtotalVal + taxVal).toFixed(2),
     vendor_id: selectedVendor.value.id,
     product_lines: buildLinesPayload(),
   }
@@ -533,9 +535,9 @@ async function updateOrder() {
     order_number: orderNumber.value,
     order_date: orderDate.value,
     status: status.value,
-    subtotal: subtotalVal,
-    tax: taxVal,
-    total: subtotalVal + taxVal,
+    subtotal: subtotalVal.toFixed(2),
+    tax: taxVal.toFixed(2),
+    total: (subtotalVal + taxVal).toFixed(2),
     vendor_id: selectedVendor.value.id,
   }
   const orderId = route.params.id
@@ -553,13 +555,13 @@ async function updateOrder() {
         product_id: it.product_id,
         line_number: items.indexOf(it) + 1,
         description: it.nama || '',
-        qty: Number(it.qty) || 0,
-        unit_price: Number(it.harga) || 0,
-        discount: Number(it.discount) || 0,
+        qty: (Number(it.qty) || 0).toFixed(2),
+        unit_price: (Number(it.harga) || 0).toFixed(2),
+        discount: (Number(it.discount) || 0).toFixed(2),
         line_total: Math.max(
           0,
           (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
-        ),
+        ).toFixed(2),
       })
     }
   }
@@ -569,13 +571,13 @@ async function updateOrder() {
       product_id: it.product_id,
       line_number: items.indexOf(it) + 1,
       description: it.nama || '',
-      qty: Number(it.qty) || 0,
-      unit_price: Number(it.harga) || 0,
-      discount: Number(it.discount) || 0,
+      qty: (Number(it.qty) || 0).toFixed(2),
+      unit_price: (Number(it.harga) || 0).toFixed(2),
+      discount: (Number(it.discount) || 0).toFixed(2),
       line_total: Math.max(
         0,
         (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
-      ),
+      ).toFixed(2),
     })
   }
 }
