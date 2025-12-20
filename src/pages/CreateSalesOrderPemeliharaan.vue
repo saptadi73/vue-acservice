@@ -446,6 +446,7 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const notification = ref({ show: false, message: '', type: 'success' })
+const isEdit = computed(() => Boolean(route.params?.id))
 
 // Form data
 const form = ref({
@@ -474,15 +475,15 @@ const services = ref([])
 const searchCustomer = ref('')
 const customerSearchResults = ref([])
 
-// Watch for totals changes
+// Watch for totals changes with NaN guards
 const totals = computed(() => {
   let subtotal = 0
 
   form.value.productLines.forEach((line) => {
-    subtotal += line.line_total || 0
+    subtotal += toNumber(line.line_total)
   })
   form.value.serviceLines.forEach((line) => {
-    subtotal += line.line_total || 0
+    subtotal += toNumber(line.line_total)
   })
 
   const tax = form.value.useTax ? subtotal * 0.11 : 0 // 11% tax or 0 if disabled
@@ -503,6 +504,12 @@ function formatCurrency(num) {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(num)
+}
+
+// Convert any value to finite number or default to 0
+function toNumber(val) {
+  const parsed = Number(val)
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 // Generate order number
@@ -582,8 +589,15 @@ function removeServiceLine(idx) {
 
 // Calculate line total
 function calculateLineTotal(line) {
-  line.line_total = line.qty * line.unit_price - (line.discount || 0)
-  if (line.line_total < 0) line.line_total = 0
+  const qty = toNumber(line.qty)
+  const unitPrice = toNumber(line.unit_price)
+  const discount = toNumber(line.discount)
+
+  const total = qty * unitPrice - discount
+  line.qty = qty
+  line.unit_price = unitPrice
+  line.discount = discount
+  line.line_total = Number.isFinite(total) && total > 0 ? total : 0
 }
 
 // Show notification
@@ -649,9 +663,15 @@ async function saveSalesOrder() {
 
     console.log('Payload yang dikirim ke API:', payload)
 
-    const res = await api.post('orders/sale', payload)
+    const res = isEdit.value
+      ? await api.post(`orders/update/sale/${route.params.id}`, payload)
+      : await api.post('orders/sale', payload)
+
     if (res.data.status || res.data.success) {
-      showNotification('Sales Order berhasil dibuat!', 'success')
+      showNotification(
+        isEdit.value ? 'Sales Order berhasil diperbarui!' : 'Sales Order berhasil dibuat!',
+        'success',
+      )
       setTimeout(() => {
         router.push({ name: 'daftar Sales Order' })
       }, 1500)
@@ -736,6 +756,11 @@ onMounted(async () => {
   form.value.order_number = generateOrderNumber()
   await Promise.all([fetchProducts(), fetchServices()])
 
+  if (isEdit.value) {
+    await loadSalesOrder(route.params.id)
+    return
+  }
+
   // Prefill customer from WorkOrder navigation
   const cid = route.query?.customer_id
   const cname = route.query?.customer_name
@@ -760,4 +785,62 @@ onMounted(async () => {
     console.log('Customer set without ID (manual entry)')
   }
 })
+
+// Load existing sales order for edit mode
+async function loadSalesOrder(id) {
+  try {
+    loading.value = true
+    const res = await api.get(`/orders/sale/${id}`)
+    const data = res?.data?.data || {}
+
+    form.value.order_number = data.order_number || ''
+    form.value.order_date = data.order_date || form.value.order_date
+    form.value.status = data.status || 'draft'
+    form.value.keterangan = data.keterangan || ''
+    form.value.useTax = data.tax ? data.tax > 0 : form.value.useTax
+
+    // Customer
+    const customerId = data.customer_id || data.customer?.id
+    form.value.customer.id = customerId || null
+    form.value.customer.nama = data.nama || data.customer?.nama || ''
+    form.value.customer.alamat = data.alamat || data.customer?.alamat || ''
+    form.value.customer.no_hp = data.hp || data.customer?.hp || ''
+
+    // Product lines
+    form.value.productLines = (data.product_lines || []).map((line, idx) => ({
+      product_id: line.product_id ?? line.product?.id ?? null,
+      line_number: line.line_number ?? idx + 1,
+      description: line.description || line.product?.nama || '',
+      qty: toNumber(line.qty),
+      unit_price: toNumber(line.unit_price ?? line.harga),
+      hpp: toNumber(line.hpp),
+      discount: toNumber(line.discount),
+      line_total: toNumber(line.line_total ?? line.subtotal),
+      showDropdown: false,
+    }))
+
+    // Service lines
+    form.value.serviceLines = (data.service_lines || []).map((line, idx) => ({
+      service_id: line.service_id ?? line.service?.id ?? null,
+      line_number: line.line_number ?? idx + 1,
+      description: line.description || line.service?.nama || '',
+      qty: toNumber(line.qty),
+      unit_price: toNumber(line.unit_price ?? line.harga),
+      discount: toNumber(line.discount),
+      line_total: toNumber(line.line_total ?? line.subtotal),
+      showDropdown: false,
+    }))
+
+    // Recalculate to guarantee clean totals
+    form.value.productLines.forEach((line) => calculateLineTotal(line))
+    form.value.serviceLines.forEach((line) => calculateLineTotal(line))
+
+    console.log('Sales order loaded for edit:', data)
+  } catch (err) {
+    console.error('Gagal memuat Sales Order:', err)
+    showNotification('Gagal memuat Sales Order', 'error')
+  } finally {
+    loading.value = false
+  }
+}
 </script>
