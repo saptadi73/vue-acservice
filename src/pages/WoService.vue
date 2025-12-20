@@ -619,12 +619,22 @@
         </div>
       </div>
     </div>
-    <button
-      class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createWorkOrder"
-    >
-      simpan perubahan
-    </button>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 mt-6">
+      <button
+        class="flex-1 bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-slate-700 transition"
+        @click="createWorkOrder"
+      >
+        Simpan Perubahan
+      </button>
+      <button
+        class="flex-1 bg-green-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-green-700 transition"
+        @click="createSalesOrder"
+      >
+        + Buat Sales Order
+      </button>
+    </div>
   </div>
   <loading-overlay />
   <ToastCard v-if="show_toast" :message="message_toast" @close="tutupToast" />
@@ -632,7 +642,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
@@ -730,6 +740,20 @@ async function createWorkOrder() {
   } finally {
     loadingStore.hide()
   }
+}
+
+function createSalesOrder() {
+  // Navigate ke halaman create sales order
+  // Pass customer data
+  const router = useRouter()
+  router.push({
+    name: 'create sales order maintenance',
+    params: {
+      customerName: nama_pelanggan.value,
+      customerAddress: alamat.value,
+      customerPhone: no_hp.value,
+    },
+  })
 }
 
 async function getForNewWorkOrder(id) {

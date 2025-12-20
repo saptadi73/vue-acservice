@@ -702,6 +702,12 @@
     >
       Buat Link untuk Pelanggan
     </button>
+    <button
+      class="bg-blue-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md hover:bg-blue-700"
+      @click="createSalesOrder"
+    >
+      + Buat Sales Order
+    </button>
   </div>
   <loading-overlay />
   <ToastCard v-if="show_toast" :message="message_toast" @close="tutupToast" />
@@ -709,7 +715,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
@@ -925,6 +931,19 @@ onMounted(() => {
   getForNewWorkOrder(customerAssetId)
   getPegawai()
 })
+
+const router = useRouter()
+function createSalesOrder() {
+  router.push({
+    name: 'create sales order maintenance',
+    query: {
+      customer_id: formData.value.customer_asset_id,
+      customer_name: nama_pelanggan.value,
+      customer_address: alamat.value,
+      customer_phone: no_hp.value,
+    },
+  })
+}
 
 import { computed } from 'vue'
 const teknisiSignUrl = computed(() => {

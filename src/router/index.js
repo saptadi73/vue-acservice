@@ -140,6 +140,16 @@ const router = createRouter({
           component: () => import('../pages/TableSalesorder.vue'),
         },
         {
+          path: 'sales/create-maintenance',
+          name: 'create sales order maintenance',
+          component: () => import('../pages/CreateSalesOrderPemeliharaan.vue'),
+        },
+        {
+          path: 'sales/edit/:id',
+          name: 'edit sales order',
+          component: () => import('../pages/CreateSalesOrderPemeliharaan.vue'),
+        },
+        {
           path: 'new/form',
           name: 'wo baru',
           component: () => import('../pages/WOFormTemplate.vue'),

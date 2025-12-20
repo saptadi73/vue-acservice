@@ -1,334 +1,439 @@
 <template>
-  <div class="container mx-auto mt-10 space-y-4">
-    <!-- Toolbar: Search + Tambah -->
-    <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-      <div class="relative w-full md:max-w-md">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Cari SO, nama pelanggan, HP, plat, mekanik, kasir, status, tanggal…"
-          class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Cari Sales Order"
-        />
-        <!-- icon search -->
-        <svg
-          class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <path
-            d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </div>
-
-      <div class="flex gap-2">
-        <button
-          v-if="searchQuery"
-          type="button"
-          class="rounded-xl bg-white px-4 py-2 text-gray-700 ring-1 ring-gray-200 hover:bg-gray-50"
-          @click="searchQuery = ''"
-          title="Bersihkan pencarian"
-        >
-          Bersihkan
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-white font-medium shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @click="handleTambah"
-        >
-          <span class="material-symbols-outlined">add</span>
-          Tambah Sales Order
-        </button>
-      </div>
-    </div>
-
-    <!-- Info kecil -->
-    <p class="text-sm text-gray-500">
-      Menampilkan {{ filteredOrders.length }} dari {{ orders.length }} data.
-    </p>
-
-    <!-- Loading indicator -->
-    <div v-if="loading" class="text-center py-10">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="mt-2 text-gray-600">Memuat data...</p>
-    </div>
-
-    <!-- Error message -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-      <p class="text-red-700">{{ error }}</p>
-      <button @click="fetchOrders" class="mt-2 text-red-600 underline">Coba lagi</button>
-    </div>
-
-    <!-- Tabel untuk layar lebar -->
-    <table
-      class="min-w-full bg-white border border-blue-100 rounded-2xl shadow-xl overflow-hidden hidden md:table"
-    >
-      <thead class="bg-gradient-to-r from-blue-100 to-teal-100">
-        <tr>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">No. Sales Order</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Nama Pelanggan</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Email</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Subtotal</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Pajak</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Total</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Tanggal</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Status</th>
-          <th class="px-6 py-4 text-left text-sm font-semibold text-blue-700">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(order, index) in filteredOrders"
-          :key="order.id"
-          :class="
-            (index % 2 === 0 ? 'bg-teal-50' : 'bg-white') + ' hover:bg-blue-50 transition-all'
-          "
-        >
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.order_number }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.customer?.name }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ order.customer?.email }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.subtotal) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.tax) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">{{ formatCurrency(order.total) }}</td>
-          <td class="px-6 py-4 text-sm text-gray-700">
-            {{ new Date(order.created_at).toLocaleDateString('id-ID') }}
-          </td>
-          <td class="px-6 py-4 text-sm">
-            <span
-              :class="getStatusClass(order.status) + ' px-3 py-1 rounded-full text-xs font-bold'"
-            >
-              {{ order.status }}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm">
-            <button
-              v-if="order.status === 'confirmed'"
-              class="border border-green-400 bg-transparent text-green-600 p-2 shadow hover:ring-2 hover:ring-green-300 transition-all duration-200"
-              @click="handleBayar(order)"
-              title="Bayar"
-            >
-              <span class="material-symbols-outlined">point_of_sale</span>
-            </button>
-            <button
-              v-if="order.status === 'draft'"
-              class="border border-orange-400 bg-transparent text-orange-500 p-2 shadow hover:ring-2 hover:ring-orange-300 transition-all duration-200"
-              @click="handleEdit(order)"
-              title="Edit"
-            >
-              <span class="material-symbols-outlined">edit_square</span>
-            </button>
-            <button
-              v-if="order.status === 'paid'"
-              class="border border-blue-400 bg-transparent text-blue-600 p-2 shadow hover:ring-2 hover:ring-blue-300 transition-all duration-200"
-              @click="handleCetak(order)"
-              title="Cetak"
-            >
-              <span class="material-symbols-outlined">print</span>
-            </button>
-            <button
-              class="border border-red-400 bg-transparent text-red-500 p-2 shadow hover:ring-2 hover:ring-red-300 transition-all duration-200 mt-2"
-              @click="handleDelete(order)"
-              title="Hapus"
-            >
-              <span class="material-symbols-outlined">delete</span>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Card per baris untuk layar mobile -->
-    <div class="md:hidden">
-      <div
-        v-for="order in filteredOrders"
-        :key="order.id"
-        class="bg-white border border-blue-100 rounded-2xl shadow-xl mb-4 p-6 hover:shadow-blue-200 transition-all duration-200"
+  <div class="p-6 space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-gray-800">Daftar Sales Order</h1>
+      <button
+        @click="createNew"
+        class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium"
       >
-        <div class="flex justify-between mb-2">
-          <h3 class="text-lg font-bold text-blue-700">No. SO: {{ order.noSalesOrder }}</h3>
-          <span
-            :class="getStatusClass(order.status) + ' px-3 py-1 rounded-full text-xs font-bold'"
-            >{{ order.status }}</span
+        + Buat Sales Order Baru
+      </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Search by Order Number or Customer Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Cari Order atau Pelanggan</label
           >
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="No. Order atau nama pelanggan..."
+            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-        <p class="text-sm text-gray-600">Pelanggan: {{ order.customer?.name }}</p>
-        <p class="text-sm text-gray-600">Email: {{ order.customer?.email }}</p>
-        <p class="text-sm text-gray-600">Subtotal: {{ formatCurrency(order.subtotal) }}</p>
-        <p class="text-sm text-gray-600">Pajak: {{ formatCurrency(order.tax) }}</p>
-        <p class="text-sm text-gray-600">Total: {{ formatCurrency(order.total) }}</p>
-        <p class="text-sm text-gray-600">
-          Tanggal: {{ new Date(order.created_at).toLocaleDateString('id-ID') }}
-        </p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <button
-            v-if="order.status === 'Invoiced'"
-            class="border border-green-400 bg-transparent text-green-600 px-3 py-2 shadow hover:ring-2 hover:ring-green-300 transition-all duration-200"
-            @click="handleBayar(order.id)"
+
+        <!-- Filter by Status -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filter Status</label>
+          <select
+            v-model="filterStatus"
+            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <span class="material-symbols-outlined">point_of_sale</span> Bayar
-          </button>
+            <option value="">Semua Status</option>
+            <option value="draft">Draft</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="paid">Paid</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="flex items-end">
           <button
-            v-if="order.status === 'Open'"
-            class="border border-orange-400 bg-transparent text-orange-500 px-3 py-2 shadow hover:ring-2 hover:ring-orange-300 transition-all duration-200"
-            @click="handleEdit(order.id)"
+            @click="resetFilters"
+            class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition font-medium"
           >
-            <span class="material-symbols-outlined">edit_square</span> Edit
-          </button>
-          <button
-            v-if="order.status === 'Paid'"
-            class="border border-blue-400 bg-transparent text-blue-600 px-3 py-2 shadow hover:ring-2 hover:ring-blue-300 transition-all duration-200"
-            @click="handleCetak(order.id)"
-          >
-            <span class="material-symbols-outlined">print</span> Cetak
-          </button>
-          <button
-            class="border border-red-400 bg-transparent text-red-500 px-3 py-2 shadow hover:ring-2 hover:ring-red-300 transition-all duration-200"
-            @click="handleDelete(order.id)"
-          >
-            <span class="material-symbols-outlined">delete</span> Delete
+            Reset Filter
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Empty state -->
+    <!-- Table Section -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div v-if="loading" class="p-8 text-center text-gray-500">
+        <p>Loading data...</p>
+      </div>
+
+      <div v-else-if="filteredSalesOrders.length === 0" class="p-8 text-center text-gray-500">
+        <p>Tidak ada data Sales Order</p>
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-300">
+          <thead class="bg-blue-50">
+            <tr>
+              <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">No</th>
+              <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">
+                No. Order
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">
+                Tanggal
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">
+                Pelanggan
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold">
+                Alamat
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-right text-sm font-semibold">
+                Total
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-center text-sm font-semibold">
+                Status
+              </th>
+              <th class="border border-gray-300 px-4 py-3 text-center text-sm font-semibold">
+                Aksi
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(order, idx) in paginatedSalesOrders"
+              :key="order.id"
+              class="hover:bg-gray-50"
+            >
+              <td class="border border-gray-300 px-4 py-3 text-sm">
+                {{ (currentPage - 1) * itemsPerPage + idx + 1 }}
+              </td>
+              <td class="border border-gray-300 px-4 py-3 text-sm font-semibold">
+                {{ order.order_number }}
+              </td>
+              <td class="border border-gray-300 px-4 py-3 text-sm">
+                {{ formatDate(order.order_date) }}
+              </td>
+              <td class="border border-gray-300 px-4 py-3 text-sm">{{ order.nama }}</td>
+              <td class="border border-gray-300 px-4 py-3 text-sm">{{ order.alamat }}</td>
+              <td class="border border-gray-300 px-4 py-3 text-sm text-right font-semibold">
+                {{ formatCurrency(order.total) }}
+              </td>
+              <td class="border border-gray-300 px-4 py-3 text-center">
+                <span
+                  :class="{
+                    'bg-yellow-100 text-yellow-800': order.status === 'draft',
+                    'bg-blue-100 text-blue-800': order.status === 'confirmed',
+                    'bg-green-100 text-green-800': order.status === 'paid',
+                  }"
+                  class="px-3 py-1 rounded-full text-xs font-semibold"
+                >
+                  {{ capitalizeStatus(order.status) }}
+                </span>
+              </td>
+              <td class="border border-gray-300 px-4 py-3 text-center">
+                <div class="flex gap-2 justify-center">
+                  <button
+                    @click="editOrder(order.id)"
+                    class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="openDeleteModal(order.id, order.order_number)"
+                    class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination Section -->
+    <div v-if="totalPages > 1" class="bg-white rounded-lg shadow-md p-4">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
+          {{ Math.min(currentPage * itemsPerPage, filteredSalesOrders.length) }} dari
+          {{ filteredSalesOrders.length }} data
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            @click="previousPage"
+            :disabled="currentPage === 1"
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Sebelumnya
+          </button>
+
+          <div class="flex items-center gap-1">
+            <button
+              v-for="page in visiblePages"
+              :key="page"
+              @click="currentPage = page"
+              :class="{
+                'bg-blue-600 text-white': page === currentPage,
+                'border border-gray-300 hover:bg-gray-50': page !== currentPage,
+              }"
+              class="px-3 py-2 rounded transition"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
+            class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Selanjutnya →
+          </button>
+        </div>
+
+        <div class="text-sm text-gray-700">Halaman {{ currentPage }} dari {{ totalPages }}</div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
     <div
-      v-if="!loading && !error && !filteredOrders.length"
-      class="text-center text-gray-500 py-10"
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
-      Tidak ada data yang cocok dengan pencarian.
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Konfirmasi Hapus</h2>
+        <p class="text-gray-600 mb-6">
+          Apakah Anda yakin ingin menghapus Sales Order <strong>{{ selectedOrderNumber }}</strong
+          >?
+        </p>
+        <div class="flex gap-4">
+          <button
+            @click="showDeleteModal = false"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition font-medium"
+          >
+            Batal
+          </button>
+          <button
+            @click="deleteOrder"
+            :disabled="deleting"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-medium disabled:opacity-50"
+          >
+            {{ deleting ? 'Menghapus...' : 'Hapus' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div v-if="notification.show" class="fixed top-4 right-4 z-50">
+      <div
+        :class="{
+          'bg-green-50 border-l-4 border-green-500': notification.type === 'success',
+          'bg-red-50 border-l-4 border-red-500': notification.type === 'error',
+        }"
+        class="p-4 rounded shadow-lg max-w-md"
+      >
+        <p
+          :class="{
+            'text-green-800': notification.type === 'success',
+            'text-red-800': notification.type === 'error',
+          }"
+        >
+          {{ notification.message }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
-<script>
-import * as apiSalesOrder from './apiSalesOrder.js'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+import api from '@/user/axios'
+import { BASE_URL } from '@/base.utils.url'
 
-export default {
-  data() {
-    return {
-      searchQuery: '',
-      orders: [],
-      loading: false,
-      error: null,
-    }
-  },
-  mounted() {
-    this.fetchOrders()
-  },
-  computed: {
-    filteredOrders() {
-      const q = this.searchQuery.trim().toLowerCase()
-      if (!q) return this.orders
+const router = useRouter()
 
-      return this.orders.filter((o) => {
-        const haystack = [
-          o.order_number,
-          o.customer?.name,
-          o.customer?.email,
-          o.status,
-          new Date(o.created_at).toLocaleDateString('id-ID'),
-        ]
-          .filter(Boolean)
-          .join(' | ')
-          .toLowerCase()
+// State
+const salesOrders = ref([])
+const loading = ref(false)
+const searchQuery = ref('')
+const filterStatus = ref('')
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+const showDeleteModal = ref(false)
+const selectedOrderId = ref(null)
+const selectedOrderNumber = ref('')
+const deleting = ref(false)
+const notification = ref({ show: false, message: '', type: 'success' })
 
-        return haystack.includes(q)
-      })
-    },
-  },
-  methods: {
-    async fetchOrders() {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await apiSalesOrder.getSalesOrders()
-        this.orders = response.data
-      } catch (error) {
-        console.error('Error fetching sales orders:', error)
-        this.error = 'Gagal memuat data sales order.'
-      } finally {
-        this.loading = false
-      }
-    },
-    handleTambah() {
-      this.$router.push({ name: 'sales form' })
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-      }).format(value)
-    },
-    getStatusClass(status) {
-      switch (status) {
-        case 'paid':
-          return 'text-green-600 font-semibold'
-        case 'confirmed':
-          return 'text-blue-600 font-semibold'
-        case 'draft':
-          return 'text-yellow-600 font-semibold'
-        default:
-          return 'text-gray-600'
-      }
-    },
-    handleBayar(order) {
-      // Update status to paid
-      this.updateOrderStatus(order.id, 'paid')
-    },
-    handleEdit(order) {
-      this.$router.push({ name: 'sales form', params: { id: order.id } })
-    },
-    handleCetak(order) {
-      // For now, just show alert
-      alert(`Cetak invoice untuk order ${order.order_number}`)
-    },
-    async handleDelete(order) {
-      if (confirm(`Apakah Anda yakin ingin menghapus Sales Order ${order.order_number}?`)) {
-        try {
-          // Assuming delete endpoint exists, but based on payload, it's for product lines
-          // For now, just remove from local state
-          this.orders = this.orders.filter((o) => o.id !== order.id)
-          alert('Sales Order berhasil dihapus!')
-        } catch (error) {
-          console.error('Error deleting order:', error)
-          this.error = 'Gagal menghapus sales order.'
-        }
-      }
-    },
-    async updateOrderStatus(orderId, status) {
-      try {
-        await apiSalesOrder.updateSalesOrder(orderId, { status })
-        await this.fetchOrders() // Refresh data
-        alert('Status berhasil diperbarui!')
-      } catch (error) {
-        console.error('Error updating status:', error)
-        this.error = 'Gagal memperbarui status.'
-      }
-    },
-  },
+// Computed: Filtered sales orders
+const filteredSalesOrders = computed(() => {
+  let filtered = salesOrders.value
+
+  // Filter by search query
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(
+      (order) =>
+        (order.order_number && order.order_number.toLowerCase().includes(query)) ||
+        (order.nama && order.nama.toLowerCase().includes(query)),
+    )
+  }
+
+  // Filter by status
+  if (filterStatus.value) {
+    filtered = filtered.filter((order) => order.status === filterStatus.value)
+  }
+
+  return filtered
+})
+
+// Computed: Paginated sales orders
+const paginatedSalesOrders = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredSalesOrders.value.slice(start, end)
+})
+
+// Computed: Total pages
+const totalPages = computed(() => {
+  return Math.ceil(filteredSalesOrders.value.length / itemsPerPage.value)
+})
+
+// Computed: Visible pages for pagination
+const visiblePages = computed(() => {
+  const pages = []
+  const maxVisible = 5
+  let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
+  let end = Math.min(totalPages.value, start + maxVisible - 1)
+
+  if (end - start < maxVisible - 1) {
+    start = Math.max(1, end - maxVisible + 1)
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  return pages
+})
+
+// Format currency
+function formatCurrency(num) {
+  if (!num || num === 0) return 'Rp 0'
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(num)
 }
+
+// Format date
+function formatDate(dateString) {
+  if (!dateString) return '-'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+// Capitalize status
+function capitalizeStatus(status) {
+  const map = {
+    draft: 'Draft',
+    confirmed: 'Confirmed',
+    paid: 'Paid',
+  }
+  return map[status] || status
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+  notification.value = { show: true, message, type }
+  setTimeout(() => {
+    notification.value.show = false
+  }, 3000)
+}
+
+// Pagination handlers
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+// Reset filters
+function resetFilters() {
+  searchQuery.value = ''
+  filterStatus.value = ''
+  currentPage.value = 1
+}
+
+// CRUD operations
+function createNew() {
+  router.push({ name: 'create sales order maintenance' })
+}
+
+function editOrder(id) {
+  router.push({
+    name: 'edit sales order',
+    params: { id },
+  })
+}
+
+function openDeleteModal(id, orderNumber) {
+  selectedOrderId.value = id
+  selectedOrderNumber.value = orderNumber
+  showDeleteModal.value = true
+}
+
+async function deleteOrder() {
+  if (!selectedOrderId.value) return
+
+  deleting.value = true
+  try {
+    const response = await api.post(`orders/sale/delete/${selectedOrderId.value}`)
+    showNotification(response.data.message || 'Sales Order berhasil dihapus', 'success')
+
+    // Refresh list
+    await fetchSalesOrders()
+    showDeleteModal.value = false
+  } catch (error) {
+    console.error('Error deleting sales order:', error)
+    const errorMsg = error.response?.data?.message || 'Gagal menghapus Sales Order'
+    showNotification(errorMsg, 'error')
+  } finally {
+    deleting.value = false
+  }
+}
+
+// Fetch sales orders
+async function fetchSalesOrders() {
+  loading.value = true
+  try {
+    const response = await axios.get(`${BASE_URL}orders/sale`)
+    salesOrders.value = Array.isArray(response.data.data) ? response.data.data : []
+    currentPage.value = 1
+    console.log('Sales orders fetched:', salesOrders.value)
+  } catch (error) {
+    console.error('Error fetching sales orders:', error)
+    showNotification('Gagal memuat data Sales Order', 'error')
+    salesOrders.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Initialize
+onMounted(() => {
+  fetchSalesOrders()
+})
 </script>
 
-<style scoped>
-/* optional: kecilkan ikon material agar pas di tombol */
-.material-symbols-outlined {
-  font-size: 18px;
-  line-height: 1;
-}
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-th,
-td {
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-</style>
+<style lang="scss" scoped></style>

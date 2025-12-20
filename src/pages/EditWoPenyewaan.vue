@@ -745,6 +745,12 @@
     >
       Buat Link untuk Pelanggan
     </button>
+    <button
+      class="bg-blue-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md hover:bg-blue-700"
+      @click="createSalesOrder"
+    >
+      + Buat Sales Order
+    </button>
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
@@ -753,7 +759,7 @@
 <script setup>
 // Import yang diperlukan
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
@@ -1028,6 +1034,19 @@ const teknisiSignUrl = computed(() => {
   }
   return null
 })
+
+const router = useRouter()
+function createSalesOrder() {
+  router.push({
+    name: 'create sales order maintenance',
+    query: {
+      customer_id: selectedCustomerId.value,
+      customer_name: nama_pelanggan.value,
+      customer_address: alamat.value,
+      customer_phone: no_hp.value,
+    },
+  })
+}
 
 // Lifecycle
 onMounted(() => {

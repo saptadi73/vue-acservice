@@ -105,6 +105,10 @@ const navItems = reactive([
         url: '/wo/sewa/baru',
       },
       {
+        text: 'Daftar Sales Order',
+        url: '/wo/sales/list',
+      },
+      {
         text: 'Daftar Penjualan',
         url: '/wo/sales/list',
       },
