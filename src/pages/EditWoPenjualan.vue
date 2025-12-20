@@ -625,6 +625,7 @@ function tutupToast() {
 // Routing dan data utama
 const route = useRoute()
 const customerAssetId = route.params.id
+const customer_id = ref('')
 const nama_pelanggan = ref('')
 const alamat = ref('')
 const no_hp = ref('')
@@ -715,6 +716,7 @@ async function getForNewWorkOrder(id) {
   try {
     const response = await axios.get(`${BASE_URL}wo/penjualan/${id}`)
     console.log('Work order data:', response.data.data)
+    customer_id.value = response.data.data.customer_asset.customer.id
     nama_pelanggan.value = response.data.data.customer_asset.customer.nama
     alamat.value = response.data.data.customer_asset.customer.alamat
     no_hp.value = response.data.data.customer_asset.customer.hp
@@ -808,7 +810,7 @@ function createSalesOrder() {
   router.push({
     name: 'create sales order maintenance',
     query: {
-      customer_id: formData.value.customer_asset_id,
+      customer_id: customer_id.value,
       customer_name: nama_pelanggan.value,
       customer_address: alamat.value,
       customer_phone: no_hp.value,

@@ -38,8 +38,8 @@
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Customer Search / Select -->
-          <div>
+          <!-- Customer Search / Select - Only show if customer not prefilled from WO -->
+          <div v-if="!form.customer.id">
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Cari Pelanggan atau Buat Baru
             </label>
@@ -525,7 +525,7 @@ async function searchCustomers() {
   }
 
   try {
-    const res = await axios.get(`${BASE_URL}customers`)
+    const res = await api.get('customers')
     const allCustomers = res.data.data || []
     customerSearchResults.value = allCustomers.filter((c) =>
       c.nama.toLowerCase().includes(searchCustomer.value.toLowerCase()),
@@ -602,6 +602,11 @@ async function saveSalesOrder() {
     return
   }
 
+  if (!form.value.customer.id) {
+    showNotification('Mohon pilih pelanggan dari dropdown', 'error')
+    return
+  }
+
   if (form.value.productLines.length === 0 && form.value.serviceLines.length === 0) {
     showNotification('Mohon tambahkan minimal satu produk atau jasa', 'error')
     return
@@ -613,7 +618,7 @@ async function saveSalesOrder() {
       order_number: form.value.order_number,
       order_date: form.value.order_date,
       status: form.value.status,
-      customer_id: form.value.customer.id || undefined,
+      customer_id: form.value.customer.id,
       nama: form.value.customer.nama,
       alamat: form.value.customer.alamat,
       hp: form.value.customer.no_hp,
@@ -641,6 +646,8 @@ async function saveSalesOrder() {
         line_total: line.line_total,
       })),
     }
+
+    console.log('Payload yang dikirim ke API:', payload)
 
     const res = await api.post('orders/sale', payload)
     if (res.data.status || res.data.success) {
@@ -735,35 +742,22 @@ onMounted(async () => {
   const caddr = route.query?.customer_address
   const cphone = route.query?.customer_phone
 
-  try {
-    if (cid) {
-      // Fetch customers and select by id
-      const res = await axios.get(`${BASE_URL}customers`)
-      const allCustomers = Array.isArray(res?.data?.data) ? res.data.data : []
-      const found = allCustomers.find((c) => String(c.id) === String(cid))
-      if (found) {
-        selectCustomer(found)
-      } else {
-        // Fallback to provided name/address/phone
-        form.value.customer.id = Number(cid)
-        form.value.customer.nama = cname || ''
-        form.value.customer.alamat = caddr || ''
-        form.value.customer.no_hp = cphone || ''
-      }
-    } else if (cname || caddr || cphone) {
-      // If only details provided without id
-      form.value.customer.nama = cname || ''
-      form.value.customer.alamat = caddr || ''
-      form.value.customer.no_hp = cphone || ''
-    }
-  } catch (e) {
-    // Silent fail and keep manual entry
-    console.warn('Prefill customer failed:', e)
-    if (cname || caddr || cphone) {
-      form.value.customer.nama = cname || ''
-      form.value.customer.alamat = caddr || ''
-      form.value.customer.no_hp = cphone || ''
-    }
+  // Set customer data directly from query params
+  if (cid) {
+    form.value.customer.id = cid
+    form.value.customer.nama = cname || ''
+    form.value.customer.alamat = caddr || ''
+    form.value.customer.no_hp = cphone || ''
+    console.log('Customer set from WorkOrder:', {
+      id: form.value.customer.id,
+      nama: form.value.customer.nama,
+    })
+  } else if (cname || caddr || cphone) {
+    // If only details provided without id (shouldn't happen from WO)
+    form.value.customer.nama = cname || ''
+    form.value.customer.alamat = caddr || ''
+    form.value.customer.no_hp = cphone || ''
+    console.log('Customer set without ID (manual entry)')
   }
 })
 </script>
