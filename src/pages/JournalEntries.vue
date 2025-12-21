@@ -262,10 +262,10 @@
 
           <!-- Description -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
             <textarea
               v-model="formData.description"
-              placeholder="Deskripsi jurnal"
+              placeholder="Deskripsi jurnal (opsional)"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               rows="2"
             ></textarea>
@@ -302,6 +302,8 @@
                 <thead>
                   <tr class="bg-gray-100">
                     <th class="px-3 py-2 text-left font-medium text-gray-700">Akun CoA</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-700">Vendor</th>
+                    <th class="px-3 py-2 text-left font-medium text-gray-700">Customer</th>
                     <th class="px-3 py-2 text-left font-medium text-gray-700">Deskripsi</th>
                     <th class="px-3 py-2 text-right font-medium text-gray-700">Debit</th>
                     <th class="px-3 py-2 text-right font-medium text-gray-700">Credit</th>
@@ -310,14 +312,90 @@
                 </thead>
                 <tbody>
                   <tr v-for="(line, idx) in formData.lines" :key="idx" class="border-t">
-                    <td class="px-3 py-2">
+                    <td class="px-3 py-2 relative">
                       <input
-                        v-model="line.account_code"
+                        v-model="line.account_search"
+                        @input="searchAccounts(idx)"
+                        @focus="showAccountDropdown[idx] = true"
+                        @blur="hideAccountDropdown(idx)"
                         type="text"
-                        placeholder="Pilih akun"
+                        placeholder="Ketik kode/nama akun..."
                         class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-purple-500"
                       />
-                      <div class="text-xs text-gray-500 mt-1">{{ line.account_name }}</div>
+
+                      <!-- Dropdown Results -->
+                      <div
+                        v-if="showAccountDropdown[idx] && accountSearchResults[idx]?.length > 0"
+                        class="absolute z-50 mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                      >
+                        <div
+                          v-for="account in accountSearchResults[idx]"
+                          :key="account.id"
+                          @mousedown.prevent="selectAccount(idx, account)"
+                          class="px-3 py-2 hover:bg-purple-100 cursor-pointer border-b last:border-b-0"
+                        >
+                          <div class="font-semibold text-xs text-purple-600">
+                            {{ account.code }} - {{ account.name }}
+                          </div>
+                          <div class="text-[10px] text-gray-500">{{ account.type }}</div>
+                        </div>
+                      </div>
+
+                      <!-- Selected account helper intentionally removed to avoid duplicate display -->
+                    </td>
+                    <!-- Vendor Column -->
+                    <td class="px-3 py-2 relative">
+                      <input
+                        v-model="line.vendor_search"
+                        @input="searchVendors(idx)"
+                        @focus="showVendorDropdown[idx] = true"
+                        @blur="hideVendorDropdown(idx)"
+                        type="text"
+                        placeholder="Vendor"
+                        class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500"
+                      />
+                      <div
+                        v-if="showVendorDropdown[idx] && vendorSearchResults[idx]?.length > 0"
+                        class="absolute z-50 mt-1 w-56 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto"
+                      >
+                        <div
+                          v-for="vendor in vendorSearchResults[idx]"
+                          :key="vendor.id"
+                          @mousedown.prevent="selectVendor(idx, vendor)"
+                          class="px-3 py-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                        >
+                          <div class="font-semibold text-xs text-blue-600">{{ vendor.nama }}</div>
+                          <div class="text-[10px] text-gray-500">{{ vendor.hp }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <!-- Customer Column -->
+                    <td class="px-3 py-2 relative">
+                      <input
+                        v-model="line.customer_search"
+                        @input="searchCustomers(idx)"
+                        @focus="showCustomerDropdown[idx] = true"
+                        @blur="hideCustomerDropdown(idx)"
+                        type="text"
+                        placeholder="Customer"
+                        class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-green-500"
+                      />
+                      <div
+                        v-if="showCustomerDropdown[idx] && customerSearchResults[idx]?.length > 0"
+                        class="absolute z-50 mt-1 w-56 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto"
+                      >
+                        <div
+                          v-for="customer in customerSearchResults[idx]"
+                          :key="customer.id"
+                          @mousedown.prevent="selectCustomer(idx, customer)"
+                          class="px-3 py-2 hover:bg-green-100 cursor-pointer border-b last:border-b-0"
+                        >
+                          <div class="font-semibold text-xs text-green-600">
+                            {{ customer.kode_pelanggan }} - {{ customer.nama }}
+                          </div>
+                          <div class="text-[10px] text-gray-500">{{ customer.hp }}</div>
+                        </div>
+                      </div>
                     </td>
                     <td class="px-3 py-2">
                       <input
@@ -570,17 +648,29 @@ import {
   updateJournalEntry,
   deleteJournalEntry,
 } from './apiJournalEntries'
+import { getChartOfAccounts } from './apiChartOfAccounts'
+import { getVendors } from './apiVendors'
+import { getCustomers } from './apiCustomers'
 
 export default {
   name: 'JournalEntries',
   data() {
+    const today = new Date()
+    const startMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const formatDate = (d) => {
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
     return {
       journalEntries: [],
       filteredData: [],
       searchQuery: '',
       filterStatus: '',
-      filterStartDate: '',
-      filterEndDate: '',
+      filterStartDate: formatDate(startMonth),
+      filterEndDate: formatDate(today),
       currentPage: 1,
       itemsPerPage: 10,
       showModal: false,
@@ -589,6 +679,15 @@ export default {
       isEditMode: false,
       isLoading: false,
       deleteConfirmData: null,
+      chartOfAccounts: [],
+      accountSearchResults: {},
+      showAccountDropdown: {},
+      vendors: [],
+      vendorSearchResults: {},
+      showVendorDropdown: {},
+      customers: [],
+      customerSearchResults: {},
+      showCustomerDropdown: {},
       viewData: {
         entry_date: '',
         reference_number: '',
@@ -607,11 +706,12 @@ export default {
         reference_number: '',
         description: '',
         status: 'draft',
-        created_by: '',
+        created_by: localStorage.getItem('email') || '',
         lines: [
           {
             account_code: '',
             account_name: '',
+            account_search: '',
             description: '',
             debit: 0,
             credit: 0,
@@ -619,6 +719,7 @@ export default {
           {
             account_code: '',
             account_name: '',
+            account_search: '',
             description: '',
             debit: 0,
             credit: 0,
@@ -658,14 +759,24 @@ export default {
         if (this.filterStartDate) params.start_date = this.filterStartDate
         if (this.filterEndDate) params.end_date = this.filterEndDate
         if (this.filterStatus) params.status = this.filterStatus
+        if (this.searchQuery) params.reference_number = this.searchQuery
 
+        console.log('📥 Fetching journals with params:', params)
         const response = await getJournalEntries(params)
-        if (response.success) {
+        console.log('📦 Journal list response:', response)
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
           this.journalEntries = response.data || []
           this.applyFilters()
+        } else {
+          console.warn('⚠️ Journal fetch not successful:', response)
+          this.showNotification('error', 'Gagal memuat data jurnal')
         }
       } catch (error) {
         console.error('Failed to fetch journal entries', error)
+        if (error?.response) {
+          console.error('Error response data:', error.response.data)
+        }
         this.showNotification('error', 'Gagal memuat data jurnal')
       }
     },
@@ -696,7 +807,8 @@ export default {
     async openEditModal(item) {
       try {
         const response = await getJournalEntryById(item.id)
-        if (response.success) {
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
           const data = response.data
           this.formData = {
             id: data.id,
@@ -709,6 +821,9 @@ export default {
               id: line.id,
               account_code: line.chart_of_account_id,
               account_name: line.account_name || '',
+              account_search: line.account_name
+                ? `${line.account_code || ''} - ${line.account_name}`
+                : '',
               description: line.description,
               debit: parseFloat(line.debit) || 0,
               credit: parseFloat(line.credit) || 0,
@@ -736,11 +851,18 @@ export default {
         reference_number: '',
         description: '',
         status: 'draft',
-        created_by: '',
+        created_by: localStorage.getItem('email') || '',
         lines: [
           {
             account_code: '',
             account_name: '',
+            account_search: '',
+            vendor_id: '',
+            vendor_name: '',
+            vendor_search: '',
+            customer_id: '',
+            customer_name: '',
+            customer_search: '',
             description: '',
             debit: 0,
             credit: 0,
@@ -748,6 +870,13 @@ export default {
           {
             account_code: '',
             account_name: '',
+            account_search: '',
+            vendor_id: '',
+            vendor_name: '',
+            vendor_search: '',
+            customer_id: '',
+            customer_name: '',
+            customer_search: '',
             description: '',
             debit: 0,
             credit: 0,
@@ -759,6 +888,13 @@ export default {
       this.formData.lines.push({
         account_code: '',
         account_name: '',
+        account_search: '',
+        vendor_id: '',
+        vendor_name: '',
+        vendor_search: '',
+        customer_id: '',
+        customer_name: '',
+        customer_search: '',
         description: '',
         debit: 0,
         credit: 0,
@@ -770,6 +906,127 @@ export default {
       } else {
         this.showNotification('error', 'Minimal harus ada 2 baris jurnal')
       }
+    },
+    async loadChartOfAccounts() {
+      try {
+        const response = await getChartOfAccounts()
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
+          this.chartOfAccounts = response.data || []
+        }
+      } catch (error) {
+        console.error('Failed to load chart of accounts', error)
+      }
+    },
+    searchAccounts(idx) {
+      const searchTerm = this.formData.lines[idx].account_search?.toLowerCase() || ''
+      if (!searchTerm) {
+        this.accountSearchResults[idx] = []
+        return
+      }
+
+      const filtered = this.chartOfAccounts.filter(
+        (acc) =>
+          acc.code.toLowerCase().includes(searchTerm) ||
+          acc.name.toLowerCase().includes(searchTerm),
+      )
+
+      this.accountSearchResults[idx] = filtered.slice(0, 10)
+    },
+    selectAccount(idx, account) {
+      this.formData.lines[idx].account_code = account.id
+      this.formData.lines[idx].account_name = account.name
+      this.formData.lines[idx].account_search = `${account.code} - ${account.name}`
+      this.accountSearchResults[idx] = []
+      this.showAccountDropdown[idx] = false
+    },
+    hideAccountDropdown(idx) {
+      setTimeout(() => {
+        this.showAccountDropdown[idx] = false
+      }, 200)
+    },
+    async loadVendors() {
+      try {
+        const response = await getVendors()
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
+          this.vendors = response.data || []
+        }
+      } catch (error) {
+        console.error('Failed to load vendors', error)
+      }
+    },
+    searchVendors(idx) {
+      const searchTerm = this.formData.lines[idx].vendor_search?.toLowerCase() || ''
+      if (!searchTerm) {
+        this.vendorSearchResults[idx] = []
+        return
+      }
+
+      const filtered = this.vendors.filter(
+        (vendor) =>
+          vendor.nama.toLowerCase().includes(searchTerm) ||
+          vendor.hp.toLowerCase().includes(searchTerm),
+      )
+
+      this.vendorSearchResults[idx] = filtered.slice(0, 10)
+    },
+    selectVendor(idx, vendor) {
+      this.formData.lines[idx].vendor_id = vendor.id
+      this.formData.lines[idx].vendor_name = vendor.nama
+      this.formData.lines[idx].vendor_search = vendor.nama
+      this.vendorSearchResults[idx] = []
+      this.showVendorDropdown[idx] = false
+    },
+    hideVendorDropdown(idx) {
+      setTimeout(() => {
+        this.showVendorDropdown[idx] = false
+      }, 200)
+    },
+    async loadCustomers() {
+      try {
+        const response = await getCustomers()
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
+          this.customers = response.data || []
+        }
+      } catch (error) {
+        console.error('Failed to load customers', error)
+      }
+    },
+    searchCustomers(idx) {
+      const searchTerm = this.formData.lines[idx].customer_search?.toLowerCase() || ''
+      if (!searchTerm) {
+        this.customerSearchResults[idx] = []
+        return
+      }
+
+      const filtered = this.customers.filter(
+        (customer) =>
+          customer.nama.toLowerCase().includes(searchTerm) ||
+          customer.kode_pelanggan.toLowerCase().includes(searchTerm),
+      )
+
+      this.customerSearchResults[idx] = filtered.slice(0, 10)
+    },
+    selectCustomer(idx, customer) {
+      this.formData.lines[idx].customer_id = customer.id
+      this.formData.lines[idx].customer_name = customer.nama
+      this.formData.lines[idx].customer_search = `${customer.kode_pelanggan} - ${customer.nama}`
+      this.customerSearchResults[idx] = []
+      this.showCustomerDropdown[idx] = false
+    },
+    hideCustomerDropdown(idx) {
+      setTimeout(() => {
+        this.showCustomerDropdown[idx] = false
+      }, 200)
+    },
+    generateReferenceNumber() {
+      const randomPart = Math.floor(Math.random() * 100000)
+        .toString()
+        .padStart(5, '0')
+      const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, '')
+      return `JRNL-${datePart}-${randomPart}`
     },
     calculateFormTotalDebit() {
       return this.formData.lines.reduce((sum, line) => sum + (parseFloat(line.debit) || 0), 0)
@@ -786,53 +1043,84 @@ export default {
       return item.journal_lines.reduce((sum, line) => sum + parseFloat(line.credit || 0), 0)
     },
     async saveForm() {
-      if (
-        !this.formData.entry_date ||
-        !this.formData.reference_number ||
-        !this.formData.description
-      ) {
-        this.showNotification('error', 'Harap lengkapi semua field yang wajib')
+      console.log('🔥 saveForm called - START')
+      console.log('📋 formData:', JSON.parse(JSON.stringify(this.formData)))
+
+      const refNumber = this.formData.reference_number || this.generateReferenceNumber()
+      this.formData.reference_number = refNumber
+      console.log('📌 Reference number:', refNumber)
+
+      if (!this.formData.entry_date) {
+        console.log('❌ Validation failed: missing required fields')
+        this.showNotification('error', 'Harap isi: Tanggal Jurnal')
         return
       }
 
       if (Math.abs(this.calculateFormTotalDebit() - this.calculateFormTotalCredit()) >= 0.01) {
+        console.log('❌ Validation failed: debit/credit not balanced')
         this.showNotification('error', 'Debit dan Credit harus seimbang')
         return
       }
 
       if (this.formData.lines.length < 2) {
+        console.log('❌ Validation failed: less than 2 lines')
         this.showNotification('error', 'Minimal harus ada 2 baris jurnal')
         return
       }
+
+      const hasMissingAccount = this.formData.lines.some((line) => !line.account_code)
+      if (hasMissingAccount) {
+        console.log('❌ Validation failed: missing account codes')
+        this.showNotification('error', 'Pilih akun CoA untuk setiap baris')
+        return
+      }
+
+      console.log('✅ All validations passed')
 
       this.isLoading = true
       try {
         const payload = {
           entry_date: this.formData.entry_date,
-          reference_number: this.formData.reference_number,
+          reference_number: refNumber,
           description: this.formData.description,
           status: this.formData.status,
-          created_by: this.formData.created_by || 'system',
-          lines: this.formData.lines.map((line) => ({
-            chart_of_account_id: line.account_code,
-            description: line.description,
-            debit: parseFloat(line.debit) || 0,
-            credit: parseFloat(line.credit) || 0,
-          })),
+          created_by: this.formData.created_by || localStorage.getItem('email') || 'system',
+          lines: this.formData.lines.map((line) => {
+            const item = {
+              chart_of_account_id: line.account_code,
+              description: line.description,
+              debit: parseFloat(line.debit) || 0,
+              credit: parseFloat(line.credit) || 0,
+            }
+            if (line.vendor_id) item.vendor_id = line.vendor_id
+            if (line.customer_id) item.customer_id = line.customer_id
+            return item
+          }),
         }
+
+        console.log('📝 Saving journal entry with payload:', payload)
 
         let response
         if (this.isEditMode) {
+          console.log('🔄 Updating entry ID:', this.formData.id)
           response = await updateJournalEntry(this.formData.id, payload)
+          console.log('✅ Update response:', response)
           this.showNotification('success', 'Jurnal berhasil diperbarui')
         } else {
+          console.log('➕ Creating new journal entry')
           response = await createMiscellaneousJournal(payload)
+          console.log('✅ Create response:', response)
           this.showNotification('success', 'Jurnal berhasil ditambahkan')
         }
 
-        if (response.success) {
+        const isSuccess = response?.success === true || response?.status === true
+        console.log('🔍 Response success check:', isSuccess, 'response:', response)
+        if (isSuccess) {
           this.closeModal()
           await this.fetchData()
+        } else {
+          console.warn('⚠️ API returned unsuccessful response:', response)
+          this.showNotification('error', 'Respons API tidak berhasil')
         }
       } catch (error) {
         console.error('Failed to save journal entry', error)
@@ -852,7 +1140,8 @@ export default {
       this.isLoading = true
       try {
         const response = await deleteJournalEntry(this.deleteConfirmData.id)
-        if (response.success) {
+        const isSuccess = response?.success === true || response?.status === true
+        if (isSuccess) {
           this.showNotification('success', 'Jurnal berhasil dihapus')
           this.showDeleteConfirm = false
           await this.fetchData()
@@ -893,6 +1182,9 @@ export default {
   },
   mounted() {
     this.fetchData()
+    this.loadChartOfAccounts()
+    this.loadVendors()
+    this.loadCustomers()
   },
 }
 </script>

@@ -22,20 +22,32 @@ export const getJournalEntryById = async (id) => {
 
 export const createMiscellaneousJournal = async (data) => {
   try {
+    console.log('🌐 API Call - POST /accounting/journals/miscellaneous')
+    console.log('📤 Request payload:', JSON.stringify(data, null, 2))
     const response = await api.post('/accounting/journals/miscellaneous', data)
+    console.log('📥 API Response:', response)
+    console.log('📦 Response data:', response.data)
     return response.data
   } catch (error) {
-    console.error('Error creating journal entry:', error)
+    console.error('❌ API Error creating journal entry:', error)
+    console.error('📛 Error response:', error.response)
+    console.error('📛 Error data:', error.response?.data)
     throw error
   }
 }
 
 export const updateJournalEntry = async (id, data) => {
   try {
+    console.log(`🌐 API Call - PUT /accounting/journals/${id}`)
+    console.log('📤 Request payload:', JSON.stringify(data, null, 2))
     const response = await api.put(`/accounting/journals/${id}`, data)
+    console.log('📥 API Response:', response)
+    console.log('📦 Response data:', response.data)
     return response.data
   } catch (error) {
-    console.error('Error updating journal entry:', error)
+    console.error('❌ API Error updating journal entry:', error)
+    console.error('📛 Error response:', error.response)
+    console.error('📛 Error data:', error.response?.data)
     throw error
   }
 }

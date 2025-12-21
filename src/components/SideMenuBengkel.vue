@@ -225,11 +225,15 @@ const navItems = reactive([
     haschildren: true,
     children: [
       {
-        text: 'coa',
+        text: 'Chart of Accounts',
         url: '/finansial/coa',
       },
       {
-        text: 'Cash',
+        text: 'Jurnal Umum',
+        url: '/finansial/jurnal',
+      },
+      {
+        text: 'Cash Flow',
         url: '/finansial/cashflow',
       },
       {
