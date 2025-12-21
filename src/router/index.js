@@ -298,7 +298,12 @@ const router = createRouter({
         {
           path: 'coa',
           name: 'chart of accounts',
-          component: () => import('../pages/TableChartOfAccounts.vue'),
+          component: () => import('../pages/ChartOfAccounts.vue'),
+        },
+        {
+          path: 'jurnal',
+          name: 'jurnal umum',
+          component: () => import('../pages/JournalEntries.vue'),
         },
       ],
     },
