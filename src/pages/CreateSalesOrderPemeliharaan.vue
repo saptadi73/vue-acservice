@@ -48,7 +48,8 @@
               @input="searchCustomers"
               type="text"
               placeholder="Ketik nama pelanggan..."
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="isLocked"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
             <!-- Dropdown hasil search -->
             <div
@@ -74,7 +75,8 @@
               v-model="form.customer.nama"
               type="text"
               placeholder="Nama pelanggan"
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="isLocked"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
           </div>
 
@@ -85,7 +87,8 @@
               v-model="form.customer.alamat"
               type="text"
               placeholder="Alamat lengkap"
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="isLocked"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
           </div>
 
@@ -96,7 +99,8 @@
               v-model="form.customer.no_hp"
               type="text"
               placeholder="Nomor HP"
-              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="isLocked"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             />
           </div>
         </div>
@@ -106,7 +110,8 @@
             v-model="form.keterangan"
             rows="3"
             placeholder="Catatan atau keterangan tambahan"
-            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :disabled="isLocked"
+            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
           ></textarea>
         </div>
       </div>
@@ -119,6 +124,7 @@
           </h2>
           <button
             @click="addProductLine"
+            :disabled="isLocked"
             class="ml-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition whitespace-nowrap"
           >
             + Tambah Produk
@@ -162,12 +168,13 @@
                     v-model="line.description"
                     type="text"
                     placeholder="Cari nama produk..."
-                    @input="line.showDropdown = true"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                    @input="onProductInput(line)"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <!-- Dropdown hasil search produk -->
                   <div
-                    v-if="line.showDropdown && line.description"
+                    v-if="line.showDropdown && line.description && !isLocked"
                     class="absolute bg-white border border-gray-300 rounded mt-1 w-full max-h-48 overflow-y-auto z-20 shadow-lg"
                   >
                     <div
@@ -198,7 +205,8 @@
                     min="0"
                     step="0.01"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
@@ -208,7 +216,8 @@
                     type="number"
                     min="0"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
@@ -218,7 +227,8 @@
                     type="number"
                     min="0"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm text-right font-semibold">
@@ -227,7 +237,8 @@
                 <td class="border border-gray-300 px-3 py-2 text-center">
                   <button
                     @click="removeProductLine(idx)"
-                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    :disabled="isLocked"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium disabled:cursor-not-allowed"
                   >
                     Hapus
                   </button>
@@ -246,6 +257,7 @@
           </h2>
           <button
             @click="addServiceLine"
+            :disabled="isLocked"
             class="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition whitespace-nowrap"
           >
             + Tambah Jasa
@@ -289,12 +301,13 @@
                     v-model="line.description"
                     type="text"
                     placeholder="Cari nama jasa..."
-                    @input="line.showDropdown = true"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                    @input="onServiceInput(line)"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <!-- Dropdown hasil search jasa -->
                   <div
-                    v-if="line.showDropdown && line.description"
+                    v-if="line.showDropdown && line.description && !isLocked"
                     class="absolute bg-white border border-gray-300 rounded mt-1 w-full max-h-48 overflow-y-auto z-20 shadow-lg"
                   >
                     <div
@@ -324,7 +337,8 @@
                     min="0"
                     step="0.01"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
@@ -334,7 +348,8 @@
                     type="number"
                     min="0"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
@@ -344,7 +359,8 @@
                     type="number"
                     min="0"
                     placeholder="0"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
+                    :disabled="isLocked"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm text-right font-semibold">
@@ -353,7 +369,8 @@
                 <td class="border border-gray-300 px-3 py-2 text-center">
                   <button
                     @click="removeServiceLine(idx)"
-                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    :disabled="isLocked"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium disabled:cursor-not-allowed"
                   >
                     Hapus
                   </button>
@@ -392,6 +409,7 @@
               <input
                 v-model="form.useTax"
                 type="checkbox"
+                :disabled="isLocked"
                 class="w-4 h-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
               />
               <span class="ml-2 text-sm font-medium text-gray-700">Tambahkan Pajak (11%)</span>
@@ -405,6 +423,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
             <select
               v-model="form.status"
+              :disabled="isLocked"
               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="draft">Draft</option>
@@ -416,7 +435,14 @@
       </div>
 
       <!-- ACTION BUTTONS -->
-      <div class="flex justify-end gap-4">
+      <div class="flex justify-end gap-4 items-center">
+        <button
+          v-if="showPaymentButton"
+          @click="openPaymentModal"
+          class="px-6 py-3 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition font-medium"
+        >
+          Payment
+        </button>
         <button
           @click="goBack"
           class="px-6 py-3 border border-gray-300 rounded hover:bg-gray-50 transition font-medium"
@@ -425,18 +451,100 @@
         </button>
         <button
           @click="saveSalesOrder"
-          :disabled="loading"
+          :disabled="loading || isLocked"
           class="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium disabled:opacity-50"
         >
           {{ loading ? 'Menyimpan...' : 'Simpan Sales Order' }}
         </button>
+      </div>
+
+      <!-- Payment Modal -->
+      <div
+        v-if="paymentModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      >
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-gray-800">Payment</h3>
+            <button @click="closePaymentModal" class="text-gray-500 hover:text-gray-700">✕</button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
+              <input
+                v-model="paymentDate"
+                type="date"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Akun Bank</label>
+              <select
+                v-model="selectedBankAccountId"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>Pilih akun bank</option>
+                <option v-for="acc in bankAccounts" :key="acc.id" :value="acc.id">
+                  {{ acc.code }} - {{ acc.name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+              <input
+                v-model="paymentReference"
+                type="text"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+              <input
+                v-model="paymentDescription"
+                type="text"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Pembayaran</label>
+              <div
+                class="px-3 py-2 border border-gray-200 rounded bg-gray-50 font-semibold text-gray-800"
+              >
+                {{ formatCurrency(paymentAmount) }}
+              </div>
+            </div>
+
+            <p v-if="paymentError" class="text-sm text-red-600">{{ paymentError }}</p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              @click="closePaymentModal"
+              class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Batal
+            </button>
+            <button
+              @click="submitPayment"
+              :disabled="paymentLoading"
+              class="px-5 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {{ paymentLoading ? 'Memproses...' : 'Konfirmasi Pembayaran' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import api from '@/user/axios'
@@ -465,11 +573,25 @@ const form = ref({
   serviceLines: [],
 })
 
+const isLocked = computed(() => ['confirmed', 'paid'].includes(form.value.status))
+const showPaymentButton = computed(() => isEdit.value && form.value.status === 'confirmed')
+
 // Products data for search
 const products = ref([])
 
 // Services data for search
 const services = ref([])
+
+// Payment modal
+const paymentModal = ref(false)
+const bankAccounts = ref([])
+const selectedBankAccountId = ref('')
+const paymentDate = ref(new Date().toISOString().split('T')[0])
+const paymentReference = ref('')
+const paymentDescription = ref('')
+const paymentLoading = ref(false)
+const paymentError = ref('')
+const paymentAmount = computed(() => totals.value.total)
 
 // Customer search
 const searchCustomer = ref('')
@@ -723,6 +845,17 @@ async function fetchServices() {
   }
 }
 
+// Fetch bank accounts for payment
+async function fetchBankAccounts() {
+  try {
+    const res = await api.get('bank-accounts')
+    bankAccounts.value = Array.isArray(res?.data?.data) ? res.data.data : []
+  } catch (err) {
+    console.error('Error fetching bank accounts:', err)
+    showNotification('Gagal memuat akun bank', 'error')
+  }
+}
+
 // Filter services based on search query
 function serviceMatches(searchQuery) {
   const q = (searchQuery || '').trim().toLowerCase()
@@ -732,6 +865,7 @@ function serviceMatches(searchQuery) {
 
 // Select product and auto-fill price
 function selectProductLine(lineIdx, product) {
+  if (isLocked.value) return
   const line = form.value.productLines[lineIdx]
   line.product_id = product.id
   line.description = product.nama
@@ -743,12 +877,97 @@ function selectProductLine(lineIdx, product) {
 
 // Select service and auto-fill price
 function selectServiceLine(lineIdx, service) {
+  if (isLocked.value) return
   const line = form.value.serviceLines[lineIdx]
   line.service_id = service.id
   line.description = service.nama
   line.unit_price = service.harga ?? 0
   line.showDropdown = false
   calculateLineTotal(line)
+}
+
+function onProductInput(line) {
+  if (isLocked.value) return
+  line.showDropdown = true
+}
+
+function onServiceInput(line) {
+  if (isLocked.value) return
+  line.showDropdown = true
+}
+
+watch(
+  () => isLocked.value,
+  (locked) => {
+    if (!locked) return
+    form.value.productLines.forEach((line) => {
+      line.showDropdown = false
+    })
+    form.value.serviceLines.forEach((line) => {
+      line.showDropdown = false
+    })
+  },
+)
+
+// Payment flow
+function openPaymentModal() {
+  paymentError.value = ''
+  paymentReference.value = form.value.order_number ? `PAY-${form.value.order_number}` : 'PAY-SALE'
+  paymentDescription.value = `Pelunasan ${form.value.order_number || 'Sales Order'}`
+  paymentDate.value = new Date().toISOString().split('T')[0]
+  paymentModal.value = true
+  if (bankAccounts.value.length === 0) {
+    fetchBankAccounts()
+  }
+}
+
+function closePaymentModal() {
+  paymentModal.value = false
+}
+
+async function submitPayment() {
+  paymentError.value = ''
+
+  if (!isEdit.value || !route.params.id) {
+    paymentError.value = 'Pembayaran hanya bisa dilakukan pada order yang sudah tersimpan.'
+    return
+  }
+
+  if (!selectedBankAccountId.value) {
+    paymentError.value = 'Pilih akun bank terlebih dahulu.'
+    return
+  }
+
+  if (!form.value.customer.id) {
+    paymentError.value = 'Data pelanggan tidak lengkap.'
+    return
+  }
+
+  paymentLoading.value = true
+  try {
+    await api.post(`/orders/update/sale/${route.params.id}`, { status: 'paid' })
+
+    const payload = {
+      payment_date: paymentDate.value,
+      amount: paymentAmount.value,
+      customer_id: form.value.customer.id,
+      cash_account_id: selectedBankAccountId.value,
+      reference_number: paymentReference.value || `PAY-${form.value.order_number}`,
+      description: paymentDescription.value || `Pelunasan ${form.value.order_number}`,
+      created_by: localStorage.getItem('email') || 'system',
+    }
+
+    await api.post('/accounting/journals/sales-payment', payload)
+
+    form.value.status = 'paid'
+    showNotification('Pembayaran berhasil, status berubah menjadi paid', 'success')
+    paymentModal.value = false
+  } catch (err) {
+    console.error('Error processing payment:', err)
+    paymentError.value = err.response?.data?.message || 'Gagal memproses pembayaran'
+  } finally {
+    paymentLoading.value = false
+  }
 }
 
 // Initialize
@@ -797,7 +1016,7 @@ async function loadSalesOrder(id) {
     form.value.order_date = data.order_date || form.value.order_date
     form.value.status = data.status || 'draft'
     form.value.keterangan = data.keterangan || ''
-    form.value.useTax = data.tax ? data.tax > 0 : form.value.useTax
+    form.value.useTax = data.tax ? data.tax > 0 : false
 
     // Customer
     const customerId = data.customer_id || data.customer?.id
@@ -834,6 +1053,9 @@ async function loadSalesOrder(id) {
     // Recalculate to guarantee clean totals
     form.value.productLines.forEach((line) => calculateLineTotal(line))
     form.value.serviceLines.forEach((line) => calculateLineTotal(line))
+
+    paymentReference.value = form.value.order_number ? `PAY-${form.value.order_number}` : 'PAY-SALE'
+    paymentDescription.value = `Pelunasan ${form.value.order_number || 'Sales Order'}`
 
     console.log('Sales order loaded for edit:', data)
   } catch (err) {
