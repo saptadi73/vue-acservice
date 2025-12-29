@@ -237,8 +237,8 @@ const navItems = reactive([
         url: '/finansial/cashflow',
       },
       {
-        text: 'Biaya',
-        url: '/finansial/biaya',
+        text: 'Daftar Biaya',
+        url: '/finansial/biaya/list',
       },
       {
         text: 'Laba Rugi',

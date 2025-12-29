@@ -277,8 +277,21 @@ function closeCreateModal() {
 }
 function onCreateFileChange(e) {
   const file = e.target.files?.[0] || null
+  if (!file) {
+    createFile.value = null
+    createPreview.value = null
+    return
+  }
+  const allowed = ['image/jpeg', 'image/png']
+  if (!allowed.includes(file.type)) {
+    alert('File harus berupa gambar JPG atau PNG')
+    e.target.value = ''
+    createFile.value = null
+    createPreview.value = null
+    return
+  }
   createFile.value = file
-  createPreview.value = file ? URL.createObjectURL(file) : null
+  createPreview.value = URL.createObjectURL(file)
 }
 async function submitCreate() {
   loading.value = true
@@ -342,8 +355,21 @@ async function loadVendorDetail(id) {
 }
 function onEditFileChange(e) {
   const file = e.target.files?.[0] || null
+  if (!file) {
+    editFile.value = null
+    editPreview.value = null
+    return
+  }
+  const allowed = ['image/jpeg', 'image/png']
+  if (!allowed.includes(file.type)) {
+    alert('File harus berupa gambar JPG atau PNG')
+    e.target.value = ''
+    editFile.value = null
+    editPreview.value = null
+    return
+  }
   editFile.value = file
-  editPreview.value = file ? URL.createObjectURL(file) : null
+  editPreview.value = URL.createObjectURL(file)
 }
 const resolvedEditImageUrl = computed(() => {
   // if backend returns relative path, you may need to prefix BASE_URL

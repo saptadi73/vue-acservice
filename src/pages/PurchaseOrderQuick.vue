@@ -217,16 +217,105 @@
         <div v-if="taxEnabled" class="text-sm text-gray-600">
           Pajak: <span class="font-semibold">{{ formatCurrency(taxTotal) }}</span>
         </div>
+        <button
+          v-if="showPaymentButton"
+          @click="openPaymentModal"
+          class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition font-medium"
+        >
+          Payment
+        </button>
         <button class="px-3 py-2 border rounded" @click="resetForm" :disabled="loading">
           Reset
         </button>
         <button
           class="px-3 py-2 bg-blue-600 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
           @click="submit"
-          :disabled="loading || isConfirmed"
+          :disabled="loading || isServerLocked"
         >
           {{ loading ? 'Menyimpan...' : isEdit ? 'Update PO' : 'Simpan PO' }}
         </button>
+      </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div
+      v-if="paymentModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-800">Payment Purchase Order</h3>
+          <button @click="closePaymentModal" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
+            <input
+              v-model="paymentDate"
+              type="date"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Akun Bank</label>
+            <select
+              v-model="selectedBankAccountId"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>Pilih akun bank</option>
+              <option v-for="acc in bankAccounts" :key="acc.id" :value="acc.id">
+                {{ acc.code }} - {{ acc.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+            <input
+              v-model="paymentReference"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <input
+              v-model="paymentDescription"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Pembayaran</label>
+            <div
+              class="px-3 py-2 border border-gray-200 rounded bg-gray-50 font-semibold text-gray-800"
+            >
+              {{ formatCurrency(paymentAmount) }}
+            </div>
+          </div>
+
+          <p v-if="paymentError" class="text-sm text-red-600">{{ paymentError }}</p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            @click="closePaymentModal"
+            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            Batal
+          </button>
+          <button
+            @click="submitPayment"
+            :disabled="paymentLoading"
+            class="px-5 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {{ paymentLoading ? 'Memproses...' : 'Konfirmasi Pembayaran' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -257,15 +346,30 @@ const isEdit = computed(() => !!route.params.id)
 const orderNumber = ref('')
 const orderDate = ref(new Date().toISOString().slice(0, 10))
 const status = ref('draft')
+const serverStatus = ref('draft')
 const taxEnabled = ref(true)
 
-const isConfirmed = computed(() => status.value !== 'draft')
+const isServerLocked = computed(() =>
+  ['confirmed', 'paid', 'cancelled'].includes(serverStatus.value),
+)
 const loading = ref(false)
 const subtotal = computed(() => items.reduce((sum, it) => sum + (it.subtotal || 0), 0))
 const taxTotal = computed(() =>
   taxEnabled.value ? items.reduce((sum, it) => sum + (Number(it.tax) || 0), 0) : 0,
 )
 const total = computed(() => subtotal.value + taxTotal.value)
+
+// Payment modal
+const paymentModal = ref(false)
+const bankAccounts = ref([])
+const selectedBankAccountId = ref('')
+const paymentDate = ref(new Date().toISOString().split('T')[0])
+const paymentReference = ref('')
+const paymentDescription = ref('')
+const paymentLoading = ref(false)
+const paymentError = ref('')
+const paymentAmount = computed(() => total.value)
+const showPaymentButton = computed(() => isEdit.value && status.value === 'confirmed')
 
 function formatCurrency(n) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return '-'
@@ -377,6 +481,15 @@ async function fetchProducts() {
     console.error('Gagal memuat produk:', err)
   }
 }
+
+async function fetchBankAccounts() {
+  try {
+    const res = await api.get('bank-accounts')
+    bankAccounts.value = Array.isArray(res?.data?.data) ? res.data.data : []
+  } catch (err) {
+    console.error('Gagal memuat akun bank:', err)
+  }
+}
 function resetForm() {
   vendorSearch.value = ''
   selectedVendor.value = null
@@ -386,6 +499,7 @@ function resetForm() {
   orderNumber.value = `PO-${Date.now()}`
   orderDate.value = new Date().toISOString().slice(0, 10)
   status.value = 'draft'
+  serverStatus.value = 'draft'
   taxEnabled.value = true
   addItem()
 }
@@ -398,6 +512,7 @@ async function loadOrder(id) {
     orderNumber.value = d.order_number || `PO-${id}`
     orderDate.value = d.order_date || new Date().toISOString().slice(0, 10)
     status.value = d.status || 'draft'
+    serverStatus.value = status.value
 
     const vendId = d.vendor_id || d.vendor?.id
     if (vendId) {
@@ -479,6 +594,8 @@ function buildLinesPayload() {
       qty: (Number(it.qty) || 0).toFixed(2),
       unit_price: (Number(it.harga) || 0).toFixed(2),
       discount: (Number(it.discount) || 0).toFixed(2),
+      tax: (Number(it.tax) || 0).toFixed(2),
+      tax_rate: (Number(it.taxRate) || 0).toFixed(2),
       line_total: Math.max(
         0,
         (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
@@ -558,6 +675,8 @@ async function updateOrder() {
         qty: (Number(it.qty) || 0).toFixed(2),
         unit_price: (Number(it.harga) || 0).toFixed(2),
         discount: (Number(it.discount) || 0).toFixed(2),
+        tax: (Number(it.tax) || 0).toFixed(2),
+        tax_rate: (Number(it.taxRate) || 0).toFixed(2),
         line_total: Math.max(
           0,
           (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
@@ -574,11 +693,74 @@ async function updateOrder() {
       qty: (Number(it.qty) || 0).toFixed(2),
       unit_price: (Number(it.harga) || 0).toFixed(2),
       discount: (Number(it.discount) || 0).toFixed(2),
+      tax: (Number(it.tax) || 0).toFixed(2),
+      tax_rate: (Number(it.taxRate) || 0).toFixed(2),
       line_total: Math.max(
         0,
         (Number(it.qty) || 0) * (Number(it.harga) || 0) - (Number(it.discount) || 0),
       ).toFixed(2),
     })
+  }
+}
+
+function openPaymentModal() {
+  paymentError.value = ''
+  paymentReference.value = orderNumber.value ? `PAY-${orderNumber.value}` : 'PAY-PO'
+  paymentDescription.value = `Pelunasan ${orderNumber.value || 'Purchase Order'}`
+  paymentDate.value = new Date().toISOString().split('T')[0]
+  paymentModal.value = true
+  if (bankAccounts.value.length === 0) {
+    fetchBankAccounts()
+  }
+}
+
+function closePaymentModal() {
+  paymentModal.value = false
+}
+
+async function submitPayment() {
+  paymentError.value = ''
+
+  if (!isEdit.value || !route.params.id) {
+    paymentError.value = 'Pembayaran hanya bisa dilakukan pada order yang sudah tersimpan.'
+    return
+  }
+
+  if (!selectedBankAccountId.value) {
+    paymentError.value = 'Pilih akun bank terlebih dahulu.'
+    return
+  }
+
+  if (!selectedVendor.value?.id) {
+    paymentError.value = 'Data vendor tidak lengkap.'
+    return
+  }
+
+  paymentLoading.value = true
+  try {
+    await api.post(`orders/update/purchase/${route.params.id}`, { status: 'paid' })
+
+    const payload = {
+      payment_date: paymentDate.value,
+      amount: paymentAmount.value,
+      vendor_id: selectedVendor.value.id,
+      cash_account_id: selectedBankAccountId.value,
+      reference_number: paymentReference.value || `PAY-${orderNumber.value}`,
+      description: paymentDescription.value || `Pelunasan ${orderNumber.value}`,
+      created_by: localStorage.getItem('email') || 'system',
+    }
+
+    await api.post('/accounting/journals/purchase-payment', payload)
+
+    status.value = 'paid'
+    serverStatus.value = 'paid'
+    alert('Pembayaran berhasil, status berubah menjadi paid')
+    paymentModal.value = false
+  } catch (err) {
+    console.error('Error processing payment:', err)
+    paymentError.value = err.response?.data?.message || 'Gagal memproses pembayaran'
+  } finally {
+    paymentLoading.value = false
   }
 }
 

@@ -582,8 +582,21 @@ function closeCreateModal() {
 }
 function onCreateFileChange(e) {
   const file = e.target.files?.[0] || null
+  if (!file) {
+    createFile.value = null
+    createPreview.value = null
+    return
+  }
+  const allowed = ['image/jpeg', 'image/png']
+  if (!allowed.includes(file.type)) {
+    alert('File harus berupa gambar JPG atau PNG')
+    e.target.value = ''
+    createFile.value = null
+    createPreview.value = null
+    return
+  }
   createFile.value = file
-  createPreview.value = file ? URL.createObjectURL(file) : null
+  createPreview.value = URL.createObjectURL(file)
 }
 async function submitCreate() {
   loading.value = true
@@ -602,6 +615,15 @@ async function submitCreate() {
     fd.append('brand_id', createForm.value.brand_id || '')
     fd.append('is_sealable', createForm.value.is_sealable ? 'true' : 'false')
     if (createFile.value) fd.append('gambar', createFile.value)
+
+    // Debug: Log payload
+    console.log('=== DEBUG SUBMIT CREATE ===')
+    console.log('FormData entries:', Object.fromEntries(fd))
+    console.log('kategori_id value:', createForm.value.kategori_id)
+    console.log('satuan_id value:', createForm.value.satuan_id)
+    console.log('brand_id value:', createForm.value.brand_id)
+    console.log('========================')
+
     const res = await api.post('products', fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
@@ -655,8 +677,21 @@ async function loadProductDetail(id) {
 }
 function onEditFileChange(e) {
   const file = e.target.files?.[0] || null
+  if (!file) {
+    editFile.value = null
+    editPreview.value = null
+    return
+  }
+  const allowed = ['image/jpeg', 'image/png']
+  if (!allowed.includes(file.type)) {
+    alert('File harus berupa gambar JPG atau PNG')
+    e.target.value = ''
+    editFile.value = null
+    editPreview.value = null
+    return
+  }
   editFile.value = file
-  editPreview.value = file ? URL.createObjectURL(file) : null
+  editPreview.value = URL.createObjectURL(file)
 }
 const resolvedEditImageUrl = computed(() => {
   const g = editForm.value.gambar
@@ -682,6 +717,15 @@ async function submitEdit() {
     fd.append('brand_id', editForm.value.brand_id || '')
     fd.append('is_sealable', editForm.value.is_sealable ? 'true' : 'false')
     if (editFile.value) fd.append('gambar', editFile.value)
+
+    // Debug: Log payload
+    console.log('=== DEBUG SUBMIT EDIT ===')
+    console.log('FormData entries:', Object.fromEntries(fd))
+    console.log('kategori_id value:', editForm.value.kategori_id)
+    console.log('satuan_id value:', editForm.value.satuan_id)
+    console.log('brand_id value:', editForm.value.brand_id)
+    console.log('========================')
+
     const res = await api.post(`products/${editId.value}`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

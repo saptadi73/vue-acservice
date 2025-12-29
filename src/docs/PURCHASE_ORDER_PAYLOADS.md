@@ -5,6 +5,7 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
 ---
 
 ## 1. CREATE Purchase Order
+
 **Endpoint:** `POST /orders/purchase`  
 **Authentication:** Not Required  
 **Content-Type:** `application/json`
@@ -16,28 +17,32 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
   "order_number": "PO-2025-001",
   "order_date": "2025-01-15",
   "status": "draft",
-  "subtotal": 5000000.00,
-  "tax": 500000.00,
-  "total": 5500000.00,
+  "subtotal": 5000000.0,
+  "tax": 500000.0,
+  "total": 5500000.0,
   "vendor_id": "uuid-vendor-id-here",
   "product_lines": [
     {
       "product_id": "uuid-product-id-here",
       "line_number": 1,
       "description": "AC Split 2 PK",
-      "qty": 10.00,
-      "unit_price": 400000.00,
-      "discount": 0.00,
-      "line_total": 4000000.00
+      "qty": 10.0,
+      "unit_price": 400000.0,
+      "discount": 0.0,
+      "tax": 400000.0,
+      "tax_rate": 10.0,
+      "line_total": 4000000.0
     },
     {
       "product_id": "uuid-product-id-here-2",
       "line_number": 2,
       "description": "Remote AC Universal",
-      "qty": 10.00,
-      "unit_price": 100000.00,
-      "discount": 0.00,
-      "line_total": 1000000.00
+      "qty": 10.0,
+      "unit_price": 100000.0,
+      "discount": 0.0,
+      "tax": 100000.0,
+      "tax_rate": 10.0,
+      "line_total": 1000000.0
     }
   ]
 }
@@ -46,6 +51,7 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
 ### Field Descriptions
 
 #### Purchase Order Fields (Required)
+
 - `order_number` (string): Nomor purchase order unik
 - `order_date` (date): Tanggal order format `YYYY-MM-DD`
 - `status` (enum): Status order - nilai valid: `"draft"`, `"confirmed"`, `"paid"`, `"cancelled"`
@@ -55,12 +61,15 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
 - `vendor_id` (uuid): ID vendor yang valid
 
 #### Product Lines (Optional Array)
+
 - `product_id` (uuid): ID produk yang valid
 - `line_number` (integer): Nomor urut baris
 - `description` (string): Deskripsi produk
 - `qty` (decimal): Jumlah/kuantitas
 - `unit_price` (decimal): Harga per unit
 - `discount` (decimal): Diskon
+- `tax` (decimal): Nilai pajak untuk line ini
+- `tax_rate` (decimal): Persentase pajak (%)
 - `line_total` (decimal): Total baris (qty × unit_price - discount)
 
 ### Example Minimal Payload (Tanpa Lines)
@@ -70,9 +79,9 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
   "order_number": "PO-2025-002",
   "order_date": "2025-01-15",
   "status": "draft",
-  "subtotal": 0.00,
-  "tax": 0.00,
-  "total": 0.00,
+  "subtotal": 0.0,
+  "tax": 0.0,
+  "total": 0.0,
   "vendor_id": "uuid-vendor-id-here"
 }
 ```
@@ -84,19 +93,21 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
   "order_number": "PO-2025-003",
   "order_date": "2025-01-15",
   "status": "draft",
-  "subtotal": 3000000.00,
-  "tax": 300000.00,
-  "total": 3300000.00,
+  "subtotal": 3000000.0,
+  "tax": 300000.0,
+  "total": 3300000.0,
   "vendor_id": "uuid-vendor-id-here",
   "product_lines": [
     {
       "product_id": "uuid-product-id-here",
       "line_number": 1,
       "description": "AC Split 1.5 PK",
-      "qty": 5.00,
-      "unit_price": 600000.00,
-      "discount": 0.00,
-      "line_total": 3000000.00
+      "qty": 5.0,
+      "unit_price": 600000.0,
+      "discount": 0.0,
+      "tax": 300000.0,
+      "tax_rate": 10.0,
+      "line_total": 3000000.0
     }
   ]
 }
@@ -105,19 +116,23 @@ Dokumentasi lengkap payload yang valid untuk operasi CRUD Purchase Order berdasa
 ---
 
 ## 2. READ Purchase Order by ID
+
 **Endpoint:** `GET /orders/purchase/{id}`  
 **Authentication:** Not Required  
 **Method:** GET
 
 ### URL Parameters
+
 - `{id}`: UUID dari purchase order
 
 ### Example Request
+
 ```
 GET /orders/purchase/9d4f5e6a-7b8c-9d0e-1f2a-3b4c5d6e7f8g
 ```
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -148,6 +163,8 @@ GET /orders/purchase/9d4f5e6a-7b8c-9d0e-1f2a-3b4c5d6e7f8g
         "qty": "10.00",
         "unit_price": "400000.00",
         "discount": "0.00",
+        "tax": "400000.00",
+        "tax_rate": "10.00",
         "line_total": "4000000.00",
         "created_at": "2025-01-15 10:30:00",
         "updated_at": "2025-01-15 10:30:00",
@@ -167,6 +184,8 @@ GET /orders/purchase/9d4f5e6a-7b8c-9d0e-1f2a-3b4c5d6e7f8g
         "qty": "10.00",
         "unit_price": "100000.00",
         "discount": "0.00",
+        "tax": "100000.00",
+        "tax_rate": "10.00",
         "line_total": "1000000.00",
         "created_at": "2025-01-15 10:30:00",
         "updated_at": "2025-01-15 10:30:00",
@@ -185,16 +204,19 @@ GET /orders/purchase/9d4f5e6a-7b8c-9d0e-1f2a-3b4c5d6e7f8g
 ---
 
 ## 3. LIST All Purchase Orders
+
 **Endpoint:** `GET /orders/purchase`  
 **Authentication:** Not Required  
 **Method:** GET
 
 ### Example Request
+
 ```
 GET /orders/purchase
 ```
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -242,11 +264,13 @@ GET /orders/purchase
 ---
 
 ## 4. UPDATE Purchase Order
+
 **Endpoint:** `POST /orders/update/purchase/{id}`  
 **Authentication:** Required (JWT Token)  
 **Content-Type:** `application/json`
 
 ### URL Parameters
+
 - `{id}`: UUID dari purchase order yang akan diupdate
 
 ### Payload Structure
@@ -256,9 +280,9 @@ GET /orders/purchase
   "order_number": "PO-2025-001-UPDATED",
   "order_date": "2025-01-16",
   "status": "confirmed",
-  "subtotal": 5500000.00,
-  "tax": 550000.00,
-  "total": 6050000.00,
+  "subtotal": 5500000.0,
+  "tax": 550000.0,
+  "total": 6050000.0,
   "vendor_id": "uuid-vendor-id-here"
 }
 ```
@@ -275,18 +299,20 @@ GET /orders/purchase
 
 ```json
 {
-  "subtotal": 6000000.00,
-  "tax": 600000.00,
-  "total": 6600000.00
+  "subtotal": 6000000.0,
+  "tax": 600000.0,
+  "total": 6600000.0
 }
 ```
 
 ### Important Notes
+
 - Semua field bersifat optional, hanya field yang dikirim yang akan diupdate
 - Jika status berubah dari selain `"confirmed"` menjadi `"confirmed"`, sistem akan otomatis apply stock (menambah stok produk)
 - Status yang valid: `"draft"`, `"confirmed"`, `"paid"`, `"cancelled"`
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -308,25 +334,31 @@ GET /orders/purchase
 ---
 
 ## 5. DELETE Purchase Order
+
 **Endpoint:** `POST /orders/delete/purchase/{id}`  
 **Authentication:** Required (JWT Token)  
 **Content-Type:** `application/json`
 
 ### URL Parameters
+
 - `{id}`: UUID dari purchase order yang akan dihapus
 
 ### Payload
+
 ```json
 {}
 ```
+
 atau tidak perlu body sama sekali
 
 ### Example Request
+
 ```
 POST /orders/delete/purchase/uuid-purchase-order-id-here
 ```
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -339,25 +371,31 @@ POST /orders/delete/purchase/uuid-purchase-order-id-here
 ---
 
 ## 6. DELETE Purchase Order Line
+
 **Endpoint:** `POST /orders/delete/purchase/product-lines/{id}`  
 **Authentication:** Required (JWT Token)  
 **Content-Type:** `application/json`
 
 ### URL Parameters
+
 - `{id}`: UUID dari purchase order line yang akan dihapus
 
 ### Payload
+
 ```json
 {}
 ```
+
 atau tidak perlu body sama sekali
 
 ### Example Request
+
 ```
 POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
 ```
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -370,6 +408,8 @@ POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
     "qty": "10.00",
     "unit_price": "400000.00",
     "discount": "0.00",
+    "tax": "400000.00",
+    "tax_rate": "10.00",
     "line_total": "4000000.00",
     "created_at": "2025-01-15 10:30:00",
     "updated_at": "2025-01-15 10:30:00"
@@ -380,11 +420,13 @@ POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
 ---
 
 ## 7. ADD Purchase Order Line
+
 **Endpoint:** `POST /orders/add/purchase/product-lines/{id}`  
 **Authentication:** Required (JWT Token)  
 **Content-Type:** `application/json`
 
 ### URL Parameters
+
 - `{id}`: UUID dari purchase order yang akan ditambahkan product line
 
 ### Payload Structure
@@ -394,23 +436,29 @@ POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
   "product_id": "uuid-product-id-here",
   "line_number": 3,
   "description": "Freon R32 1kg",
-  "qty": 20.00,
-  "unit_price": 150000.00,
-  "discount": 0.00,
-  "line_total": 3000000.00
+  "qty": 20.0,
+  "unit_price": 150000.0,
+  "discount": 0.0,
+  "tax": 300000.0,
+  "tax_rate": 10.0,
+  "line_total": 3000000.0
 }
 ```
 
 ### Field Descriptions
+
 - `product_id` (uuid, required): ID produk yang valid
 - `line_number` (integer, required): Nomor urut baris
 - `description` (string, required): Deskripsi produk
 - `qty` (decimal, required): Jumlah/kuantitas
 - `unit_price` (decimal, required): Harga per unit
 - `discount` (decimal, required): Diskon
+- `tax` (decimal, required): Nilai pajak untuk line ini
+- `tax_rate` (decimal, required): Persentase pajak (%)
 - `line_total` (decimal, required): Total baris (qty × unit_price - discount)
 
 ### Example Response
+
 ```json
 {
   "success": true,
@@ -423,6 +471,8 @@ POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
     "qty": "20.00",
     "unit_price": "150000.00",
     "discount": "0.00",
+    "tax": "300000.00",
+    "tax_rate": "10.00",
     "line_total": "3000000.00",
     "created_at": "2025-01-15 16:30:00",
     "updated_at": "2025-01-15 16:30:00"
@@ -436,18 +486,19 @@ POST /orders/delete/purchase/product-lines/uuid-purchase-order-line-id-here
 
 Purchase Order memiliki 4 status yang valid:
 
-| Status | Deskripsi |
-|--------|-----------|
-| `draft` | Order masih dalam draft, belum dikonfirmasi |
+| Status      | Deskripsi                                    |
+| ----------- | -------------------------------------------- |
+| `draft`     | Order masih dalam draft, belum dikonfirmasi  |
 | `confirmed` | Order sudah dikonfirmasi, stok akan ditambah |
-| `paid` | Order sudah dibayar |
-| `cancelled` | Order dibatalkan |
+| `paid`      | Order sudah dibayar                          |
+| `cancelled` | Order dibatalkan                             |
 
 ---
 
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "success": false,
@@ -456,6 +507,7 @@ Purchase Order memiliki 4 status yang valid:
 ```
 
 ### 401 Unauthorized (untuk endpoint yang memerlukan JWT)
+
 ```json
 {
   "success": false,
@@ -464,6 +516,7 @@ Purchase Order memiliki 4 status yang valid:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "success": false,
@@ -472,6 +525,7 @@ Purchase Order memiliki 4 status yang valid:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "success": false,
@@ -484,6 +538,7 @@ Purchase Order memiliki 4 status yang valid:
 ## Testing dengan cURL
 
 ### 1. Create Purchase Order
+
 ```bash
 curl -X POST http://localhost/orders/purchase \
   -H "Content-Type: application/json" \
@@ -510,16 +565,19 @@ curl -X POST http://localhost/orders/purchase \
 ```
 
 ### 2. Get Purchase Order
+
 ```bash
 curl -X GET http://localhost/orders/purchase/uuid-purchase-order-id
 ```
 
 ### 3. List All Purchase Orders
+
 ```bash
 curl -X GET http://localhost/orders/purchase
 ```
 
 ### 4. Update Purchase Order
+
 ```bash
 curl -X POST http://localhost/orders/update/purchase/uuid-purchase-order-id \
   -H "Content-Type: application/json" \
@@ -530,18 +588,21 @@ curl -X POST http://localhost/orders/update/purchase/uuid-purchase-order-id \
 ```
 
 ### 5. Delete Purchase Order
+
 ```bash
 curl -X POST http://localhost/orders/delete/purchase/uuid-purchase-order-id \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### 6. Delete Purchase Order Line
+
 ```bash
 curl -X POST http://localhost/orders/delete/purchase/product-lines/uuid-purchase-order-line-id \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### 7. Add Purchase Order Line
+
 ```bash
 curl -X POST http://localhost/orders/add/purchase/product-lines/uuid-purchase-order-id \
   -H "Content-Type: application/json" \
@@ -561,13 +622,13 @@ curl -X POST http://localhost/orders/add/purchase/product-lines/uuid-purchase-or
 
 ## Perbedaan Purchase Order vs Sale Order
 
-| Aspek | Purchase Order | Sale Order |
-|-------|----------------|------------|
-| **Relasi** | Vendor (supplier) | Customer (pelanggan) |
-| **Tujuan** | Pembelian barang dari supplier | Penjualan barang ke customer |
-| **Stock Impact** | Menambah stok saat confirmed | Mengurangi stok saat confirmed |
-| **Lines** | Hanya Product Lines | Product Lines + Service Lines |
-| **Authentication** | Create tidak perlu JWT | Create perlu JWT |
+| Aspek              | Purchase Order                 | Sale Order                     |
+| ------------------ | ------------------------------ | ------------------------------ |
+| **Relasi**         | Vendor (supplier)              | Customer (pelanggan)           |
+| **Tujuan**         | Pembelian barang dari supplier | Penjualan barang ke customer   |
+| **Stock Impact**   | Menambah stok saat confirmed   | Mengurangi stok saat confirmed |
+| **Lines**          | Hanya Product Lines            | Product Lines + Service Lines  |
+| **Authentication** | Create tidak perlu JWT         | Create perlu JWT               |
 
 ---
 
@@ -591,7 +652,7 @@ curl -X POST http://localhost/orders/add/purchase/product-lines/uuid-purchase-or
 
 9. **No Service Lines**: Purchase Order hanya mendukung Product Lines, tidak ada Service Lines (berbeda dengan Sale Order)
 
-10. **Authentication Differences**: 
+10. **Authentication Differences**:
     - Create Purchase Order: Tidak perlu JWT
     - Update/Delete Purchase Order: Perlu JWT
     - Create Sale Order: Perlu JWT
