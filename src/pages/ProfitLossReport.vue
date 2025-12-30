@@ -235,7 +235,7 @@ export default {
           net_income: 37000000,
         }
       } catch (err) {
-        this.error = 'Gagal memuat laporan laba rugi. Silakan coba lagi.'
+        this.error = 'Gagal memuat laporan laba rugi. Silakan coba lagi.' + err
       } finally {
         this.loading = false
       }
