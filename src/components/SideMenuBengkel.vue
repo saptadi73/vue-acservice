@@ -200,6 +200,10 @@ const navItems = reactive([
         text: 'Buat Pembelian Baru',
         url: '/inventory/purchase/new',
       },
+      {
+        text: 'Pengeluaran Barang Internal',
+        url: '/finansial/internal-expenditure',
+      },
     ],
   },
   {
@@ -233,16 +237,32 @@ const navItems = reactive([
         url: '/finansial/jurnal',
       },
       {
-        text: 'Cash Flow',
-        url: '/finansial/cashflow',
+        text: 'Laporan Neraca',
+        url: '/finansial/balance-sheet',
+      },
+      {
+        text: 'Laporan Laba Rugi',
+        url: '/finansial/profit-loss',
+      },
+      {
+        text: 'Laporan Buku Kas',
+        url: '/finansial/cash-book',
+      },
+      {
+        text: 'Laporan Umur Piutang/Hutang',
+        url: '/finansial/aged-ledger',
+      },
+      {
+        text: 'Laporan Buku Besar',
+        url: '/finansial/general-ledger',
+      },
+      {
+        text: 'Laporan Neraca Saldo',
+        url: '/finansial/trial-balance',
       },
       {
         text: 'Daftar Biaya',
         url: '/finansial/biaya/list',
-      },
-      {
-        text: 'Laba Rugi',
-        url: '/finansial/labarugi',
       },
     ],
   },

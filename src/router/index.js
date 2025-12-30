@@ -281,14 +281,44 @@ const router = createRouter({
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
       children: [
         {
-          path: 'cashflow',
-          name: 'cashflow',
-          component: () => import('../pages/CashFlowReport.vue'),
+          path: 'coa',
+          name: 'chart of accounts',
+          component: () => import('../pages/ChartOfAccounts.vue'),
         },
         {
-          path: 'biaya',
-          name: 'biaya',
-          component: () => import('../pages/ReportPembiayaan.vue'),
+          path: 'jurnal',
+          name: 'jurnal umum',
+          component: () => import('../pages/JournalEntries.vue'),
+        },
+        {
+          path: 'balance-sheet',
+          name: 'balance sheet',
+          component: () => import('../pages/BalanceSheetReport.vue'),
+        },
+        {
+          path: 'profit-loss',
+          name: 'profit loss',
+          component: () => import('../pages/ProfitLossReport.vue'),
+        },
+        {
+          path: 'cash-book',
+          name: 'cash book',
+          component: () => import('../pages/CashBookReport.vue'),
+        },
+        {
+          path: 'aged-ledger',
+          name: 'aged ledger',
+          component: () => import('../pages/AgedLedgerReport.vue'),
+        },
+        {
+          path: 'general-ledger',
+          name: 'general ledger',
+          component: () => import('../pages/GeneralLedgerReport.vue'),
+        },
+        {
+          path: 'trial-balance',
+          name: 'trial balance',
+          component: () => import('../pages/TrialBalanceReport.vue'),
         },
         {
           path: 'biaya/list',
@@ -306,19 +336,9 @@ const router = createRouter({
           component: () => import('../pages/InputBiaya.vue'),
         },
         {
-          path: 'labarugi',
-          name: 'labarugi',
-          component: () => import('../pages/LaporanLabaRugi.vue'),
-        },
-        {
-          path: 'coa',
-          name: 'chart of accounts',
-          component: () => import('../pages/ChartOfAccounts.vue'),
-        },
-        {
-          path: 'jurnal',
-          name: 'jurnal umum',
-          component: () => import('../pages/JournalEntries.vue'),
+          path: 'internal-expenditure',
+          name: 'internal-expenditure',
+          component: () => import('../pages/InternalExpenditure.vue'),
         },
       ],
     },

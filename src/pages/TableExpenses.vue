@@ -434,6 +434,103 @@
         />
       </div>
     </div>
+
+    <!-- Payment Modal -->
+    <div
+      v-if="paymentModal.open"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-800">Payment Expense</h3>
+          <button @click="closePaymentModal" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
+            <input
+              v-model="paymentModal.date"
+              type="date"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Akun Kas/Bank</label>
+            <select
+              v-model="paymentModal.selectedBankAccountId"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>Pilih akun kas/bank</option>
+              <option v-for="acc in paymentModal.bankAccounts" :key="acc.id" :value="acc.id">
+                {{ acc.code }} - {{ acc.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Akun Piutang/Hutang (2030)</label
+            >
+            <select
+              v-model="paymentModal.selectedLiabilityAccountId"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>Pilih akun hutang/piutang</option>
+              <option v-for="acc in paymentModal.liabilityAccounts" :key="acc.id" :value="acc.id">
+                {{ acc.code }} - {{ acc.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reference Number</label>
+            <input
+              v-model="paymentModal.reference"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <input
+              v-model="paymentModal.description"
+              type="text"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Pembayaran</label>
+            <div
+              class="px-3 py-2 border border-gray-200 rounded bg-gray-50 font-semibold text-gray-800"
+            >
+              {{ formatCurrency(paymentModal.amount) }}
+            </div>
+          </div>
+
+          <p v-if="paymentModal.error" class="text-sm text-red-600">{{ paymentModal.error }}</p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            @click="closePaymentModal"
+            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            Batal
+          </button>
+          <button
+            @click="submitExpensePayment"
+            :disabled="paymentModal.loading"
+            class="px-5 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {{ paymentModal.loading ? 'Memproses...' : 'Konfirmasi Pembayaran' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1152,9 +1249,97 @@ onMounted(async () => {
 })
 
 // Payment modal - for confirmed expenses
+const paymentModal = reactive({
+  open: false,
+  loading: false,
+  row: null,
+  date: new Date().toISOString().split('T')[0],
+  reference: '',
+  description: '',
+  amount: 0,
+  bankAccounts: [],
+  selectedBankAccountId: '',
+  liabilityAccounts: [],
+  selectedLiabilityAccountId: '',
+  error: '',
+})
+
+async function fetchPaymentBankAccounts() {
+  try {
+    const res = await api.get('bank-accounts')
+    paymentModal.bankAccounts = Array.isArray(res?.data?.data) ? res.data.data : []
+  } catch (err) {
+    console.error('Gagal memuat akun kas/bank:', err)
+  }
+}
+
+async function fetchLiabilityAccounts() {
+  try {
+    const res = await api.get('chart-of-accounts/liabilities')
+    paymentModal.liabilityAccounts = Array.isArray(res?.data?.data) ? res.data.data : []
+    const def = paymentModal.liabilityAccounts.find((a) => String(a.code) === '2030')
+    paymentModal.selectedLiabilityAccountId = def?.id || paymentModal.liabilityAccounts[0]?.id || ''
+  } catch (err) {
+    console.error('Gagal memuat akun hutang/piutang:', err)
+  }
+}
+
 function openPaymentModal(row) {
-  // TODO: Implement payment functionality like in PO/SO/WO
-  alert(`Payment untuk biaya ${row.nomor} - jumlah ${formatCurrency(row.jumlah)}`)
+  paymentModal.error = ''
+  paymentModal.row = row
+  paymentModal.date = new Date().toISOString().split('T')[0]
+  paymentModal.amount = Number(row?.jumlah) || 0
+  const nomor = row?.nomor || row?.number || ''
+  paymentModal.reference = nomor ? `PAY-EXP-${nomor}` : 'PAY-EXP'
+  const ket = row?.keterangan || row?.deskripsi || row?.notes || ''
+  paymentModal.description = ket ? `Pembayaran expense ${ket}` : `Pembayaran expense ${nomor || ''}`
+  paymentModal.open = true
+  if (!paymentModal.bankAccounts.length) fetchPaymentBankAccounts()
+  if (!paymentModal.liabilityAccounts.length) fetchLiabilityAccounts()
+}
+
+function closePaymentModal() {
+  paymentModal.open = false
+}
+
+async function submitExpensePayment() {
+  paymentModal.error = ''
+  if (!paymentModal.row?.id) {
+    paymentModal.error = 'Data expense tidak lengkap.'
+    return
+  }
+  if (!paymentModal.selectedBankAccountId) {
+    paymentModal.error = 'Pilih akun kas/bank terlebih dahulu.'
+    return
+  }
+
+  paymentModal.loading = true
+  try {
+    await api.put(`expenses/${paymentModal.row.id}`, { status: 'paid' })
+
+    const payload = {
+      payment_date: paymentModal.date,
+      amount: paymentModal.amount,
+      cash_account_id: paymentModal.selectedBankAccountId,
+      reference_number: paymentModal.reference,
+      description: paymentModal.description,
+      created_by: localStorage.getItem('email'),
+    }
+    if (paymentModal.selectedLiabilityAccountId) {
+      payload.liability_account_id = paymentModal.selectedLiabilityAccountId
+    }
+
+    await api.post('/accounting/journals/expense-payment', payload)
+
+    alert('Pembayaran berhasil, jurnal expense-payment dibuat')
+    paymentModal.open = false
+    fetchExpenses()
+  } catch (err) {
+    console.error('Error processing expense payment:', err)
+    paymentModal.error = err.response?.data?.message || 'Gagal memproses pembayaran'
+  } finally {
+    paymentModal.loading = false
+  }
 }
 </script>
 
