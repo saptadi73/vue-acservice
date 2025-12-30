@@ -386,7 +386,7 @@ export default {
         this.report.total_credit = this.report.accounts.reduce((sum, acc) => sum + acc.credit, 0)
         this.report.balanced = this.report.total_debit === this.report.total_credit
       } catch (err) {
-        this.error = 'Gagal memuat laporan neraca saldo. Silakan coba lagi.'
+        this.error = 'Gagal memuat laporan neraca saldo. Silakan coba lagi.' + err
       } finally {
         this.loading = false
       }
