@@ -194,7 +194,27 @@ const router = createRouter({
         {
           path: 'list',
           name: 'daftar karyawan',
+          component: () => import('../pages/TableKaryawan.vue'),
+        },
+        {
+          path: 'cards',
+          name: 'daftar karyawan cards',
           component: () => import('../pages/KaryawanListCard.vue'),
+        },
+        {
+          path: 'departments',
+          name: 'daftar departemen',
+          component: () => import('../pages/TableDepartments.vue'),
+        },
+        {
+          path: 'positions',
+          name: 'daftar posisi',
+          component: () => import('../pages/TablePositions.vue'),
+        },
+        {
+          path: 'groups',
+          name: 'daftar groups',
+          component: () => import('../pages/TableGroups.vue'),
         },
         {
           path: 'absen',
