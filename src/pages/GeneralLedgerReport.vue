@@ -325,7 +325,7 @@ export default {
           closing_balance: 20000000,
         }
       } catch (err) {
-        this.error = 'Gagal memuat laporan buku besar. Silakan coba lagi.'
+        this.error = 'Gagal memuat laporan buku besar. Silakan coba lagi.' + err
       } finally {
         this.loading = false
       }
