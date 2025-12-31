@@ -131,12 +131,8 @@ const navItems = reactive([
     title: false,
     children: [
       {
-        text: 'Daftar Karyawan (Table)',
+        text: 'Daftar Karyawan',
         url: '/karyawan/list',
-      },
-      {
-        text: 'Daftar Karyawan (Card)',
-        url: '/karyawan/cards',
       },
       {
         text: 'Daftar Departemen',

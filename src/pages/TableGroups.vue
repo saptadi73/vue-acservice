@@ -71,16 +71,6 @@
                 Nama Grup
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Deskripsi
-              </th>
-              <th
-                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
                 class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Aksi
@@ -90,25 +80,8 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="group in groups" :key="group.id" class="hover:bg-gray-50">
               <!-- Name -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ group.name }}</div>
-              </td>
-
-              <!-- Description -->
               <td class="px-6 py-4">
-                <div class="text-sm text-gray-600 max-w-md">{{ group.description || '-' }}</div>
-              </td>
-
-              <!-- Status -->
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span
-                  :class="
-                    group.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  "
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                >
-                  {{ group.is_active ? 'Aktif' : 'Tidak Aktif' }}
-                </span>
+                <div class="text-sm font-medium text-gray-900">{{ group.nama }}</div>
               </td>
 
               <!-- Actions -->
@@ -190,32 +163,9 @@
               v-model="formData.name"
               type="text"
               required
-              placeholder="Contoh: Group A, Tim Service"
+              placeholder="Contoh: Teknisi Group A, Finance, HRD"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"> Deskripsi </label>
-            <textarea
-              v-model="formData.description"
-              rows="3"
-              placeholder="Deskripsi singkat grup"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            ></textarea>
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="flex items-center">
-              <input
-                v-model="formData.is_active"
-                type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">Grup Aktif</span>
-            </label>
           </div>
 
           <!-- Buttons -->
@@ -241,6 +191,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url'
+
 export default {
   name: 'TableGroups',
   data() {
@@ -260,8 +213,6 @@ export default {
       },
       formData: {
         name: '',
-        description: '',
-        is_active: true,
       },
     }
   },
@@ -274,41 +225,32 @@ export default {
       this.error = null
 
       try {
-        // Build query params
-        const params = new URLSearchParams()
-        params.append('page', this.pagination.current_page)
-        params.append('limit', this.pagination.limit)
-        if (this.searchQuery) params.append('search', this.searchQuery)
+        const params = {
+          page: this.pagination.current_page,
+          limit: this.pagination.limit,
+        }
+        if (this.searchQuery) params.search = this.searchQuery
 
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/groups?${params.toString()}`);
-        // const data = await response.json();
-        // this.groups = data.data.data;
-        // this.pagination = data.data.pagination;
+        const response = await axios.get(`${BASE_URL}api/groups`, { params })
 
-        // Mock data
-        this.groups = [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            name: 'Group A',
-            description: 'Group untuk tim AC',
-            is_active: true,
-            created_at: '2025-12-30T10:00:00Z',
-            updated_at: '2025-12-30T10:00:00Z',
-          },
-          {
-            id: '660e8400-e29b-41d4-a716-446655440001',
-            name: 'Group B',
-            description: 'Group untuk tim service',
-            is_active: true,
-            created_at: '2025-12-30T10:15:00Z',
-            updated_at: '2025-12-30T10:15:00Z',
-          },
-        ]
-        this.pagination.total = 2
-        this.pagination.per_page = this.pagination.limit
+        if (response.data.status === true) {
+          const data = response.data.data
+          this.groups = data.data || data || []
+
+          // Update pagination dari response Laravel
+          this.pagination = {
+            current_page: data.current_page || 1,
+            per_page: data.per_page || this.pagination.limit,
+            total: data.total || 0,
+            limit: this.pagination.limit,
+          }
+          console.log('✅ Groups loaded:', this.groups.length, 'items')
+        } else {
+          this.error = response.data.message || 'Gagal memuat data grup'
+        }
       } catch (err) {
-        this.error = 'Gagal memuat data grup. Silakan coba lagi.'
+        console.error('❌ Error loading groups:', err)
+        this.error = err.response?.data?.message || 'Gagal memuat data grup. Silakan coba lagi.'
       } finally {
         this.loading = false
       }
@@ -321,8 +263,6 @@ export default {
       this.modalMode = 'create'
       this.formData = {
         name: '',
-        description: '',
-        is_active: true,
       }
       this.showModal = true
     },
@@ -330,9 +270,7 @@ export default {
       this.modalMode = 'edit'
       this.selectedGroup = group
       this.formData = {
-        name: group.name,
-        description: group.description,
-        is_active: group.is_active,
+        name: group.nama,
       }
       this.showModal = true
     },
@@ -342,44 +280,52 @@ export default {
     },
     async saveGroup() {
       try {
-        // TODO: Replace with actual API call
-        // if (this.modalMode === 'create') {
-        //   await fetch('/api/groups', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // } else {
-        //   await fetch(`/api/groups/${this.selectedGroup.id}`, {
-        //     method: 'PUT',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // }
+        const payload = {
+          nama: this.formData.name,
+        }
 
-        alert(
-          `✅ Grup berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
-        )
-        this.closeModal()
-        this.loadGroups()
+        let response
+        if (this.modalMode === 'create') {
+          response = await axios.post(`${BASE_URL}api/groups`, payload)
+        } else {
+          response = await axios.post(`${BASE_URL}api/groups/${this.selectedGroup.id}`, {
+            ...payload,
+            _method: 'PUT',
+          })
+        }
+
+        if (response.data.status === true) {
+          alert(
+            `✅ Grup berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
+          )
+          this.closeModal()
+          this.loadGroups()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menyimpan data grup'))
+        }
       } catch (err) {
-        alert('❌ Gagal menyimpan data grup')
+        console.error('❌ Error saving group:', err)
+        alert('❌ Gagal menyimpan data grup: ' + (err.response?.data?.message || err.message))
       }
     },
     confirmDelete(group) {
-      if (confirm(`Yakin ingin menghapus grup "${group.name}"?`)) {
+      if (confirm(`Yakin ingin menghapus grup "${group.nama}"?`)) {
         this.deleteGroup(group.id)
       }
     },
     async deleteGroup(id) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+        const response = await axios.delete(`${BASE_URL}api/groups/${id}`)
 
-        alert('✅ Grup berhasil dihapus')
-        this.loadGroups()
+        if (response.data.status === true) {
+          alert('✅ Grup berhasil dihapus')
+          this.loadGroups()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menghapus grup'))
+        }
       } catch (err) {
-        alert('❌ Gagal menghapus grup')
+        console.error('❌ Error deleting group:', err)
+        alert('❌ Gagal menghapus grup: ' + (err.response?.data?.message || err.message))
       }
     },
   },

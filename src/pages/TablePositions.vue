@@ -236,6 +236,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url'
+
 export default {
   name: 'TablePositions',
   data() {
@@ -264,57 +267,21 @@ export default {
       this.error = null
 
       try {
-        // Build query params
-        const params = new URLSearchParams()
-        if (this.filterStatus !== null) params.append('is_active', this.filterStatus)
-        if (this.showEmployeeCount) params.append('with_pegawai_count', true)
+        const params = {}
+        if (this.filterStatus !== null) params.is_active = this.filterStatus
+        if (this.showEmployeeCount) params.with_pegawai_count = true
 
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/positions?${params.toString()}`);
-        // const data = await response.json();
-        // this.positions = data.data;
+        const response = await axios.get(`${BASE_URL}api/positions`, { params })
 
-        // Mock data
-        this.positions = [
-          {
-            id: '660e8400-e29b-41d4-a716-446655440001',
-            name: 'Teknisi AC',
-            description: 'Teknisi pemasangan dan perbaikan AC',
-            is_active: true,
-            pegawai_count: 5,
-            created_at: '2024-01-15T10:00:00.000000Z',
-            updated_at: '2024-01-15T10:00:00.000000Z',
-          },
-          {
-            id: '660e8400-e29b-41d4-a716-446655440002',
-            name: 'Supervisor',
-            description: 'Supervisor lapangan',
-            is_active: true,
-            pegawai_count: 2,
-            created_at: '2024-01-15T10:00:00.000000Z',
-            updated_at: '2024-01-15T10:00:00.000000Z',
-          },
-          {
-            id: '660e8400-e29b-41d4-a716-446655440003',
-            name: 'Admin',
-            description: 'Staff administrasi',
-            is_active: true,
-            pegawai_count: 3,
-            created_at: '2024-01-20T10:00:00.000000Z',
-            updated_at: '2024-01-20T10:00:00.000000Z',
-          },
-          {
-            id: '660e8400-e29b-41d4-a716-446655440004',
-            name: 'Kasir',
-            description: 'Kasir',
-            is_active: true,
-            pegawai_count: 2,
-            created_at: '2024-02-01T10:00:00.000000Z',
-            updated_at: '2024-02-01T10:00:00.000000Z',
-          },
-        ]
+        if (response.data.status === true) {
+          this.positions = response.data.data.data || response.data.data || []
+          console.log('✅ Positions loaded:', this.positions.length, 'items')
+        } else {
+          this.error = response.data.message || 'Gagal memuat data posisi'
+        }
       } catch (err) {
-        this.error = 'Gagal memuat data posisi. Silakan coba lagi.' + err.message
+        console.error('❌ Error loading positions:', err)
+        this.error = err.response?.data?.message || 'Gagal memuat data posisi. Silakan coba lagi.'
       } finally {
         this.loading = false
       }
@@ -344,28 +311,34 @@ export default {
     },
     async savePosition() {
       try {
-        // TODO: Replace with actual API call
-        // if (this.modalMode === 'create') {
-        //   await fetch('/api/positions', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // } else {
-        //   await fetch(`/api/positions/${this.selectedPosition.id}`, {
-        //     method: 'PUT',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // }
+        const payload = {
+          name: this.formData.name,
+          description: this.formData.description,
+          is_active: this.formData.is_active,
+        }
 
-        alert(
-          `✅ Posisi berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
-        )
-        this.closeModal()
-        this.loadPositions()
+        let response
+        if (this.modalMode === 'create') {
+          response = await axios.post(`${BASE_URL}api/positions`, payload)
+        } else {
+          response = await axios.post(`${BASE_URL}api/positions/${this.selectedPosition.id}`, {
+            ...payload,
+            _method: 'PUT',
+          })
+        }
+
+        if (response.data.status === true) {
+          alert(
+            `✅ Posisi berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
+          )
+          this.closeModal()
+          this.loadPositions()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menyimpan data posisi'))
+        }
       } catch (err) {
-        alert('❌ Gagal menyimpan data posisi') + err.message
+        console.error('❌ Error saving position:', err)
+        alert('❌ Gagal menyimpan data posisi: ' + (err.response?.data?.message || err.message))
       }
     },
     confirmDelete(position) {
@@ -375,13 +348,17 @@ export default {
     },
     async deletePosition(id) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/positions/${id}`, { method: 'DELETE' });
+        const response = await axios.delete(`${BASE_URL}api/positions/${id}`)
 
-        alert('✅ Posisi berhasil dihapus') + id
-        this.loadPositions()
+        if (response.data.status === true) {
+          alert('✅ Posisi berhasil dihapus')
+          this.loadPositions()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menghapus posisi'))
+        }
       } catch (err) {
-        alert('❌ Gagal menghapus posisi') + err.message
+        console.error('❌ Error deleting position:', err)
+        alert('❌ Gagal menghapus posisi: ' + (err.response?.data?.message || err.message))
       }
     },
   },

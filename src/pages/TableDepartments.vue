@@ -16,23 +16,9 @@
 
     <!-- Filter Section -->
     <div class="bg-white rounded-lg shadow-sm p-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Status Filter -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select
-            v-model="filterStatus"
-            @change="loadDepartments"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option :value="null">Semua Status</option>
-            <option :value="true">Aktif</option>
-            <option :value="false">Tidak Aktif</option>
-          </select>
-        </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
         <!-- Show Employee Count -->
-        <div class="flex items-end">
+        <div class="flex items-center">
           <label class="flex items-center">
             <input
               v-model="showEmployeeCount"
@@ -68,17 +54,7 @@
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                ID
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
                 Nama Departemen
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Deskripsi
               </th>
               <th
                 v-if="showEmployeeCount"
@@ -89,28 +65,15 @@
               <th
                 class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Status
-              </th>
-              <th
-                class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
                 Aksi
               </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="dept in departments" :key="dept.id" class="hover:bg-gray-50">
-              <!-- ID -->
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ dept.id }}</td>
-
               <!-- Name -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ dept.name }}</div>
-              </td>
-
-              <!-- Description -->
               <td class="px-6 py-4">
-                <div class="text-sm text-gray-600 max-w-xs">{{ dept.description || '-' }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ dept.nama }}</div>
               </td>
 
               <!-- Employee Count -->
@@ -118,19 +81,7 @@
                 <span
                   class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
                 >
-                  {{ dept.pegawai_count || 0 }} orang
-                </span>
-              </td>
-
-              <!-- Status -->
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <span
-                  :class="
-                    dept.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  "
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                >
-                  {{ dept.is_active ? 'Aktif' : 'Tidak Aktif' }}
+                  {{ dept.jumlah_karyawan || 0 }} orang
                 </span>
               </td>
 
@@ -185,32 +136,9 @@
               v-model="formData.name"
               type="text"
               required
-              placeholder="Contoh: Technical, Administration"
+              placeholder="Contoh: Teknisi, Finance, HRD, Sales/Marketing"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"> Deskripsi </label>
-            <textarea
-              v-model="formData.description"
-              rows="3"
-              placeholder="Deskripsi singkat departemen"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            ></textarea>
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="flex items-center">
-              <input
-                v-model="formData.is_active"
-                type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span class="ml-2 text-sm text-gray-700">Departemen Aktif</span>
-            </label>
           </div>
 
           <!-- Buttons -->
@@ -236,6 +164,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url'
+
 export default {
   name: 'TableDepartments',
   data() {
@@ -250,8 +181,6 @@ export default {
       showEmployeeCount: true,
       formData: {
         name: '',
-        description: '',
-        is_active: true,
       },
     }
   },
@@ -264,48 +193,20 @@ export default {
       this.error = null
 
       try {
-        // Build query params
-        const params = new URLSearchParams()
-        if (this.filterStatus !== null) params.append('is_active', this.filterStatus)
-        if (this.showEmployeeCount) params.append('with_pegawai_count', true)
+        // Use summary/count endpoint to get departments with employee count
+        const response = await axios.get(`${BASE_URL}api/departments/summary/count`)
 
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/departments?${params.toString()}`);
-        // const data = await response.json();
-        // this.departments = data.data;
+        if (response.data.status === true) {
+          this.departments = response.data.data || []
 
-        // Mock data
-        this.departments = [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440001',
-            name: 'Technical',
-            description: 'Departemen teknis lapangan',
-            is_active: true,
-            pegawai_count: 8,
-            created_at: '2024-01-15T10:00:00.000000Z',
-            updated_at: '2024-01-15T10:00:00.000000Z',
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440002',
-            name: 'Administration',
-            description: 'Departemen administrasi',
-            is_active: true,
-            pegawai_count: 3,
-            created_at: '2024-01-15T10:00:00.000000Z',
-            updated_at: '2024-01-15T10:00:00.000000Z',
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440003',
-            name: 'Finance',
-            description: 'Departemen keuangan',
-            is_active: true,
-            pegawai_count: 2,
-            created_at: '2024-01-20T10:00:00.000000Z',
-            updated_at: '2024-01-20T10:00:00.000000Z',
-          },
-        ]
+          console.log('✅ Departments loaded:', this.departments.length, 'items')
+        } else {
+          this.error = response.data.message || 'Gagal memuat data departemen'
+        }
       } catch (err) {
-        this.error = 'Gagal memuat data departemen. Silakan coba lagi.' + err
+        console.error('❌ Error loading departments:', err)
+        this.error =
+          err.response?.data?.message || 'Gagal memuat data departemen. Silakan coba lagi.'
       } finally {
         this.loading = false
       }
@@ -314,8 +215,6 @@ export default {
       this.modalMode = 'create'
       this.formData = {
         name: '',
-        description: '',
-        is_active: true,
       }
       this.showModal = true
     },
@@ -323,9 +222,7 @@ export default {
       this.modalMode = 'edit'
       this.selectedDepartment = dept
       this.formData = {
-        name: dept.name,
-        description: dept.description,
-        is_active: dept.is_active,
+        name: dept.nama,
       }
       this.showModal = true
     },
@@ -335,44 +232,52 @@ export default {
     },
     async saveDepartment() {
       try {
-        // TODO: Replace with actual API call
-        // if (this.modalMode === 'create') {
-        //   await fetch('/api/departments', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // } else {
-        //   await fetch(`/api/departments/${this.selectedDepartment.id}`, {
-        //     method: 'PUT',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        //   });
-        // }
+        const payload = {
+          nama: this.formData.name,
+        }
 
-        alert(
-          `✅ Departemen berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
-        )
-        this.closeModal()
-        this.loadDepartments()
+        let response
+        if (this.modalMode === 'create') {
+          response = await axios.post(`${BASE_URL}api/departments`, payload)
+        } else {
+          response = await axios.post(`${BASE_URL}api/departments/${this.selectedDepartment.id}`, {
+            ...payload,
+            _method: 'PUT',
+          })
+        }
+
+        if (response.data.status === true) {
+          alert(
+            `✅ Departemen berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.name}`,
+          )
+          this.closeModal()
+          this.loadDepartments()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menyimpan data departemen'))
+        }
       } catch (err) {
-        alert('❌ Gagal menyimpan data departemen') + err
+        console.error('❌ Error saving department:', err)
+        alert('❌ Gagal menyimpan data departemen: ' + (err.response?.data?.message || err.message))
       }
     },
     confirmDelete(dept) {
-      if (confirm(`Yakin ingin menghapus departemen "${dept.name}"?`)) {
+      if (confirm(`Yakin ingin menghapus departemen "${dept.nama}"?`)) {
         this.deleteDepartment(dept.id)
       }
     },
     async deleteDepartment(id) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/departments/${id}`, { method: 'DELETE' });
+        const response = await axios.delete(`${BASE_URL}api/departments/${id}`)
 
-        alert('✅ Departemen berhasil dihapus') + id
-        this.loadDepartments()
+        if (response.data.status === true) {
+          alert('✅ Departemen berhasil dihapus')
+          this.loadDepartments()
+        } else {
+          alert('❌ ' + (response.data.message || 'Gagal menghapus departemen'))
+        }
       } catch (err) {
-        alert('❌ Gagal menghapus departemen') + err
+        console.error('❌ Error deleting department:', err)
+        alert('❌ Gagal menghapus departemen: ' + (err.response?.data?.message || err.message))
       }
     },
   },

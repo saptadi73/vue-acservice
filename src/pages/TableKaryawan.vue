@@ -6,12 +6,62 @@
         <h2 class="text-2xl font-semibold text-gray-800">Daftar Pegawai</h2>
         <p class="text-gray-600 text-sm mt-1">Kelola data pegawai AC Lestari</p>
       </div>
-      <button
-        @click="openCreateModal"
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-      >
-        <span>➕</span> Tambah Pegawai
-      </button>
+      <div class="flex items-center gap-3">
+        <!-- View Toggle -->
+        <div class="flex bg-gray-100 rounded-lg p-1">
+          <button
+            @click="viewMode = 'table'"
+            :class="viewMode === 'table' ? 'bg-white shadow-sm' : 'text-gray-600'"
+            class="px-3 py-2 rounded-md transition flex items-center gap-2"
+            title="Tampilan Table"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            <span class="text-sm font-medium">List</span>
+          </button>
+          <button
+            @click="viewMode = 'card'"
+            :class="viewMode === 'card' ? 'bg-white shadow-sm' : 'text-gray-600'"
+            class="px-3 py-2 rounded-md transition flex items-center gap-2"
+            title="Tampilan Card"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
+              />
+            </svg>
+            <span class="text-sm font-medium">Kanban</span>
+          </button>
+        </div>
+
+        <button
+          @click="openCreateModal"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          <span>➕</span> Tambah Pegawai
+        </button>
+      </div>
     </div>
 
     <!-- Filter Section -->
@@ -88,8 +138,8 @@
       <p class="text-red-800">{{ error }}</p>
     </div>
 
-    <!-- Table -->
-    <div v-else class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <!-- Table View -->
+    <div v-else-if="viewMode === 'table'" class="bg-white rounded-lg shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-50 border-b border-gray-200">
@@ -141,9 +191,10 @@
               <!-- Photo -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <img
-                  :src="employee.url_foto || '/default-avatar.png'"
+                  :src="getImageUrl(employee.url_foto)"
                   :alt="employee.nama"
                   class="h-10 w-10 rounded-full object-cover"
+                  @error="handleImageError"
                 />
               </td>
 
@@ -156,22 +207,26 @@
               <!-- Contact -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ employee.hp }}</div>
-                <div class="text-sm text-gray-500">{{ formatDate(employee.tanggal_masuk) }}</div>
+                <div class="text-sm text-gray-500">
+                  {{ formatDate(employee.hire_date || employee.tanggal_masuk) }}
+                </div>
               </td>
 
               <!-- Department -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ employee.departemen?.name || '-' }}</div>
+                <div class="text-sm text-gray-900">{{ employee.departemen?.nama || '-' }}</div>
               </td>
 
               <!-- Position -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ employee.posisi?.name || '-' }}</div>
+                <div class="text-sm text-gray-900">
+                  {{ employee.position?.name || '-' }}
+                </div>
               </td>
 
               <!-- Group -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ employee.group?.name || '-' }}</div>
+                <div class="text-sm text-gray-900">{{ employee.group?.nama || '-' }}</div>
               </td>
 
               <!-- Status -->
@@ -215,9 +270,151 @@
         </table>
       </div>
 
-      <!-- Empty State -->
+      <!-- Empty State for Table -->
       <div v-if="employees.length === 0" class="text-center py-12">
         <p class="text-gray-500">Tidak ada data pegawai</p>
+      </div>
+
+      <!-- Pagination for Table -->
+      <div
+        v-if="pagination.total > 0"
+        class="bg-gray-50 px-6 py-4 border-t flex items-center justify-between"
+      >
+        <div class="text-sm text-gray-700">
+          Menampilkan {{ (pagination.current_page - 1) * pagination.per_page + 1 }} -
+          {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} dari
+          {{ pagination.total }} pegawai
+        </div>
+        <div class="flex gap-2">
+          <button
+            @click="changePage(pagination.current_page - 1)"
+            :disabled="pagination.current_page === 1"
+            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Prev
+          </button>
+          <span class="px-3 py-1 text-sm text-gray-700">
+            Halaman {{ pagination.current_page }} dari {{ pagination.last_page }}
+          </span>
+          <button
+            @click="changePage(pagination.current_page + 1)"
+            :disabled="pagination.current_page >= pagination.last_page"
+            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card View (Kanban) -->
+    <div
+      v-else-if="viewMode === 'card'"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+    >
+      <!-- Empty State for Cards -->
+      <div v-if="employees.length === 0" class="col-span-full text-center py-12">
+        <p class="text-gray-500">Tidak ada data pegawai</p>
+      </div>
+
+      <!-- Employee Card -->
+      <div
+        v-for="employee in employees"
+        :key="employee.id"
+        class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+      >
+        <img
+          :src="getImageUrl(employee.url_foto)"
+          :alt="employee.nama"
+          class="w-full h-48 object-cover"
+          @error="handleImageError"
+        />
+
+        <div class="p-4">
+          <!-- Name -->
+          <h3 class="text-lg font-semibold text-gray-800 truncate">{{ employee.nama }}</h3>
+
+          <!-- Department & Position -->
+          <p class="text-sm text-gray-600 truncate">
+            {{ employee.departemen?.nama || '-' }} - {{ employee.position?.name || '-' }}
+          </p>
+
+          <!-- Contact Info -->
+          <div class="mt-2 space-y-1">
+            <p class="text-xs text-gray-600 truncate"><strong>HP:</strong> {{ employee.hp }}</p>
+            <p class="text-xs text-gray-600 truncate">
+              <strong>Email:</strong> {{ employee.email }}
+            </p>
+            <p v-if="employee.group" class="text-xs text-gray-600 truncate">
+              <strong>Group:</strong> {{ employee.group.nama }}
+            </p>
+          </div>
+
+          <!-- Status & Actions -->
+          <div class="mt-3 flex items-center justify-between">
+            <span
+              :class="employee.is_active ? 'bg-green-500' : 'bg-red-500'"
+              class="inline-block px-3 py-1 text-white text-xs font-semibold rounded-full"
+            >
+              {{ employee.is_active ? 'Aktif' : 'Tidak Aktif' }}
+            </span>
+
+            <div class="flex gap-2">
+              <button
+                @click="viewEmployee(employee)"
+                class="text-blue-600 hover:text-blue-900"
+                title="Lihat Detail"
+              >
+                👁️
+              </button>
+              <button
+                @click="editEmployee(employee)"
+                class="text-green-600 hover:text-green-900"
+                title="Edit"
+              >
+                ✏️
+              </button>
+              <button
+                @click="confirmDelete(employee)"
+                class="text-red-600 hover:text-red-900"
+                title="Hapus"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination for Card View -->
+    <div
+      v-if="viewMode === 'card' && pagination.total > 0"
+      class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between"
+    >
+      <div class="text-sm text-gray-700">
+        Menampilkan {{ (pagination.current_page - 1) * pagination.per_page + 1 }} -
+        {{ Math.min(pagination.current_page * pagination.per_page, pagination.total) }} dari
+        {{ pagination.total }} pegawai
+      </div>
+      <div class="flex gap-2">
+        <button
+          @click="changePage(pagination.current_page - 1)"
+          :disabled="pagination.current_page === 1"
+          class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          ← Prev
+        </button>
+        <span class="px-3 py-1 text-sm text-gray-700">
+          Halaman {{ pagination.current_page }} dari {{ pagination.last_page }}
+        </span>
+        <button
+          @click="changePage(pagination.current_page + 1)"
+          :disabled="pagination.current_page >= pagination.last_page"
+          class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next →
+        </button>
       </div>
     </div>
 
@@ -293,7 +490,7 @@
               >
                 <option value="">Pilih Departemen</option>
                 <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                  {{ dept.name }}
+                  {{ dept.nama || dept.name }}
                 </option>
               </select>
             </div>
@@ -308,7 +505,7 @@
               >
                 <option value="">Pilih Posisi</option>
                 <option v-for="pos in positions" :key="pos.id" :value="pos.id">
-                  {{ pos.name }}
+                  {{ pos.nama || pos.name }}
                 </option>
               </select>
             </div>
@@ -322,7 +519,7 @@
               >
                 <option value="">Tidak ada Group</option>
                 <option v-for="group in groups" :key="group.id" :value="group.id">
-                  {{ group.name }}
+                  {{ group.nama || group.name }}
                 </option>
               </select>
             </div>
@@ -358,10 +555,18 @@
               <input
                 type="file"
                 @change="handlePhotoUpload"
-                accept="image/*"
+                accept="image/png,image/jpg,image/jpeg"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG (Max 2MB)</p>
+              <!-- Photo Preview -->
+              <div v-if="photoPreview" class="mt-2">
+                <img
+                  :src="photoPreview"
+                  alt="Preview Foto"
+                  class="h-24 w-24 object-cover rounded-lg border border-gray-300"
+                />
+              </div>
             </div>
 
             <!-- Signature Upload -->
@@ -370,10 +575,27 @@
               <input
                 type="file"
                 @change="handleSignatureUpload"
-                accept="image/*"
+                accept="image/png,image/jpg,image/jpeg"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG (Max 1MB)</p>
+              <p class="text-xs text-blue-600 mt-1">
+                ℹ️ Akan diupload ke tabel tanda_tangan terlebih dahulu
+              </p>
+              <!-- Signature Preview -->
+              <div v-if="signaturePreview" class="mt-2">
+                <img
+                  :src="signaturePreview"
+                  alt="Preview Tanda Tangan"
+                  class="h-20 border border-gray-300 rounded"
+                />
+              </div>
+              <!-- Show existing signature ID -->
+              <div v-else-if="formData.tanda_tangan_id && modalMode === 'edit'" class="mt-2">
+                <p class="text-xs text-gray-600">
+                  📝 Tanda Tangan ID: {{ formData.tanda_tangan_id }}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -430,9 +652,10 @@
           <!-- Profile Section -->
           <div class="flex items-center gap-6">
             <img
-              :src="selectedEmployee.url_foto || '/default-avatar.png'"
+              :src="getImageUrl(selectedEmployee.url_foto)"
               :alt="selectedEmployee.nama"
               class="h-24 w-24 rounded-full object-cover border-4 border-gray-200"
+              @error="handleImageError"
             />
             <div>
               <h3 class="text-2xl font-bold text-gray-900">{{ selectedEmployee.nama }}</h3>
@@ -459,22 +682,24 @@
             <div>
               <p class="text-sm text-gray-600">Tanggal Masuk</p>
               <p class="font-semibold text-gray-900">
-                {{ formatDate(selectedEmployee.tanggal_masuk) }}
+                {{ formatDate(selectedEmployee.hire_date || selectedEmployee.tanggal_masuk) }}
               </p>
             </div>
             <div>
               <p class="text-sm text-gray-600">Departemen</p>
               <p class="font-semibold text-gray-900">
-                {{ selectedEmployee.departemen?.name || '-' }}
+                {{ selectedEmployee.departemen?.nama || '-' }}
               </p>
             </div>
             <div>
               <p class="text-sm text-gray-600">Posisi</p>
-              <p class="font-semibold text-gray-900">{{ selectedEmployee.posisi?.name || '-' }}</p>
+              <p class="font-semibold text-gray-900">
+                {{ selectedEmployee.position?.name || '-' }}
+              </p>
             </div>
             <div>
               <p class="text-sm text-gray-600">Group</p>
-              <p class="font-semibold text-gray-900">{{ selectedEmployee.group?.name || '-' }}</p>
+              <p class="font-semibold text-gray-900">{{ selectedEmployee.group?.nama || '-' }}</p>
             </div>
             <div>
               <p class="text-sm text-gray-600">Gaji</p>
@@ -489,13 +714,21 @@
           </div>
 
           <!-- Signature (if exists) -->
-          <div v-if="selectedEmployee.tandaTangan">
+          <div v-if="selectedEmployee.tanda_tangan || selectedEmployee.tandaTangan">
             <p class="text-sm text-gray-600 mb-2">Tanda Tangan</p>
             <img
-              :src="selectedEmployee.tandaTangan"
+              :src="
+                getImageUrl(
+                  selectedEmployee.tanda_tangan?.url_tanda_tangan ||
+                    selectedEmployee.tandaTangan?.url_tanda_tangan,
+                )
+              "
               alt="Tanda Tangan"
               class="h-20 border border-gray-300 rounded"
             />
+            <p v-if="selectedEmployee.tanda_tangan" class="text-xs text-gray-500 mt-1">
+              ID: {{ selectedEmployee.tanda_tangan_id }}
+            </p>
           </div>
         </div>
       </div>
@@ -504,10 +737,14 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url.ts'
+
 export default {
   name: 'TableKaryawan',
   data() {
     return {
+      viewMode: 'table', // 'table' or 'card'
       employees: [],
       departments: [],
       positions: [],
@@ -518,6 +755,12 @@ export default {
       showDetailModal: false,
       modalMode: 'create', // 'create' or 'edit'
       selectedEmployee: null,
+      pagination: {
+        current_page: 1,
+        per_page: 10,
+        total: 0,
+        last_page: 1,
+      },
       filters: {
         search: '',
         department_id: null,
@@ -535,9 +778,13 @@ export default {
         tanggal_masuk: new Date().toISOString().split('T')[0],
         gaji: '',
         is_active: true,
-        url_foto: null,
-        tanda_tangan: null,
+        tanda_tangan_id: null,
       },
+      photoFile: null,
+      signatureFile: null,
+      uploadedSignatureId: null,
+      signaturePreview: null,
+      photoPreview: null,
     }
   },
   mounted() {
@@ -548,159 +795,126 @@ export default {
   },
   methods: {
     async loadDepartments() {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/departments?is_active=true');
-      // const data = await response.json();
-      // this.departments = data.data;
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${BASE_URL}api/departments`, {
+          params: { is_active: true },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-      // Mock data with UUID
-      this.departments = [
-        {
-          id: '550e8400-e29b-41d4-a716-446655440001',
-          name: 'Technical',
-          description: 'Departemen teknis lapangan',
-        },
-        {
-          id: '550e8400-e29b-41d4-a716-446655440002',
-          name: 'Administration',
-          description: 'Departemen administrasi',
-        },
-        {
-          id: '550e8400-e29b-41d4-a716-446655440003',
-          name: 'Finance',
-          description: 'Departemen keuangan',
-        },
-      ]
+        if (response.data && response.data.status === 'success') {
+          this.departments = response.data.data
+        }
+      } catch (error) {
+        console.error('Error loading departments:', error)
+        // Fallback to empty array if API fails
+        this.departments = []
+      }
     },
     async loadPositions() {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/positions?is_active=true');
-      // const data = await response.json();
-      // this.positions = data.data;
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${BASE_URL}api/positions`, {
+          params: { is_active: true },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-      // Mock data with UUID
-      this.positions = [
-        {
-          id: '660e8400-e29b-41d4-a716-446655440001',
-          name: 'Teknisi AC',
-          description: 'Teknisi pemasangan dan perbaikan AC',
-        },
-        {
-          id: '660e8400-e29b-41d4-a716-446655440002',
-          name: 'Supervisor',
-          description: 'Supervisor lapangan',
-        },
-        {
-          id: '660e8400-e29b-41d4-a716-446655440003',
-          name: 'Admin',
-          description: 'Staff administrasi',
-        },
-        {
-          id: '660e8400-e29b-41d4-a716-446655440004',
-          name: 'Kasir',
-          description: 'Kasir',
-        },
-      ]
+        if (response.data && response.data.status === 'success') {
+          this.positions = response.data.data
+        }
+      } catch (error) {
+        console.error('Error loading positions:', error)
+        // Fallback to empty array if API fails
+        this.positions = []
+      }
     },
     async loadGroups() {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/groups?is_active=true');
-      // const data = await response.json();
-      // this.groups = data.data.data;
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${BASE_URL}api/groups`, {
+          params: { is_active: true },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-      // Mock data
-      this.groups = [
-        {
-          id: '770e8400-e29b-41d4-a716-446655440001',
-          name: 'Group A',
-          description: 'Group untuk tim AC',
-        },
-        {
-          id: '770e8400-e29b-41d4-a716-446655440002',
-          name: 'Group B',
-          description: 'Group untuk tim service',
-        },
-      ]
+        if (response.data && response.data.status === 'success') {
+          // API returns paginated data in data.data
+          this.groups = response.data.data.data || response.data.data
+        }
+      } catch (error) {
+        console.error('Error loading groups:', error)
+        // Fallback to empty array if API fails
+        this.groups = []
+      }
     },
-    async loadEmployees() {
+    async loadEmployees(keepPage = false) {
       this.loading = true
       this.error = null
 
+      // Reset to page 1 when filters change (but not when navigating pages)
+      if (!keepPage && this.pagination.current_page !== 1) {
+        this.pagination.current_page = 1
+      }
+
       try {
         // Build query params
-        const params = new URLSearchParams()
-        if (this.filters.search) params.append('search', this.filters.search)
-        if (this.filters.department_id) params.append('department_id', this.filters.department_id)
-        if (this.filters.position_id) params.append('position_id', this.filters.position_id)
-        if (this.filters.is_active !== null) params.append('is_active', this.filters.is_active)
+        const params = {
+          page: this.pagination.current_page,
+          limit: this.pagination.per_page,
+        }
+        if (this.filters.search) params.search = this.filters.search
+        if (this.filters.department_id) params.department_id = this.filters.department_id
+        if (this.filters.position_id) params.position_id = this.filters.position_id
+        if (this.filters.is_active !== null) params.is_active = this.filters.is_active
 
-        // TODO: Replace with actual API call
-        const response = await fetch(`/api/pegawai?${params.toString()}`)
-        const data = await response.json()
-        this.employees = data.data
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${BASE_URL}api/pegawai`, {
+          params,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-        // Mock data with Indonesian field names and UUID
-        this.employees = [
-          {
-            id: '880e8400-e29b-41d4-a716-446655440001',
-            nama: 'Ahmad Budi',
-            alamat: 'Jl. Raya No. 15, Jakarta',
-            hp: '08123456789',
-            departemen_id: '550e8400-e29b-41d4-a716-446655440001',
-            posisi_id: '660e8400-e29b-41d4-a716-446655440001',
-            group_id: '770e8400-e29b-41d4-a716-446655440001',
-            email: 'ahmad.budi@bengkel.com',
-            url_foto: null,
-            tanggal_masuk: '2024-01-01',
-            gaji: 5000000,
-            is_active: true,
-            departemen: { id: '550e8400-e29b-41d4-a716-446655440001', name: 'Technical' },
-            posisi: { id: '660e8400-e29b-41d4-a716-446655440001', name: 'Teknisi AC' },
-            group: { id: '770e8400-e29b-41d4-a716-446655440001', name: 'Group A' },
-            tandaTangan: null,
-          },
-          {
-            id: '880e8400-e29b-41d4-a716-446655440002',
-            nama: 'Siti Aisyah',
-            alamat: 'Jl. Merdeka No. 8, Bandung',
-            hp: '08234567890',
-            departemen_id: '550e8400-e29b-41d4-a716-446655440002',
-            posisi_id: '660e8400-e29b-41d4-a716-446655440003',
-            group_id: null,
-            email: 'siti.aisyah@bengkel.com',
-            url_foto: null,
-            tanggal_masuk: '2024-02-15',
-            gaji: 4000000,
-            is_active: true,
-            departemen: { id: '550e8400-e29b-41d4-a716-446655440002', name: 'Administration' },
-            posisi: { id: '660e8400-e29b-41d4-a716-446655440003', name: 'Admin' },
-            group: null,
-            tandaTangan: null,
-          },
-          {
-            id: '880e8400-e29b-41d4-a716-446655440003',
-            nama: 'Joko Santoso',
-            alamat: 'Jl. Diponegoro No. 12, Surabaya',
-            hp: '08345678901',
-            departemen_id: '550e8400-e29b-41d4-a716-446655440001',
-            posisi_id: '660e8400-e29b-41d4-a716-446655440001',
-            group_id: '770e8400-e29b-41d4-a716-446655440001',
-            email: 'joko.santoso@bengkel.com',
-            url_foto: null,
-            tanggal_masuk: '2023-11-20',
-            gaji: 5500000,
-            is_active: true,
-            departemen: { id: '550e8400-e29b-41d4-a716-446655440001', name: 'Technical' },
-            posisi: { id: '660e8400-e29b-41d4-a716-446655440001', name: 'Teknisi AC' },
-            group: { id: '770e8400-e29b-41d4-a716-446655440001', name: 'Group A' },
-            tandaTangan: null,
-          },
-        ]
+        console.log('Employees response:', response.data)
+        console.log('Requested page:', params.page)
+
+        // API returns status as boolean (true) not string ('success')
+        // Data is paginated: response.data.data.data contains the array
+        if (response.data && response.data.status === true) {
+          const data = response.data.data
+          this.employees = data.data || data
+
+          // Update pagination info
+          this.pagination = {
+            current_page: data.current_page || 1,
+            per_page: data.per_page || 10,
+            total: data.total || 0,
+            last_page: data.last_page || 1,
+          }
+
+          // Debug: Log sample employee data
+          if (this.employees.length > 0) {
+            console.log('✅ Sample employee data:', this.employees[0])
+            console.log('✅ Pagination:', this.pagination)
+          }
+        }
       } catch (err) {
-        this.error = 'Gagal memuat data pegawai. Silakan coba lagi.' + err.message
+        console.error('Error loading employees:', err)
+        this.error = 'Gagal memuat data pegawai. ' + (err.response?.data?.message || err.message)
+        this.employees = []
       } finally {
         this.loading = false
       }
+    },
+    changePage(page) {
+      if (page < 1 || page > this.pagination.last_page) return
+      this.pagination.current_page = page
+      this.loadEmployees(true) // Pass true to keep the current page
     },
     openCreateModal() {
       this.modalMode = 'create'
@@ -715,9 +929,13 @@ export default {
         tanggal_masuk: new Date().toISOString().split('T')[0],
         gaji: '',
         is_active: true,
-        url_foto: null,
-        tanda_tangan: null,
+        tanda_tangan_id: null,
       }
+      this.photoFile = null
+      this.signatureFile = null
+      this.uploadedSignatureId = null
+      this.signaturePreview = null
+      this.photoPreview = null
       this.showModal = true
     },
     editEmployee(employee) {
@@ -728,15 +946,19 @@ export default {
         alamat: employee.alamat,
         hp: employee.hp,
         departemen_id: employee.departemen_id,
-        posisi_id: employee.posisi_id,
+        posisi_id: employee.posisi_id || employee.position_id,
         group_id: employee.group_id,
         email: employee.email,
-        tanggal_masuk: employee.tanggal_masuk,
+        tanggal_masuk: employee.hire_date || employee.tanggal_masuk,
         gaji: employee.gaji,
         is_active: employee.is_active,
-        url_foto: null,
-        tanda_tangan: null,
+        tanda_tangan_id: employee.tanda_tangan_id || null,
       }
+      this.photoFile = null
+      this.signatureFile = null
+      this.uploadedSignatureId = null
+      this.signaturePreview = null
+      this.photoPreview = employee.url_foto ? this.getImageUrl(employee.url_foto) : null
       this.showModal = true
     },
     viewEmployee(employee) {
@@ -750,44 +972,137 @@ export default {
     handlePhotoUpload(event) {
       const file = event.target.files[0]
       if (file) {
-        this.formData.url_foto = file
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          alert('❌ Ukuran foto terlalu besar. Maksimal 2MB')
+          event.target.value = ''
+          return
+        }
+
+        this.photoFile = file
+
+        // Create preview
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          this.photoPreview = e.target.result
+        }
+        reader.readAsDataURL(file)
       }
     },
     handleSignatureUpload(event) {
       const file = event.target.files[0]
       if (file) {
-        this.formData.tanda_tangan = file
+        // Validate file size (max 1MB)
+        if (file.size > 1 * 1024 * 1024) {
+          alert('❌ Ukuran tanda tangan terlalu besar. Maksimal 1MB')
+          event.target.value = ''
+          return
+        }
+
+        this.signatureFile = file
+
+        // Create preview
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          this.signaturePreview = e.target.result
+        }
+        reader.readAsDataURL(file)
       }
     },
     async saveEmployee() {
       try {
-        // TODO: Replace with actual API call using multipart/form-data
-        const formData = new FormData()
-        Object.keys(this.formData).forEach((key) => {
-          if (this.formData[key] !== null) {
-            formData.append(key, this.formData[key])
-          }
-        })
+        const token = localStorage.getItem('token')
 
-        if (this.modalMode === 'create') {
-          await fetch('/api/pegawai', {
-            method: 'POST',
-            body: formData,
-          })
-        } else {
-          await fetch(`/api/pegawai/${this.selectedEmployee.id}`, {
-            method: 'PUT',
-            body: formData,
-          })
+        // Step 1: Upload signature if new signature file is provided
+        if (this.signatureFile) {
+          const signatureFormData = new FormData()
+          signatureFormData.append('tanda_tangan', this.signatureFile)
+
+          const signatureResponse = await axios.post(
+            `${BASE_URL}api/tanda-tangan`,
+            signatureFormData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
+
+          if (signatureResponse.data && signatureResponse.data.status === true) {
+            this.uploadedSignatureId = signatureResponse.data.data.id
+            console.log('Signature uploaded with ID:', this.uploadedSignatureId)
+          }
         }
 
-        alert(
-          `✅ Pegawai berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.nama}\nEmail: ${this.formData.email}\nHP: ${this.formData.hp}`,
-        )
-        this.closeModal()
-        this.loadEmployees()
+        // Step 2: Create/Update employee with multipart/form-data
+        const formData = new FormData()
+
+        // Add all form fields (use Indonesian field names to match API)
+        formData.append('nama', this.formData.nama)
+        formData.append('alamat', this.formData.alamat)
+        formData.append('hp', this.formData.hp)
+        formData.append('email', this.formData.email)
+        formData.append('tanggal_masuk', this.formData.tanggal_masuk)
+        formData.append('is_active', this.formData.is_active ? '1' : '0')
+
+        if (this.formData.departemen_id) {
+          formData.append('departemen_id', this.formData.departemen_id)
+        }
+        if (this.formData.posisi_id) {
+          formData.append('posisi_id', this.formData.posisi_id)
+        }
+        if (this.formData.group_id) {
+          formData.append('group_id', this.formData.group_id)
+        }
+        if (this.formData.gaji) {
+          formData.append('gaji', this.formData.gaji)
+        }
+
+        // Add signature ID if uploaded
+        if (this.uploadedSignatureId) {
+          formData.append('tanda_tangan_id', this.uploadedSignatureId)
+        } else if (this.formData.tanda_tangan_id) {
+          formData.append('tanda_tangan_id', this.formData.tanda_tangan_id)
+        }
+
+        // Add photo file if provided
+        if (this.photoFile) {
+          formData.append('url_foto', this.photoFile)
+        }
+
+        let response
+        if (this.modalMode === 'create') {
+          response = await axios.post(`${BASE_URL}api/pegawai`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        } else {
+          // Use POST for file upload with existing employee
+          response = await axios.post(
+            `${BASE_URL}api/pegawai/${this.selectedEmployee.id}`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
+        }
+
+        if (response.data && response.data.status === true) {
+          alert(
+            `✅ Pegawai berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.nama}\nEmail: ${this.formData.email}\nHP: ${this.formData.hp}`,
+          )
+          this.closeModal()
+          this.loadEmployees()
+        }
       } catch (err) {
-        alert('❌ Gagal menyimpan data pegawai') + err.message
+        console.error('Error saving employee:', err)
+        alert('❌ Gagal menyimpan data pegawai: ' + (err.response?.data?.message || err.message))
       }
     },
     confirmDelete(employee) {
@@ -797,13 +1112,20 @@ export default {
     },
     async deleteEmployee(id) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/pegawai/${id}`, { method: 'DELETE' });
+        const token = localStorage.getItem('token')
+        const response = await axios.delete(`${BASE_URL}api/pegawai/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-        alert('✅ Pegawai berhasil dihapus') + id
-        this.loadEmployees()
+        if (response.data && response.data.status === true) {
+          alert('✅ Pegawai berhasil dihapus')
+          this.loadEmployees()
+        }
       } catch (err) {
-        alert('❌ Gagal menghapus pegawai') + err.message
+        console.error('Error deleting employee:', err)
+        alert('❌ Gagal menghapus pegawai: ' + (err.response?.data?.message || err.message))
       }
     },
     formatDate(dateString) {
@@ -822,6 +1144,19 @@ export default {
         currency: 'IDR',
         minimumFractionDigits: 0,
       }).format(value)
+    },
+    getImageUrl(path) {
+      if (!path) return '/default-avatar.png'
+      // If path already includes http/https, return as is
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path
+      }
+      // Prepend BASE_URL for relative paths
+      return `${BASE_URL}${path}`
+    },
+    handleImageError(event) {
+      // Fallback to default avatar if image fails to load
+      event.target.src = '/default-avatar.png'
     },
   },
 }
