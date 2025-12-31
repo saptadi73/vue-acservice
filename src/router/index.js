@@ -219,7 +219,7 @@ const router = createRouter({
         {
           path: 'absen',
           name: 'absen',
-          component: () => import('../pages/TableAbsenKaryawan.vue'),
+          component: () => import('../pages/TableAbsen.vue'),
         },
         {
           path: 'kehadiran',
@@ -230,6 +230,11 @@ const router = createRouter({
           path: 'lemburku',
           name: 'lemburku',
           component: () => import('../pages/TableRekapLembur.vue'),
+        },
+        {
+          path: 'timeoff',
+          name: 'time off',
+          component: () => import('../pages/TableTimeOff.vue'),
         },
       ],
     },

@@ -166,6 +166,10 @@ const navItems = reactive([
         text: 'Rekap Lembur',
         url: '/karyawan/lemburku',
       },
+      {
+        text: 'Cuti & Ijin',
+        url: '/karyawan/timeoff',
+      },
     ],
   },
   {
