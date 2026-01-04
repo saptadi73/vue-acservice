@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <title>API Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>API Test</h1>
+    <button onclick="testDepartments()">Test Departments</button>
+    <button onclick="testPositions()">Test Positions</button>
+    <div
+      id="result"
+      style="margin-top: 20px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px"
+    ></div>
+
+    <script>
+      const BASE_URL = 'http://localhost:8000/'
+
+      async function testDepartments() {
+        try {
+          const token = localStorage.getItem('token')
+          console.log('Token:', token)
+          const response = await axios.get(`${BASE_URL}api/departments`, {
+            params: { is_active: true },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          document.getElementById('result').textContent =
+            'Departments Response:\n\n' + JSON.stringify(response.data, null, 2)
+          console.log('Departments:', response.data)
+        } catch (error) {
+          document.getElementById('result').textContent =
+            'Error: ' + error.message + '\n\n' + JSON.stringify(error.response?.data, null, 2)
+          console.error('Error:', error)
+        }
+      }
+
+      async function testPositions() {
+        try {
+          const token = localStorage.getItem('token')
+          const response = await axios.get(`${BASE_URL}api/positions`, {
+            params: { is_active: true },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          document.getElementById('result').textContent =
+            'Positions Response:\n\n' + JSON.stringify(response.data, null, 2)
+          console.log('Positions:', response.data)
+        } catch (error) {
+          document.getElementById('result').textContent =
+            'Error: ' + error.message + '\n\n' + JSON.stringify(error.response?.data, null, 2)
+          console.error('Error:', error)
+        }
+      }
+    </script>
+  </body>
+</html>

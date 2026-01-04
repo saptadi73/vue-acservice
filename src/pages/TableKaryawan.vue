@@ -162,6 +162,11 @@
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
+                Tanggal Masuk
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Departemen
               </th>
               <th
@@ -207,7 +212,12 @@
               <!-- Contact -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ employee.hp }}</div>
-                <div class="text-sm text-gray-500">
+                <div class="text-sm text-gray-500">{{ employee.email }}</div>
+              </td>
+
+              <!-- Hire Date -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
                   {{ formatDate(employee.hire_date || employee.tanggal_masuk) }}
                 </div>
               </td>
@@ -523,18 +533,6 @@
                 </option>
               </select>
             </div>
-
-            <!-- Gaji -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Gaji</label>
-              <input
-                v-model="formData.gaji"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
           </div>
 
           <!-- Alamat (Full Width) -->
@@ -584,17 +582,30 @@
               </p>
               <!-- Signature Preview -->
               <div v-if="signaturePreview" class="mt-2">
+                <p class="text-xs text-gray-600 mb-1">Preview Tanda Tangan Baru:</p>
                 <img
                   :src="signaturePreview"
                   alt="Preview Tanda Tangan"
                   class="h-20 border border-gray-300 rounded"
                 />
               </div>
-              <!-- Show existing signature ID -->
-              <div v-else-if="formData.tanda_tangan_id && modalMode === 'edit'" class="mt-2">
-                <p class="text-xs text-gray-600">
-                  📝 Tanda Tangan ID: {{ formData.tanda_tangan_id }}
-                </p>
+              <!-- Show existing signature -->
+              <div v-else-if="modalMode === 'edit' && selectedEmployee" class="mt-2">
+                <div v-if="selectedEmployee.tanda_tangan || selectedEmployee.tandaTangan">
+                  <p class="text-xs text-gray-600 mb-1">Tanda Tangan Saat Ini:</p>
+                  <img
+                    :src="
+                      getImageUrl(
+                        selectedEmployee.tanda_tangan?.url_tanda_tangan ||
+                          selectedEmployee.tandaTangan?.url_tanda_tangan,
+                      )
+                    "
+                    alt="Tanda Tangan Existing"
+                    class="h-20 border border-gray-300 rounded"
+                  />
+                  <p class="text-xs text-gray-500 mt-1">📝 ID: {{ formData.tanda_tangan_id }}</p>
+                </div>
+                <p v-else class="text-xs text-gray-500 mt-1">ℹ️ Belum ada tanda tangan</p>
               </div>
             </div>
           </div>
@@ -701,10 +712,6 @@
               <p class="text-sm text-gray-600">Group</p>
               <p class="font-semibold text-gray-900">{{ selectedEmployee.group?.nama || '-' }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-600">Gaji</p>
-              <p class="font-semibold text-gray-900">{{ formatCurrency(selectedEmployee.gaji) }}</p>
-            </div>
           </div>
 
           <!-- Alamat -->
@@ -776,7 +783,6 @@ export default {
         group_id: null,
         email: '',
         tanggal_masuk: new Date().toISOString().split('T')[0],
-        gaji: '',
         is_active: true,
         tanda_tangan_id: null,
       },
@@ -797,18 +803,56 @@ export default {
     async loadDepartments() {
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get(`${BASE_URL}api/departments`, {
-          params: { is_active: true },
+        const endpoint = `${BASE_URL}api/departments/summary/count`
+
+        console.group('🔵 DEPARTMENTS API CALL')
+        console.log('📤 Request URL:', endpoint)
+        console.log('📤 Request Headers:', {
+          Authorization: `Bearer ${token?.substring(0, 20)}...`,
+        })
+        console.log('📤 Request Time:', new Date().toISOString())
+
+        const response = await axios.get(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
 
-        if (response.data && response.data.status === 'success') {
-          this.departments = response.data.data
+        console.log('📥 Response Status:', response.status)
+        console.log('📥 Response Headers:', response.headers)
+        console.log('📥 Full Response Data:', JSON.stringify(response.data, null, 2))
+        console.log('📥 Response data.status:', response.data.status, typeof response.data.status)
+        console.log('📥 Response data.message:', response.data.message)
+        console.log(
+          '📥 Response data.data type:',
+          Array.isArray(response.data.data) ? 'Array' : typeof response.data.data,
+        )
+        console.log('📥 Response data.data length:', response.data.data?.length)
+
+        if (
+          response.data &&
+          (response.data.status === 'success' || response.data.status === true)
+        ) {
+          this.departments = response.data.data || []
+          console.log('✅ Departments successfully loaded:', this.departments.length, 'items')
+          console.table(this.departments)
+        } else {
+          console.warn('⚠️ Response status not success:', response.data.status)
         }
+        console.groupEnd()
       } catch (error) {
-        console.error('Error loading departments:', error)
+        console.group('❌ DEPARTMENTS API ERROR')
+        console.error('Error Type:', error.name)
+        console.error('Error Message:', error.message)
+        console.error('Error Stack:', error.stack)
+        if (error.response) {
+          console.error('Response Status:', error.response.status)
+          console.error('Response Data:', JSON.stringify(error.response.data, null, 2))
+          console.error('Response Headers:', error.response.headers)
+        } else if (error.request) {
+          console.error('No Response Received. Request:', error.request)
+        }
+        console.groupEnd()
         // Fallback to empty array if API fails
         this.departments = []
       }
@@ -816,18 +860,59 @@ export default {
     async loadPositions() {
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get(`${BASE_URL}api/positions`, {
-          params: { is_active: true },
+        const endpoint = `${BASE_URL}api/positions`
+        const params = { is_active: true }
+
+        console.group('🟢 POSITIONS API CALL')
+        console.log('📤 Request URL:', endpoint)
+        console.log('📤 Request Params:', params)
+        console.log('📤 Request Headers:', {
+          Authorization: `Bearer ${token?.substring(0, 20)}...`,
+        })
+        console.log('📤 Request Time:', new Date().toISOString())
+
+        const response = await axios.get(endpoint, {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
 
-        if (response.data && response.data.status === 'success') {
-          this.positions = response.data.data
+        console.log('📥 Response Status:', response.status)
+        console.log('📥 Response Headers:', response.headers)
+        console.log('📥 Full Response Data:', JSON.stringify(response.data, null, 2))
+        console.log('📥 Response data.status:', response.data.status, typeof response.data.status)
+        console.log('📥 Response data.message:', response.data.message)
+        console.log(
+          '📥 Response data.data type:',
+          Array.isArray(response.data.data) ? 'Array' : typeof response.data.data,
+        )
+        console.log('📥 Response data.data length:', response.data.data?.length)
+
+        if (
+          response.data &&
+          (response.data.status === 'success' || response.data.status === true)
+        ) {
+          this.positions = response.data.data || []
+          console.log('✅ Positions successfully loaded:', this.positions.length, 'items')
+          console.table(this.positions)
+        } else {
+          console.warn('⚠️ Response status not success:', response.data.status)
         }
+        console.groupEnd()
       } catch (error) {
-        console.error('Error loading positions:', error)
+        console.group('❌ POSITIONS API ERROR')
+        console.error('Error Type:', error.name)
+        console.error('Error Message:', error.message)
+        console.error('Error Stack:', error.stack)
+        if (error.response) {
+          console.error('Response Status:', error.response.status)
+          console.error('Response Data:', JSON.stringify(error.response.data, null, 2))
+          console.error('Response Headers:', error.response.headers)
+        } else if (error.request) {
+          console.error('No Response Received. Request:', error.request)
+        }
+        console.groupEnd()
         // Fallback to empty array if API fails
         this.positions = []
       }
@@ -835,19 +920,60 @@ export default {
     async loadGroups() {
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.get(`${BASE_URL}api/groups`, {
-          params: { is_active: true },
+        const endpoint = `${BASE_URL}api/groups`
+        const params = { is_active: true }
+
+        console.group('🟡 GROUPS API CALL')
+        console.log('📤 Request URL:', endpoint)
+        console.log('📤 Request Params:', params)
+        console.log('📤 Request Headers:', {
+          Authorization: `Bearer ${token?.substring(0, 20)}...`,
+        })
+        console.log('📤 Request Time:', new Date().toISOString())
+
+        const response = await axios.get(endpoint, {
+          params,
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
 
-        if (response.data && response.data.status === 'success') {
+        console.log('📥 Response Status:', response.status)
+        console.log('📥 Response Headers:', response.headers)
+        console.log('📥 Full Response Data:', JSON.stringify(response.data, null, 2))
+        console.log('📥 Response data.status:', response.data.status, typeof response.data.status)
+        console.log('📥 Response data.message:', response.data.message)
+        console.log(
+          '📥 Response data.data type:',
+          Array.isArray(response.data.data) ? 'Array' : typeof response.data.data,
+        )
+        console.log('📥 Response data.data.data (if paginated):', response.data.data?.data)
+
+        if (
+          response.data &&
+          (response.data.status === 'success' || response.data.status === true)
+        ) {
           // API returns paginated data in data.data
-          this.groups = response.data.data.data || response.data.data
+          this.groups = response.data.data.data || response.data.data || []
+          console.log('✅ Groups successfully loaded:', this.groups.length, 'items')
+          console.table(this.groups)
+        } else {
+          console.warn('⚠️ Response status not success:', response.data.status)
         }
+        console.groupEnd()
       } catch (error) {
-        console.error('Error loading groups:', error)
+        console.group('❌ GROUPS API ERROR')
+        console.error('Error Type:', error.name)
+        console.error('Error Message:', error.message)
+        console.error('Error Stack:', error.stack)
+        if (error.response) {
+          console.error('Response Status:', error.response.status)
+          console.error('Response Data:', JSON.stringify(error.response.data, null, 2))
+          console.error('Response Headers:', error.response.headers)
+        } else if (error.request) {
+          console.error('No Response Received. Request:', error.request)
+        }
+        console.groupEnd()
         // Fallback to empty array if API fails
         this.groups = []
       }
@@ -897,10 +1023,21 @@ export default {
             last_page: data.last_page || 1,
           }
 
-          // Debug: Log sample employee data
+          // Debug: Log sample employee data with field name details
           if (this.employees.length > 0) {
-            console.log('✅ Sample employee data:', this.employees[0])
-            console.log('✅ Pagination:', this.pagination)
+            console.group('✅ EMPLOYEES LOADED')
+            console.log('Total Employees:', this.employees.length)
+            console.log('Pagination:', this.pagination)
+            console.log('Sample Employee (first item):', this.employees[0])
+            console.log('Field Names Check:', {
+              has_position_id: 'position_id' in this.employees[0],
+              has_posisi_id: 'posisi_id' in this.employees[0],
+              has_hire_date: 'hire_date' in this.employees[0],
+              has_tanggal_masuk: 'tanggal_masuk' in this.employees[0],
+              position_value: this.employees[0].position_id || this.employees[0].posisi_id,
+              hire_date_value: this.employees[0].hire_date || this.employees[0].tanggal_masuk,
+            })
+            console.groupEnd()
           }
         }
       } catch (err) {
@@ -927,7 +1064,6 @@ export default {
         group_id: null,
         email: '',
         tanggal_masuk: new Date().toISOString().split('T')[0],
-        gaji: '',
         is_active: true,
         tanda_tangan_id: null,
       }
@@ -941,6 +1077,24 @@ export default {
     editEmployee(employee) {
       this.modalMode = 'edit'
       this.selectedEmployee = employee
+
+      // Format hire_date to YYYY-MM-DD for date input
+      let formattedHireDate = ''
+      const hireDate = employee.hire_date || employee.tanggal_masuk
+      if (hireDate) {
+        try {
+          const date = new Date(hireDate)
+          if (!isNaN(date.getTime())) {
+            formattedHireDate = date.toISOString().split('T')[0]
+          }
+        } catch (e) {
+          console.error('Error formatting hire date:', e)
+          formattedHireDate = new Date().toISOString().split('T')[0]
+        }
+      } else {
+        formattedHireDate = new Date().toISOString().split('T')[0]
+      }
+
       this.formData = {
         nama: employee.nama,
         alamat: employee.alamat,
@@ -949,8 +1103,7 @@ export default {
         posisi_id: employee.posisi_id || employee.position_id,
         group_id: employee.group_id,
         email: employee.email,
-        tanggal_masuk: employee.hire_date || employee.tanggal_masuk,
-        gaji: employee.gaji,
+        tanggal_masuk: formattedHireDate,
         is_active: employee.is_active,
         tanda_tangan_id: employee.tanda_tangan_id || null,
       }
@@ -959,6 +1112,14 @@ export default {
       this.uploadedSignatureId = null
       this.signaturePreview = null
       this.photoPreview = employee.url_foto ? this.getImageUrl(employee.url_foto) : null
+
+      console.log('📝 Edit Employee Data:', {
+        original_hire_date: employee.hire_date || employee.tanggal_masuk,
+        formatted_hire_date: formattedHireDate,
+        employee_id: employee.id,
+        nama: employee.nama,
+      })
+
       this.showModal = true
     },
     viewEmployee(employee) {
@@ -974,7 +1135,9 @@ export default {
       if (file) {
         // Validate file size (max 2MB)
         if (file.size > 2 * 1024 * 1024) {
-          alert('❌ Ukuran foto terlalu besar. Maksimal 2MB')
+          console.error('❌ Ukuran foto terlalu besar. Maksimal 2MB')
+          console.error('File size:', file.size, 'bytes')
+          console.error('File name:', file.name)
           event.target.value = ''
           return
         }
@@ -994,7 +1157,9 @@ export default {
       if (file) {
         // Validate file size (max 1MB)
         if (file.size > 1 * 1024 * 1024) {
-          alert('❌ Ukuran tanda tangan terlalu besar. Maksimal 1MB')
+          console.error('❌ Ukuran tanda tangan terlalu besar. Maksimal 1MB')
+          console.error('File size:', file.size, 'bytes')
+          console.error('File name:', file.name)
           event.target.value = ''
           return
         }
@@ -1015,6 +1180,9 @@ export default {
 
         // Step 1: Upload signature if new signature file is provided
         if (this.signatureFile) {
+          console.group('📝 UPLOAD SIGNATURE')
+          console.log('Signature file:', this.signatureFile.name, this.signatureFile.size, 'bytes')
+
           const signatureFormData = new FormData()
           signatureFormData.append('tanda_tangan', this.signatureFile)
 
@@ -1029,34 +1197,35 @@ export default {
             },
           )
 
+          console.log('Signature Response Status:', signatureResponse.status)
+          console.log('Signature Response Data:', JSON.stringify(signatureResponse.data, null, 2))
+
           if (signatureResponse.data && signatureResponse.data.status === true) {
             this.uploadedSignatureId = signatureResponse.data.data.id
-            console.log('Signature uploaded with ID:', this.uploadedSignatureId)
+            console.log('✅ Signature uploaded successfully with ID:', this.uploadedSignatureId)
           }
+          console.groupEnd()
         }
 
         // Step 2: Create/Update employee with multipart/form-data
         const formData = new FormData()
 
-        // Add all form fields (use Indonesian field names to match API)
+        // Add all form fields - Use English field names as primary (backend standard)
         formData.append('nama', this.formData.nama)
         formData.append('alamat', this.formData.alamat)
         formData.append('hp', this.formData.hp)
         formData.append('email', this.formData.email)
-        formData.append('tanggal_masuk', this.formData.tanggal_masuk)
+        formData.append('hire_date', this.formData.tanggal_masuk)
         formData.append('is_active', this.formData.is_active ? '1' : '0')
 
         if (this.formData.departemen_id) {
-          formData.append('departemen_id', this.formData.departemen_id)
+          formData.append('department_id', this.formData.departemen_id)
         }
         if (this.formData.posisi_id) {
-          formData.append('posisi_id', this.formData.posisi_id)
+          formData.append('position_id', this.formData.posisi_id)
         }
         if (this.formData.group_id) {
           formData.append('group_id', this.formData.group_id)
-        }
-        if (this.formData.gaji) {
-          formData.append('gaji', this.formData.gaji)
         }
 
         // Add signature ID if uploaded
@@ -1072,8 +1241,44 @@ export default {
         }
 
         let response
+        const endpoint =
+          this.modalMode === 'create'
+            ? `${BASE_URL}api/pegawai`
+            : `${BASE_URL}api/pegawai/${this.selectedEmployee.id}`
+
+        console.group(`💾 SAVE EMPLOYEE REQUEST - ${this.modalMode.toUpperCase()}`)
+        console.log('Mode:', this.modalMode === 'create' ? '➕ CREATE NEW' : '✏️ UPDATE EXISTING')
+        if (this.modalMode === 'edit') {
+          console.log('Employee ID:', this.selectedEmployee.id)
+          console.log('Existing Employee Data:', {
+            nama: this.selectedEmployee.nama,
+            email: this.selectedEmployee.email,
+            departemen_id: this.selectedEmployee.departemen_id,
+            posisi_id: this.selectedEmployee.posisi_id || this.selectedEmployee.position_id,
+            hire_date: this.selectedEmployee.hire_date,
+            tanggal_masuk: this.selectedEmployee.tanggal_masuk,
+          })
+        }
+        console.log('Endpoint:', endpoint)
+        console.log('Method:', 'POST')
+        console.log('📤 Payload (English field names - Backend Standard):', {
+          nama: this.formData.nama,
+          email: this.formData.email,
+          hp: this.formData.hp,
+          alamat: this.formData.alamat,
+          department_id: this.formData.departemen_id,
+          position_id: this.formData.posisi_id,
+          group_id: this.formData.group_id,
+          hire_date: this.formData.tanggal_masuk,
+          is_active: this.formData.is_active,
+          tanda_tangan_id: this.uploadedSignatureId || this.formData.tanda_tangan_id,
+          has_photo: !!this.photoFile,
+        })
+        console.log('⚠️ Using: position_id (not posisi_id), department_id, hire_date')
+        console.groupEnd()
+
         if (this.modalMode === 'create') {
-          response = await axios.post(`${BASE_URL}api/pegawai`, formData, {
+          response = await axios.post(endpoint, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
               Authorization: `Bearer ${token}`,
@@ -1081,28 +1286,59 @@ export default {
           })
         } else {
           // Use POST for file upload with existing employee
-          response = await axios.post(
-            `${BASE_URL}api/pegawai/${this.selectedEmployee.id}`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`,
-              },
+          response = await axios.post(endpoint, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`,
             },
-          )
+          })
         }
 
         if (response.data && response.data.status === true) {
-          alert(
-            `✅ Pegawai berhasil ${this.modalMode === 'create' ? 'ditambahkan' : 'diupdate'}!\n\nNama: ${this.formData.nama}\nEmail: ${this.formData.email}\nHP: ${this.formData.hp}`,
+          console.group(
+            `✅ SAVE EMPLOYEE SUCCESS - ${this.modalMode === 'create' ? 'CREATE' : 'UPDATE'}`,
           )
+          console.log(
+            'Operation:',
+            this.modalMode === 'create' ? 'CREATE NEW EMPLOYEE' : 'UPDATE EMPLOYEE',
+          )
+          console.log('Employee Data:', {
+            nama: this.formData.nama,
+            email: this.formData.email,
+            hp: this.formData.hp,
+            departemen_id: this.formData.departemen_id,
+            posisi_id: this.formData.posisi_id,
+            group_id: this.formData.group_id,
+          })
+          console.log('Full Response:', JSON.stringify(response.data, null, 2))
+          console.log('Response Status:', response.status)
+          console.log('Response Data:', response.data)
+          console.groupEnd()
           this.closeModal()
           this.loadEmployees()
         }
       } catch (err) {
-        console.error('Error saving employee:', err)
-        alert('❌ Gagal menyimpan data pegawai: ' + (err.response?.data?.message || err.message))
+        console.group('❌ SAVE EMPLOYEE ERROR')
+        console.error('Error Type:', err.name)
+        console.error('Error Message:', err.message)
+        console.error('Form Data Submitted:', {
+          nama: this.formData.nama,
+          email: this.formData.email,
+          hp: this.formData.hp,
+          departemen_id: this.formData.departemen_id,
+          posisi_id: this.formData.posisi_id,
+          group_id: this.formData.group_id,
+        })
+        if (err.response) {
+          console.error('Response Status:', err.response.status)
+          console.error('Response Data:', JSON.stringify(err.response.data, null, 2))
+          console.error('Response Headers:', err.response.headers)
+        } else if (err.request) {
+          console.error('No Response Received')
+          console.error('Request:', err.request)
+        }
+        console.error('Full Error:', err)
+        console.groupEnd()
       }
     },
     confirmDelete(employee) {
@@ -1120,12 +1356,25 @@ export default {
         })
 
         if (response.data && response.data.status === true) {
-          alert('✅ Pegawai berhasil dihapus')
+          console.group('✅ DELETE EMPLOYEE SUCCESS')
+          console.log('Deleted Employee ID:', id)
+          console.log('Response:', JSON.stringify(response.data, null, 2))
+          console.log('Response Status:', response.status)
+          console.groupEnd()
           this.loadEmployees()
         }
       } catch (err) {
-        console.error('Error deleting employee:', err)
-        alert('❌ Gagal menghapus pegawai: ' + (err.response?.data?.message || err.message))
+        console.group('❌ DELETE EMPLOYEE ERROR')
+        console.error('Error Type:', err.name)
+        console.error('Error Message:', err.message)
+        console.error('Employee ID:', id)
+        if (err.response) {
+          console.error('Response Status:', err.response.status)
+          console.error('Response Data:', JSON.stringify(err.response.data, null, 2))
+          console.error('Response Headers:', err.response.headers)
+        }
+        console.error('Full Error:', err)
+        console.groupEnd()
       }
     },
     formatDate(dateString) {
