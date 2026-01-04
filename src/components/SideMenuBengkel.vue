@@ -155,18 +155,6 @@ const navItems = reactive([
         },
       },
       {
-        text: 'Rekap Kehadiran',
-        url: '/karyawan/kehadiran',
-        badge: {
-          text: 10,
-          style: '',
-        },
-      },
-      {
-        text: 'Rekap Lembur',
-        url: '/karyawan/lemburku',
-      },
-      {
         text: 'Cuti & Ijin',
         url: '/karyawan/timeoff',
       },
