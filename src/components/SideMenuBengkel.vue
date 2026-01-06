@@ -286,6 +286,10 @@ const navItems = reactive([
         text: 'Register',
         url: '/user/register',
       },
+      {
+        text: 'Role Management',
+        url: '/main/role-management',
+      },
     ],
   },
 ])

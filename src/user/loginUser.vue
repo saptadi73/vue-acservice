@@ -76,7 +76,8 @@ const toastMessage = ref('')
 
 async function login() {
   localStorage.removeItem('token')
-  localStorage.removeItem('role')
+  localStorage.removeItem('user')
+  localStorage.removeItem('roles')
   localStorage.removeItem('email')
   const email = document.getElementById('email').value
   const password = document.getElementById('password').value
@@ -87,15 +88,23 @@ async function login() {
     },
   })
 
-  // console.log(response.data.data.level.nama);
-  const token = response.data.data.token
-  localStorage.setItem('token', token)
-  localStorage.setItem('role', response.data.data.role)
-  localStorage.setItem('email', email)
+  if (response.data.success) {
+    const token = response.data.token
+    const user = response.data.user
+    const roles = response.data.user.roles
 
-  if (response.data.status == true) {
-    // const tokenku = localStorage.getItem('token')
-    // console.log('datanya token Login', tokenku)
+    // Simpan token
+    localStorage.setItem('token', token)
+
+    // Simpan user data
+    localStorage.setItem('user', JSON.stringify(user))
+
+    // Simpan roles
+    localStorage.setItem('roles', JSON.stringify(roles))
+
+    // Simpan email
+    localStorage.setItem('email', email)
+
     router.push('/main/dashboard')
   } else {
     showToast.value = true

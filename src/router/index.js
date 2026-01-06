@@ -40,6 +40,11 @@ const router = createRouter({
           name: 'dashboard',
           component: () => import('../pages/DashboardServiceAC.vue'),
         },
+        {
+          path: 'role-management',
+          name: 'role management',
+          component: () => import('../pages/UserRoleManagement.vue'),
+        },
       ],
     },
     {
