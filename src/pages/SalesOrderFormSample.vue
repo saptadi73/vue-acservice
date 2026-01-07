@@ -319,7 +319,7 @@ import { reactive, computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 // import html2pdf from 'html2pdf.js' - Migrasi ke pdf-lib sedang berlangsung
 import * as apiSalesOrder from './apiSalesOrder.js'
-import * as apiCustomer from './apiCustomerInstance.js'
+import * as apiCustomer from './apiCustomers.js'
 
 const route = useRoute()
 const router = useRouter()
