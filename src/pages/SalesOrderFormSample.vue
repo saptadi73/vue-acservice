@@ -300,10 +300,11 @@
             Submit Sales Order
           </button>
           <button
-            class="bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-md shadow hover:bg-slate-50 transition"
-            @click="downloadPDF"
+            disabled
+            class="bg-gray-300 text-gray-500 border border-gray-300 px-4 py-2 rounded-md shadow cursor-not-allowed"
+            title="Fitur sedang diperbaharui"
           >
-            Download PDF
+            Download PDF (Sedang Diperbaharui)
           </button>
         </div>
 
@@ -316,7 +317,7 @@
 <script setup>
 import { reactive, computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import html2pdf from 'html2pdf.js'
+// import html2pdf from 'html2pdf.js' - Migrasi ke pdf-lib sedang berlangsung
 import * as apiSalesOrder from './apiSalesOrder.js'
 import * as apiCustomer from './apiCustomerInstance.js'
 
@@ -486,17 +487,6 @@ async function submitOrder() {
   } finally {
     loading.value = false
   }
-}
-
-async function downloadPDF() {
-  const opt = {
-    margin: 8,
-    filename: `SalesOrder_${form.orderNo || 'Draft'}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-  }
-  await html2pdf().set(opt).from(pdfArea.value).save()
 }
 </script>
 

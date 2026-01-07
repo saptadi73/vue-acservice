@@ -28,6 +28,11 @@ const router = createRouter({
           name: 'user register',
           component: () => import('../user/RegisterUser.vue'),
         },
+        {
+          path: 'edit/:id',
+          name: 'user edit',
+          component: () => import('../user/EditUser.vue'),
+        },
       ],
     },
     {
@@ -44,6 +49,11 @@ const router = createRouter({
           path: 'role-management',
           name: 'role management',
           component: () => import('../pages/UserRoleManagement.vue'),
+        },
+        {
+          path: 'users',
+          name: 'users',
+          component: () => import('../pages/TableUsers.vue'),
         },
       ],
     },
@@ -195,6 +205,7 @@ const router = createRouter({
       path: '/karyawan',
       name: 'karyawan',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresRole: ['admin', 'pegawai'] },
       children: [
         {
           path: 'list',
@@ -309,6 +320,7 @@ const router = createRouter({
       path: '/finansial',
       name: 'finansial',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresRole: ['admin'] },
       children: [
         {
           path: 'coa',
@@ -403,6 +415,34 @@ router.beforeEach((to, from, next) => {
   //   // sudah login tapi ke /login atau /register -> lempar ke dashboard (atau yang kamu mau)
   //   return next({ path: '/main/dashboard' })
   // }
+
+  // Role-based access control
+  if (to.meta && to.meta.requiresRole) {
+    const userRolesJson = localStorage.getItem('user_roles') || '[]'
+    const userRoles = JSON.parse(userRolesJson)
+
+    console.log('Route requires roles:', to.meta.requiresRole)
+    console.log('User roles from localStorage:', userRoles)
+
+    // Cek apakah user memiliki salah satu role yang dibutuhkan
+    const hasRequiredRole = to.meta.requiresRole.some((requiredRole) =>
+      userRoles.some((userRole) => {
+        const roleName = (userRole.name || '').toLowerCase()
+        const roleLabel = (userRole.label || '').toLowerCase()
+        const required = (requiredRole || '').toLowerCase()
+
+        return roleName === required || roleLabel === required
+      }),
+    )
+
+    console.log('Has required role:', hasRequiredRole)
+
+    if (!hasRequiredRole) {
+      // User tidak memiliki role yang diperlukan
+      alert('Anda tidak memiliki akses ke halaman ini')
+      return next({ path: '/' })
+    }
+  }
 
   return next()
 })

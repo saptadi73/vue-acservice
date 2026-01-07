@@ -75,41 +75,90 @@ const showToast = ref(false)
 const toastMessage = ref('')
 
 async function login() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  localStorage.removeItem('roles')
-  localStorage.removeItem('email')
-  const email = document.getElementById('email').value
-  const password = document.getElementById('password').value
-  const dataLogin = { email: email, password: password }
-  const response = await axios.post(`${BASE_URL}auth/login`, dataLogin, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
+  try {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    localStorage.removeItem('roles')
+    localStorage.removeItem('user_roles')
+    localStorage.removeItem('email')
+    const email = document.getElementById('email').value
+    const password = document.getElementById('password').value
+    const dataLogin = { email: email, password: password }
+    const response = await axios.post(`${BASE_URL}auth/login`, dataLogin, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
-  if (response.data.success) {
-    const token = response.data.token
-    const user = response.data.user
-    const roles = response.data.user.roles
+    if (response.data.status) {
+      const token = response.data.data.token
+      const role = response.data.data.role
 
-    // Simpan token
-    localStorage.setItem('token', token)
+      // Simpan token
+      localStorage.setItem('token', token)
 
-    // Simpan user data
-    localStorage.setItem('user', JSON.stringify(user))
+      // Simpan user data (email dari form)
+      localStorage.setItem('user', JSON.stringify({ email, role }))
 
-    // Simpan roles
-    localStorage.setItem('roles', JSON.stringify(roles))
+      // Simpan roles (format lama)
+      localStorage.setItem('roles', JSON.stringify([role]))
 
-    // Simpan email
-    localStorage.setItem('email', email)
+      // Simpan email
+      localStorage.setItem('email', email)
 
-    router.push('/main/dashboard')
-  } else {
+      // Fetch user roles dari API
+      try {
+        const rolesResponse = await axios.get(`${BASE_URL}roles/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (rolesResponse.data.success || rolesResponse.data.status) {
+          const users = rolesResponse.data.data || rolesResponse.data.users || []
+          const currentUser = users.find((u) => u.email === email)
+
+          if (currentUser && currentUser.roles) {
+            // Simpan user_roles dari API
+            localStorage.setItem('user_roles', JSON.stringify(currentUser.roles))
+          } else {
+            // Fallback jika tidak ada roles dari API
+            const userRoles = [
+              {
+                id: role,
+                name: role.toLowerCase(),
+                label: role,
+              },
+            ]
+            localStorage.setItem('user_roles', JSON.stringify(userRoles))
+          }
+        }
+      } catch (rolesError) {
+        console.error('Error fetching roles:', rolesError)
+        // Fallback: simpan role dari login response
+        const userRoles = [
+          {
+            id: role,
+            name: role.toLowerCase(),
+            label: role,
+          },
+        ]
+        localStorage.setItem('user_roles', JSON.stringify(userRoles))
+      }
+
+      // Tunggu sebentar sebelum navigate
+      await router.push('/main/dashboard')
+      return
+    } else {
+      showToast.value = true
+      toastMessage.value = response.data.message || 'Login gagal'
+      console.log(response.data)
+    }
+  } catch (error) {
     showToast.value = true
-    toastMessage.value = response.data.message
-    console.log(response.data)
+    toastMessage.value = error.response?.data?.message || 'Login gagal. Silahkan coba lagi.'
+    console.error('Login error:', error)
   }
 }
 

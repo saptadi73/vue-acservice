@@ -220,18 +220,23 @@
       >
         Print
       </button>
+      <!-- Download PDF Button DISABLED -->
       <button
-        @click="downloadPDF"
-        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        disabled
+        class="px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed"
+        title="Fitur sedang diperbaharui"
       >
-        Download PDF
+        Download PDF (Sedang Diperbaharui)
       </button>
     </div>
+    <p style="text-align: center; color: #666; margin-top: 12px; font-size: 12px">
+      Fitur export PDF sedang dimigrasikan. Gunakan Print Browser (Ctrl+P) sebagai alternatif.
+    </p>
   </div>
 </template>
 
 <script>
-import jsPDF from 'jspdf'
+// import jsPDF from 'jspdf' - Migrasi ke pdf-lib sedang berlangsung
 
 export default {
   data() {
@@ -266,19 +271,6 @@ export default {
     },
     printForm() {
       window.print()
-    },
-    downloadPDF() {
-      const doc = new jsPDF()
-      doc.text('Surat Perintah Kerja (SPK)', 20, 20)
-      doc.text(`No. WO: ${this.form.woNumber}`, 20, 30)
-      doc.text(`Nama Pemilik: ${this.form.customerName}`, 20, 40)
-      doc.text(`Merk-Tipe Unit: ${this.form.vehicle}`, 20, 50)
-      doc.text(`Keluhan Unit: ${this.form.complaint}`, 20, 60)
-      doc.text(`Service Result: ${this.form.serviceResult}`, 20, 70)
-
-      // Add other fields...
-
-      doc.save('SPK.pdf')
     },
   },
 }

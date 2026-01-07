@@ -62,15 +62,21 @@
       </div>
     </div>
 
-    <!-- Download PDF Button -->
-    <div class="download-button">
-      <button @click="downloadPDF" class="btn-download">Download PDF</button>
+    <!-- Download PDF Button - DISABLED -->
+    <div class="download-button" style="opacity: 0.5; pointer-events: none">
+      <button @click="downloadPDF" class="btn-download" disabled title="Fitur sedang diperbaharui">
+        Download PDF (Sedang Diperbaharui)
+      </button>
+      <p style="font-size: 12px; color: #666; margin-top: 8px">
+        Fitur export PDF sedang dimigrasikan ke teknologi yang lebih aman. Gunakan Print Browser
+        (Ctrl+P) sebagai alternatif.
+      </p>
     </div>
   </div>
 </template>
 
 <script>
-import { jsPDF } from 'jspdf'
+// import { jsPDF } from 'jspdf' - Migrasi ke pdf-lib sedang berlangsung
 
 export default {
   data() {
@@ -122,60 +128,6 @@ export default {
 
     calculateSubTotalForItem(line) {
       return (line.price + this.calculateTaxForItem(line)) * line.quantity // Price + tax, then multiply by quantity
-    },
-
-    downloadPDF() {
-      const doc = new jsPDF()
-
-      // Title
-      doc.setFontSize(22)
-      doc.text('Invoice', 20, 20)
-
-      // Sales Order Number and Date
-      doc.setFontSize(12)
-      doc.text(`Invoice #: ${this.salesOrderNo}`, 20, 30)
-      doc.text(`Date: ${this.currentDate}`, 150, 30)
-
-      // Customer and Work Order Details
-      doc.text(`Customer Name: ${this.formData.customerName}`, 20, 40)
-      doc.text(`Work Order No: ${this.formData.workOrderNo}`, 150, 40)
-      doc.text(`Car License Plate: ${this.formData.licensePlate}`, 20, 50)
-      doc.text(`Brand: ${this.formData.brand}`, 150, 50)
-      doc.text(`Car Type: ${this.formData.type}`, 20, 60)
-      doc.text(`CC: ${this.formData.cc}`, 150, 60)
-
-      // Sales Order Lines Table
-      doc.autoTable({
-        startY: 70,
-        head: [['No', 'Product', 'Quantity', 'UOM', 'Price', 'Tax 11%', 'Sub Total']],
-        body: this.formData.salesOrderLines.map((line, index) => [
-          index + 1,
-          line.product,
-          line.quantity,
-          line.uom,
-          this.formatCurrency(line.price),
-          this.formatCurrency(this.calculateTaxForItem(line)),
-          this.formatCurrency(this.calculateSubTotalForItem(line)),
-        ]),
-        theme: 'grid',
-        columnStyles: {
-          0: { halign: 'center' },
-          4: { halign: 'right' },
-          5: { halign: 'right' },
-          6: { halign: 'right' },
-        },
-      })
-
-      // Tax and Total Price
-      doc.text(`Tax (11%): ${this.formatCurrency(this.tax)}`, 150, doc.lastAutoTable.finalY + 10)
-      doc.text(
-        `Total Price: ${this.formatCurrency(this.total + this.tax)}`,
-        150,
-        doc.lastAutoTable.finalY + 20,
-      )
-
-      // Save the PDF
-      doc.save('invoice.pdf')
     },
   },
 }

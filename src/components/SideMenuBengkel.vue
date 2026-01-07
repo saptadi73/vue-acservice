@@ -1,6 +1,6 @@
 <template>
   <ul class="space-y-1">
-    <li v-for="(item, index) in navItems" :key="item">
+    <li v-for="(item, index) in filteredNavItems" :key="item">
       <div @click="!item.title && haddleSubMenu(index)">
         <span
           v-if="item.title === true"
@@ -31,7 +31,7 @@
 <script setup>
 import SideMenuParentItem from '../components/SideMenuParentItem.vue'
 import SideMenuSubItem from '../components/SideMenuSubItem.vue'
-import { reactive, inject } from 'vue'
+import { reactive, inject, computed } from 'vue'
 const $emitter = inject('$emitter')
 
 import { useScreenSize } from '@/composables/useScreenSize.js'
@@ -129,6 +129,7 @@ const navItems = reactive([
     open: false,
     haschildren: true,
     title: false,
+    requiresRole: ['admin', 'pegawai'],
     children: [
       {
         text: 'Daftar Karyawan',
@@ -177,14 +178,6 @@ const navItems = reactive([
         url: '/inventory/list',
       },
       {
-        text: 'Laporan Pengeluaran',
-        url: '/inventory/keluar',
-      },
-      {
-        text: 'Laporan Pemasukan',
-        url: '/inventory/masuk',
-      },
-      {
         text: 'Laporan Pembelian',
         url: '/inventory/pembelian',
       },
@@ -231,6 +224,7 @@ const navItems = reactive([
     open: false,
     title: false,
     haschildren: true,
+    requiresRole: ['admin'],
     children: [
       {
         text: 'Chart of Accounts',
@@ -279,6 +273,10 @@ const navItems = reactive([
     haschildren: true,
     children: [
       {
+        text: 'Daftar Users',
+        url: '/main/users',
+      },
+      {
         text: 'Login',
         url: '/login',
       },
@@ -293,6 +291,35 @@ const navItems = reactive([
     ],
   },
 ])
+
+// Function to check if user has required role
+const hasRequiredRole = (requiredRoles) => {
+  if (!requiredRoles || requiredRoles.length === 0) return true
+
+  const userRolesJson = localStorage.getItem('user_roles') || '[]'
+  const userRoles = JSON.parse(userRolesJson)
+
+  console.log('Checking roles for menu:', requiredRoles)
+  console.log('User roles:', userRoles)
+
+  const hasRole = requiredRoles.some((requiredRole) =>
+    userRoles.some((userRole) => {
+      const roleName = (userRole.name || '').toLowerCase()
+      const roleLabel = (userRole.label || '').toLowerCase()
+      const required = (requiredRole || '').toLowerCase()
+
+      return roleName === required || roleLabel === required
+    }),
+  )
+
+  console.log('Has role:', hasRole)
+  return hasRole
+}
+
+// Filter menu items based on user roles
+const filteredNavItems = computed(() => {
+  return navItems.filter((item) => hasRequiredRole(item.requiresRole))
+})
 
 const haddleSubMenu = (index) => {
   document.querySelectorAll('ul[data-submenu-open="true"]').forEach((submenu) => {

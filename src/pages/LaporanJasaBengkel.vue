@@ -142,8 +142,8 @@
 </template>
 
 <script>
-import jsPDF from 'jspdf'
-import * as XLSX from 'xlsx'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import ExcelJS from 'exceljs'
 
 export default {
   data() {
@@ -221,60 +221,141 @@ export default {
     printReport() {
       window.print()
     },
-    downloadPDF() {
-      const doc = new jsPDF()
-      doc.text('Laporan Jasa Bengkel', 20, 20)
-      doc.text(`Tanggal: ${new Date().toLocaleDateString()}`, 20, 30)
+    async downloadPDF() {
+      const pdfDoc = await PDFDocument.create()
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
-      // Add table headers
-      doc.text('No', 20, 40)
-      doc.text('Jenis Jasa', 40, 40)
-      doc.text('Pelanggan', 100, 40)
-      doc.text('No. Polisi', 140, 40)
-      doc.text('Harga', 160, 40)
-      doc.text('Pajak (11%)', 180, 40)
-      doc.text('Subtotal Harga', 200, 40)
-      doc.text('Tanggal', 220, 40)
+      const marginX = 30
+      const marginY = 40
+      const rowHeight = 18
+      const headerHeight = 22
+      const fontSize = 10
 
-      // Add data rows
-      let y = 50
+      let page = pdfDoc.addPage()
+      let { width, height } = page.getSize()
+      let y = height - marginY
+
+      const columns = [
+        { key: 'no', label: 'No', x: marginX },
+        { key: 'serviceType', label: 'Jenis Jasa', x: marginX + 30 },
+        { key: 'customer', label: 'Pelanggan', x: marginX + 130 },
+        { key: 'price', label: 'Harga', x: marginX + 250 },
+        { key: 'tax', label: 'Pajak (11%)', x: marginX + 330 },
+        { key: 'totalPrice', label: 'Subtotal', x: marginX + 420 },
+        { key: 'date', label: 'Tanggal', x: marginX + 520 },
+      ]
+
+      const ensureSpace = () => {
+        if (y < marginY + rowHeight * 2) {
+          page = pdfDoc.addPage()
+          ;({ width, height } = page.getSize())
+          y = height - marginY
+        }
+      }
+
+      const drawText = (text, x, customFont = font, size = fontSize) => {
+        page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) })
+      }
+
+      // Header
+      drawText('Laporan Jasa Bengkel', marginX, fontBold, 14)
+      y -= 16
+      drawText(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, marginX, font, 10)
+      y -= headerHeight
+
+      // Table header
+      columns.forEach((col) => drawText(col.label, col.x, fontBold))
+      y -= rowHeight
+
+      // Rows
       this.filteredData.forEach((item, index) => {
-        doc.text(`${index + 1}`, 20, y)
-        doc.text(item.serviceType, 40, y)
-        doc.text(item.customer, 100, y)
-        doc.text(item.licensePlate, 140, y)
-        doc.text(this.formatCurrency(item.price), 160, y)
-        doc.text(this.formatCurrency(item.tax), 180, y)
-        doc.text(this.formatCurrency(item.totalPrice), 200, y)
-        doc.text(this.formatDate(item.date), 220, y)
-        y += 10
+        ensureSpace()
+        const row = {
+          no: `${index + 1}`,
+          serviceType: item.serviceType,
+          customer: item.customer,
+          price: this.formatCurrency(item.price),
+          tax: this.formatCurrency(item.tax),
+          totalPrice: this.formatCurrency(item.totalPrice),
+          date: this.formatDate(item.date),
+        }
+        columns.forEach((col) => drawText(String(row[col.key] ?? ''), col.x))
+        y -= rowHeight
       })
 
-      doc.save('Laporan_Jasa_Ac_Lestari.pdf')
-    },
-    exportExcel() {
-      const data = this.filteredData.map((item, idx) => ({
-        No: idx + 1,
-        'Jenis Jasa': item.serviceType,
-        Pelanggan: item.customer,
-        Harga: item.price,
-        'Pajak (11%)': item.tax,
-        'Subtotal Harga': item.totalPrice,
-        Tanggal: this.formatDate(item.date),
-      }))
-      data.push({
-        No: '',
-        'Jenis Jasa': 'Total',
-        Pelanggan: '',
-        Harga: this.totalHarga,
-        'Pajak (11%)': this.totalPajak,
-        'Subtotal Harga': this.totalSubtotal,
-        Tanggal: '',
+      // Totals row
+      ensureSpace()
+      page.drawRectangle({
+        x: marginX,
+        y: y - 6,
+        width: width - marginX * 2,
+        height: rowHeight,
+        color: rgb(0.95, 0.97, 1),
       })
-      const worksheet = XLSX.utils.json_to_sheet(data)
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Jasa AC Lestari Service')
-      XLSX.writeFile(workbook, 'Laporan_Jasa_AC_Lestari_Service.xlsx')
+      const totals = {
+        harga: this.formatCurrency(this.totalHarga),
+        pajak: this.formatCurrency(this.totalPajak),
+        subtotal: this.formatCurrency(this.totalSubtotal),
+      }
+      drawText('Total', columns[1].x, fontBold)
+      drawText(totals.harga, columns[3].x, fontBold)
+      drawText(totals.pajak, columns[4].x, fontBold)
+      drawText(totals.subtotal, columns[5].x, fontBold)
+
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Laporan_Jasa_AC_Lestari.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+    async exportExcel() {
+      const workbook = new ExcelJS.Workbook()
+      const sheet = workbook.addWorksheet('Laporan Jasa AC Lestari')
+
+      sheet.columns = [
+        { header: 'No', key: 'no', width: 5 },
+        { header: 'Jenis Jasa', key: 'serviceType', width: 20 },
+        { header: 'Pelanggan', key: 'customer', width: 20 },
+        { header: 'Harga', key: 'price', width: 15 },
+        { header: 'Pajak (11%)', key: 'tax', width: 15 },
+        { header: 'Subtotal', key: 'totalPrice', width: 18 },
+        { header: 'Tanggal', key: 'date', width: 15 },
+      ]
+
+      this.filteredData.forEach((item, idx) => {
+        sheet.addRow({
+          no: idx + 1,
+          serviceType: item.serviceType,
+          customer: item.customer,
+          price: item.price,
+          tax: item.tax,
+          totalPrice: item.totalPrice,
+          date: this.formatDate(item.date),
+        })
+      })
+
+      sheet.addRow({})
+      sheet.addRow({
+        serviceType: 'Total',
+        price: this.totalHarga,
+        tax: this.totalPajak,
+        totalPrice: this.totalSubtotal,
+      })
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Laporan_Jasa_AC_Lestari_Service.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
     },
   },
 }

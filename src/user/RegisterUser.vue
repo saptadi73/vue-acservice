@@ -1,145 +1,234 @@
 <template>
-  <section class="bg-gray-50 dark:bg-gray-900">
-    <div
-      class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0"
-    >
-      <a
-        href="#"
-        class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
-      >
-        <img
-          class="w-8 h-8 mr-2"
-          src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
-          alt="logo"
-        />
-        Flowbite
-      </a>
-      <div
-        class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700"
-      >
-        <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
-          <h1
-            class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white"
-          >
-            Sign in to your account
-          </h1>
-          <form class="space-y-4 md:space-y-6" action="#">
-            <div>
-              <label
-                for="email"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Your email</label
-              >
-              <input
-                type="email"
-                name="email"
-                v-model="user.email"
-                id="email"
-                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="name@company.com"
-                required=""
-              />
-            </div>
-            <div>
-              <label
-                for="password1"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Password</label
-              >
-              <input
-                type="password"
-                name="password1"
-                v-model="user.password"
-                id="password1"
-                placeholder="••••••••"
-                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                required=""
-              />
-            </div>
-            <div>
-              <label
-                for="password2"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Confirm Password</label
-              >
-              <input
-                type="password"
-                name="password2"
-                id="password2"
-                v-model="password2"
-                placeholder="••••••••"
-                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                required=""
-              />
-            </div>
-            <div>
-                <div class="relative">
-              <select
-                id="level"
-                v-model="user.id_level"
-                class="peer p-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-700 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
-              >
-                <option selected="">Pilih Level User</option>
-                <option value=1>Admin</option>
-                <option value=2>Officer</option>
-              </select>
-              <label
-                class="absolute top-0 start-0 p-4 h-full truncate pointer-events-none transition ease-in-out duration-100 border border-transparent peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:text-xs peer-focus:-translate-y-1.5 peer-focus:text-gray-500 dark:peer-focus:text-neutral-500 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-gray-500 dark:peer-[:not(:placeholder-shown)]:text-neutral-500"
-                >Level User</label
-              >
-            </div>
-            </div>
-            
-            <div></div>
-            <button
-              :onclick="RegisterUser"
-              class="w-full text-white bg-blue-700 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+  <section
+    class="bg-gray-100 min-h-screen flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
+  >
+    <div class="w-full max-w-md">
+      <!-- Register Card -->
+      <div class="bg-white rounded-lg shadow-xl border border-gray-200 p-8">
+        <form @submit.prevent="handleRegister" class="space-y-5">
+          <!-- Name Input -->
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+              Nama Lengkap
+            </label>
+            <input
+              type="text"
+              id="name"
+              v-model="user.name"
+              placeholder="Nama lengkap Anda"
+              required
+              class="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <!-- Email Input -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2"> Email </label>
+            <input
+              type="email"
+              id="email"
+              v-model="user.email"
+              placeholder="nama@perusahaan.com"
+              required
+              class="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <!-- Password Input -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              v-model="user.password"
+              placeholder="••••••••"
+              required
+              class="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+            <p class="text-gray-500 text-xs mt-1">Minimal 8 karakter</p>
+          </div>
+
+          <!-- Confirm Password Input -->
+          <div>
+            <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+              Konfirmasi Password
+            </label>
+            <input
+              type="password"
+              id="confirm_password"
+              v-model="user.confirm_password"
+              placeholder="••••••••"
+              required
+              class="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <!-- Role Selection -->
+          <div>
+            <label for="role_id" class="block text-sm font-medium text-gray-700 mb-2">
+              Role Pengguna
+            </label>
+            <select
+              id="role_id"
+              v-model="user.role_id"
+              required
+              class="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none cursor-pointer"
             >
-              Sign Up sini
-            </button>
-            <p class="text-sm font-light text-gray-500 dark:text-gray-400">
-              Don’t have an account yet?
-              <a
-                href="#"
-                class="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >Sign up</a
-              >
-            </p>
-          </form>
-        </div>
+              <option value="" disabled>Pilih Role</option>
+              <option v-for="role in roles" :key="role.id" :value="role.id">
+                {{ role.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Error Message -->
+          <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-red-700 text-sm">{{ errorMessage }}</p>
+          </div>
+
+          <!-- Success Message -->
+          <div v-if="successMessage" class="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p class="text-green-700 text-sm">{{ successMessage }}</p>
+          </div>
+
+          <!-- Register Button -->
+          <button
+            type="submit"
+            :disabled="isLoading"
+            class="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <span v-if="!isLoading">Daftar Sekarang</span>
+            <span v-else>Mendaftar...</span>
+          </button>
+
+          <!-- Divider -->
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-200"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">Sudah punya akun?</span>
+            </div>
+          </div>
+
+          <!-- Login Link -->
+          <div class="text-center">
+            <router-link
+              to="/login"
+              class="inline-block text-blue-600 hover:text-blue-700 font-medium transition"
+            >
+              Masuk ke akun Anda
+            </router-link>
+          </div>
+        </form>
       </div>
+
+      <!-- Footer -->
+      <p class="text-center text-gray-500 text-xs mt-6">
+        © 2026 AC Lestari. Semua hak dilindungi.
+      </p>
     </div>
   </section>
 </template>
 
-<script>
-import authService from "./auth.service";
-import router from "../router";
-import { ref } from "vue";
-import { BASE_URL } from "../base.url.utils";
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url.ts'
 
-export default {
-  data() {
-    return {
-      user: {
-        email: "",
-        password: "",
+const router = useRouter()
+
+const user = ref({
+  name: '',
+  email: '',
+  password: '',
+  confirm_password: '',
+  role_id: '',
+})
+
+const isLoading = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
+const roles = ref([]) // Add roles array
+
+// Fetch roles from API
+async function fetchRoles() {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`${BASE_URL}roles`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      password2: "",
-    };
-  },
-  methods: {
-    RegisterUser() {
-      if (this.user.password == this.password2) {
-        return authService.register(this.user);
-      }else{
-        return alert(this.password2);
-      }
-    },
+    })
 
-  
-  },
-};
+    if (response.data.success || response.data.status) {
+      roles.value = response.data.data || response.data.roles || []
+    }
+  } catch (error) {
+    console.error('Error fetching roles:', error)
+  }
+}
+
+async function handleRegister() {
+  // Validation
+  if (
+    !user.value.name ||
+    !user.value.email ||
+    !user.value.password ||
+    !user.value.confirm_password ||
+    !user.value.role_id
+  ) {
+    errorMessage.value = 'Semua field harus diisi'
+    return
+  }
+
+  if (user.value.password.length < 8) {
+    errorMessage.value = 'Password minimal 8 karakter'
+    return
+  }
+
+  if (user.value.password !== user.value.confirm_password) {
+    errorMessage.value = 'Password tidak sesuai'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const response = await axios.post(`${BASE_URL}auth/register`, {
+      name: user.value.name,
+      email: user.value.email,
+      password: user.value.password,
+      role_id: user.value.role_id,
+    })
+
+    console.log('Register response:', response.data) // Debug log
+
+    if (response.data.success) {
+      successMessage.value = 'Pendaftaran berhasil! Redirecting...'
+      console.log('Registration successful, redirecting...') // Debug log
+      // Redirect immediately
+      router.push('/main/users')
+      return
+    } else {
+      errorMessage.value = response.data.message || 'Pendaftaran gagal'
+    }
+  } catch (error) {
+    console.error('Register error:', error) // Debug log
+    errorMessage.value = error.response?.data?.message || 'Terjadi kesalahan. Silahkan coba lagi.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRoles()
+})
 </script>
 
 <style lang="scss" scoped></style>

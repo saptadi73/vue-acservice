@@ -267,17 +267,18 @@
         Print
       </button>
       <button
-        @click="downloadPDF"
-        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        disabled
+        class="px-4 py-2 bg-gray-400 text-gray-600 rounded-md cursor-not-allowed"
+        title="Fitur sedang diperbaharui"
       >
-        Download PDF
+        Download PDF (Sedang Diperbaharui)
       </button>
     </div>
   </div>
 </template>
 
 <script>
-import jsPDF from 'jspdf'
+// import jsPDF from 'jspdf' - Migrasi ke pdf-lib sedang berlangsung
 
 export default {
   data() {
@@ -340,29 +341,6 @@ export default {
     },
     printForm() {
       window.print() // Print the page
-    },
-    downloadPDF() {
-      const doc = new jsPDF()
-      doc.text('Work Order Form', 20, 20)
-      doc.text(`Customer Name: ${this.form.customerName}`, 20, 30)
-      doc.text(`AC: ${this.form.ac}`, 20, 40)
-      doc.text(`Service Date: ${this.form.serviceDate}`, 20, 50)
-      doc.text(`Payment Method: ${this.form.paymentMethod}`, 20, 60)
-      doc.text(`Subtotal Jasa: ${this.formatCurrency(this.form.subtotalJasa)}`, 20, 70)
-      doc.text(`Total Tagihan: ${this.formatCurrency(this.form.totalTagihan)}`, 20, 80)
-      doc.text(`DP: ${this.formatCurrency(this.form.dp)}`, 20, 90)
-      doc.text(`Sisa: ${this.formatCurrency(this.form.sisa)}`, 20, 100)
-
-      // Add item details to PDF
-      this.form.items.forEach((item, index) => {
-        doc.text(
-          `${item.code} - ${item.name} - ${item.qty} - ${this.formatCurrency(item.price)}`,
-          20,
-          110 + index * 10,
-        )
-      })
-
-      doc.save('WorkOrderForm.pdf')
     },
   },
 }

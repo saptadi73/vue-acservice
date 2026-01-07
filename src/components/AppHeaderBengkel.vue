@@ -76,21 +76,22 @@
                   <PopoverPanel
                     class="absolute right-0 top-full mt-2 w-40 rounded-md bg-white shadow-md ring-1 ring-gray-200 focus:outline-none"
                   >
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
-                      >Your Profile</a
+                    <div
+                      class="block px-4 py-3 text-sm font-semibold text-gray-900 border-b border-gray-100"
                     >
+                      {{ userEmail }}
+                    </div>
                     <a
                       href="#"
                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
                       >Settings</a
                     >
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
-                      >Sign out</a
+                    <button
+                      @click="handleSignOut"
+                      class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
                     >
+                      Sign out
+                    </button>
                   </PopoverPanel>
                 </transition>
               </Popover>
@@ -105,8 +106,27 @@
 <script setup>
 import { Popover, PopoverButton, PopoverGroup, PopoverPanel } from '@headlessui/vue'
 import HeaderSearchBengkel from '../components/HeaderSearchBengkel.vue'
+import { useRouter } from 'vue-router'
 
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 
 const $emitter = inject('$emitter')
+const router = useRouter()
+
+// Get user email from localStorage
+const userEmail = computed(() => {
+  return localStorage.getItem('email') || 'Guest'
+})
+
+function handleSignOut() {
+  // Clear all user data from localStorage
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem('roles')
+  localStorage.removeItem('user_roles')
+  localStorage.removeItem('email')
+
+  // Redirect to login
+  router.push('/login')
+}
 </script>

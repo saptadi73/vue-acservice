@@ -148,8 +148,8 @@
 </template>
 
 <script>
-import jsPDF from 'jspdf'
-import * as XLSX from 'xlsx'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import ExcelJS from 'exceljs'
 
 export default {
   data() {
@@ -224,66 +224,144 @@ export default {
     printReport() {
       window.print()
     },
-    downloadPDF() {
-      const doc = new jsPDF()
-      doc.text('Laporan Penjualan Spare Part', 20, 20)
-      doc.text(`Tanggal: ${new Date().toLocaleDateString()}`, 20, 30)
+    async downloadPDF() {
+      const pdfDoc = await PDFDocument.create()
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
-      // Add table headers
-      doc.text('No', 20, 40)
-      doc.text('Nama Barang', 40, 40)
-      doc.text('Quantity', 100, 40)
-      doc.text('UOM', 140, 40)
-      doc.text('Harga', 160, 40)
-      doc.text('Pajak (11%)', 180, 40)
-      doc.text('Total Harga', 200, 40)
-      doc.text('Pelanggan', 220, 40)
-      doc.text('Tanggal', 240, 40)
+      const marginX = 24
+      const marginY = 36
+      const rowHeight = 16
+      const headerHeight = 22
+      const fontSize = 10
 
-      // Add data rows
-      let y = 50
+      let page = pdfDoc.addPage()
+      let { width, height } = page.getSize()
+      let y = height - marginY
+
+      const columns = [
+        { key: 'no', label: 'No', x: marginX },
+        { key: 'name', label: 'Nama Barang', x: marginX + 30 },
+        { key: 'quantity', label: 'Qty', x: marginX + 170 },
+        { key: 'uom', label: 'UOM', x: marginX + 210 },
+        { key: 'price', label: 'Harga', x: marginX + 250 },
+        { key: 'tax', label: 'Pajak (11%)', x: marginX + 330 },
+        { key: 'totalPrice', label: 'Total', x: marginX + 430 },
+        { key: 'customer', label: 'Pelanggan', x: marginX + 520 },
+        { key: 'date', label: 'Tanggal', x: marginX + 630 },
+      ]
+
+      const ensureSpace = () => {
+        if (y < marginY + rowHeight * 2) {
+          page = pdfDoc.addPage()
+          ;({ width, height } = page.getSize())
+          y = height - marginY
+        }
+      }
+
+      const drawText = (text, x, customFont = font, size = fontSize) => {
+        page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) })
+      }
+
+      // Header
+      drawText('Laporan Penjualan Spare Part', marginX, fontBold, 14)
+      y -= 16
+      drawText(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, marginX, font, 10)
+      y -= headerHeight
+
+      // Table header
+      columns.forEach((col) => drawText(col.label, col.x, fontBold))
+      y -= rowHeight
+
+      // Rows
       this.filteredData.forEach((item, index) => {
-        doc.text(`${index + 1}`, 20, y)
-        doc.text(item.name, 40, y)
-        doc.text(item.quantity.toString(), 100, y)
-        doc.text(item.uom, 140, y)
-        doc.text(this.formatCurrency(item.price), 160, y)
-        doc.text(this.formatCurrency(item.tax), 180, y)
-        doc.text(this.formatCurrency(item.totalPrice), 200, y)
-        doc.text(item.customer, 220, y)
-        doc.text(this.formatDate(item.date), 240, y)
-        y += 10
+        ensureSpace()
+        const row = {
+          no: `${index + 1}`,
+          name: item.name,
+          quantity: String(item.quantity),
+          uom: item.uom,
+          price: this.formatCurrency(item.price),
+          tax: this.formatCurrency(item.tax),
+          totalPrice: this.formatCurrency(item.totalPrice),
+          customer: item.customer,
+          date: this.formatDate(item.date),
+        }
+        columns.forEach((col) => drawText(String(row[col.key] ?? ''), col.x))
+        y -= rowHeight
       })
 
-      doc.save('Laporan_Penjualan_Sparepart.pdf')
-    },
-    exportExcel() {
-      const data = this.filteredData.map((item, idx) => ({
-        No: idx + 1,
-        'Nama Barang': item.name,
-        Quantity: item.quantity,
-        UOM: item.uom,
-        Harga: item.price,
-        'Pajak (11%)': item.tax,
-        'Total Harga': item.totalPrice,
-        Pelanggan: item.customer,
-        Tanggal: this.formatDate(item.date),
-      }))
-      data.push({
-        No: '',
-        'Nama Barang': 'Total',
-        Quantity: '',
-        UOM: '',
-        Harga: this.totalHarga,
-        'Pajak (11%)': this.totalPajak,
-        'Total Harga': this.totalSubtotal,
-        Pelanggan: '',
-        Tanggal: '',
+      // Totals row
+      ensureSpace()
+      page.drawRectangle({
+        x: marginX,
+        y: y - 6,
+        width: width - marginX * 2,
+        height: rowHeight,
+        color: rgb(0.95, 0.97, 1),
       })
-      const worksheet = XLSX.utils.json_to_sheet(data)
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Penjualan Spare Part')
-      XLSX.writeFile(workbook, 'Laporan_Penjualan_Sparepart.xlsx')
+      drawText('Total', columns[1].x, fontBold)
+      drawText(this.formatCurrency(this.totalHarga), columns[4].x, fontBold)
+      drawText(this.formatCurrency(this.totalPajak), columns[5].x, fontBold)
+      drawText(this.formatCurrency(this.totalSubtotal), columns[6].x, fontBold)
+
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Laporan_Penjualan_Sparepart.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+    async exportExcel() {
+      const workbook = new ExcelJS.Workbook()
+      const sheet = workbook.addWorksheet('Laporan Spare Part')
+
+      sheet.columns = [
+        { header: 'No', key: 'no', width: 5 },
+        { header: 'Nama Barang', key: 'name', width: 22 },
+        { header: 'Quantity', key: 'quantity', width: 10 },
+        { header: 'UOM', key: 'uom', width: 8 },
+        { header: 'Harga', key: 'price', width: 15 },
+        { header: 'Pajak (11%)', key: 'tax', width: 15 },
+        { header: 'Total Harga', key: 'totalPrice', width: 18 },
+        { header: 'Pelanggan', key: 'customer', width: 18 },
+        { header: 'Tanggal', key: 'date', width: 15 },
+      ]
+
+      this.filteredData.forEach((item, idx) => {
+        sheet.addRow({
+          no: idx + 1,
+          name: item.name,
+          quantity: item.quantity,
+          uom: item.uom,
+          price: item.price,
+          tax: item.tax,
+          totalPrice: item.totalPrice,
+          customer: item.customer,
+          date: this.formatDate(item.date),
+        })
+      })
+
+      sheet.addRow({})
+      sheet.addRow({
+        name: 'Total',
+        price: this.totalHarga,
+        tax: this.totalPajak,
+        totalPrice: this.totalSubtotal,
+      })
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Laporan_Penjualan_Sparepart.xlsx'
+      a.click()
+      URL.revokeObjectURL(url)
     },
   },
 }
