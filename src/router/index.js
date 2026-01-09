@@ -406,23 +406,35 @@ router.beforeEach((to, from, next) => {
   // daftar route publik (tidak perlu login)
   const publicPaths = ['/login', '/register']
 
+  console.log('🔐 Route Guard Check')
+  console.log('📍 Navigating to:', to.path)
+  console.log('🔑 Token exists:', !!token)
+  console.log('✅ Is Authenticated:', isAuth)
+
+  // ✅ Jika belum login dan mau masuk route privat
   if (!isAuth && !publicPaths.includes(to.path)) {
-    // belum login dan mau masuk route privat
-    return next({ path: '/login', query: { redirect: to.fullPath } })
+    console.warn('⚠️ No token found - redirecting to login')
+    console.warn('📍 Redirect destination:', to.fullPath)
+    return next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+      replace: true,
+    })
   }
 
+  // ✅ Jika sudah login tapi mencoba akses login/register (optional - aktifkan jika perlu)
   // if (isAuth && publicPaths.includes(to.path)) {
-  //   // sudah login tapi ke /login atau /register -> lempar ke dashboard (atau yang kamu mau)
+  //   console.log('✅ Already authenticated - redirecting from', to.path)
   //   return next({ path: '/main/dashboard' })
   // }
 
-  // Role-based access control
+  // ✅ Role-based access control
   if (to.meta && to.meta.requiresRole) {
     const userRolesJson = localStorage.getItem('user_roles') || '[]'
     const userRoles = JSON.parse(userRolesJson)
 
-    console.log('Route requires roles:', to.meta.requiresRole)
-    console.log('User roles from localStorage:', userRoles)
+    console.log('🔒 Route requires roles:', to.meta.requiresRole)
+    console.log('👤 User roles from localStorage:', userRoles)
 
     // Cek apakah user memiliki salah satu role yang dibutuhkan
     const hasRequiredRole = to.meta.requiresRole.some((requiredRole) =>
@@ -435,15 +447,17 @@ router.beforeEach((to, from, next) => {
       }),
     )
 
-    console.log('Has required role:', hasRequiredRole)
+    console.log('✅ Has required role:', hasRequiredRole)
 
     if (!hasRequiredRole) {
       // User tidak memiliki role yang diperlukan
+      console.error('❌ Access Denied - User does not have required role')
       alert('Anda tidak memiliki akses ke halaman ini')
-      return next({ path: '/' })
+      return next({ path: '/', replace: true })
     }
   }
 
+  console.log('✅ Access granted')
   return next()
 })
 

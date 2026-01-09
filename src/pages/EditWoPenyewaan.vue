@@ -917,10 +917,58 @@ async function createPelangganSignLink() {
 
 async function getWorkOrderPenyewaanByID() {
   loadingStore.show()
-  if (!workorder_id) return
+  if (!workorder_id) {
+    console.warn('No work order ID provided')
+    loadingStore.hide()
+    return
+  }
   try {
+    console.log('═══════════════════════════════════════════')
+    console.log('📡 BACKEND REQUEST DEBUG LOG')
+    console.log('═══════════════════════════════════════════')
+    console.log('🔹 Endpoint:', `/wo/penyewaan/${workorder_id}`)
+    console.log('🔹 Work Order ID:', workorder_id)
+    console.log('🔹 Request Time:', new Date().toISOString())
+
     const response = await api.get(`/wo/penyewaan/${workorder_id}`)
+
+    console.log('═══════════════════════════════════════════')
+    console.log('📥 COMPLETE RESPONSE FROM BACKEND')
+    console.log('═══════════════════════════════════════════')
+    console.log('🔹 Status Code:', response.status)
+    console.log('🔹 Status Text:', response.statusText)
+    console.log('🔹 Response Headers:', {
+      'content-type': response.headers['content-type'],
+      'content-length': response.headers['content-length'],
+    })
+    console.log('🔹 Complete Response Object:', response)
+    console.log('🔹 Response.data:', response.data)
+    console.log('🔹 Response.data.status:', response.data?.status)
+    console.log('🔹 Response.data.message:', response.data?.message)
+    console.log('🔹 Response.data.data:', response.data?.data)
+
+    // Check if response has data
+    if (!response.data || !response.data.data) {
+      console.warn('⚠️ NO DATA RETURNED FROM ENDPOINT')
+      console.warn('═══════════════════════════════════════════')
+      console.warn('Full response structure:')
+      console.warn(JSON.stringify(response.data, null, 2))
+      console.warn('═══════════════════════════════════════════')
+      message_toast.value = 'Data work order tidak ditemukan. Silakan periksa status penyewaan.'
+      show_toast.value = true
+      loadingStore.hide()
+      return
+    }
+
     const dataku = response.data.data
+    console.log('✅ Data successfully extracted from response.data.data')
+    console.log('🔹 Object Keys:', Object.keys(dataku))
+    console.log('🔹 Status Value:', dataku.status)
+    console.log('🔹 Customer ID:', dataku.customer_id)
+    console.log('🔹 Rental Asset ID:', dataku.rental_asset_id)
+    console.log('🔹 All Fields:', dataku)
+    console.log('═══════════════════════════════════════════')
+
     formData.value = {
       customer_id: dataku.customer_id || null,
       rental_asset_id: dataku.rental_asset_id || null,
@@ -976,9 +1024,47 @@ async function getWorkOrderPenyewaanByID() {
       : null
     status.value = dataku.status || ''
 
-    console.log('Fetched work order data:', dataku)
+    console.log('Work order data successfully loaded for status:', status.value)
+    console.log('═══════════════════════════════════════════✅')
   } catch (error) {
-    console.error('Error fetching work order by ID:', error)
+    console.error('❌ ERROR FETCHING WORK ORDER')
+    console.error('═══════════════════════════════════════════')
+    console.error('🔹 Error Message:', error.message)
+    console.error('🔹 Error Code:', error.code)
+    console.error('🔹 Error Stack:', error.stack)
+
+    // Response error details
+    if (error.response) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('📡 BACKEND RESPONSE ERROR')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('🔹 Status Code:', error.response.status)
+      console.error('🔹 Status Text:', error.response.statusText)
+      console.error('🔹 Response Headers:', error.response.headers)
+      console.error('🔹 Response Data:', error.response.data)
+      console.error('🔹 Response Data (JSON):', JSON.stringify(error.response.data, null, 2))
+      console.error('🔹 Error Message from Backend:', error.response.data?.message)
+      console.error('🔹 Error Code from Backend:', error.response.data?.code)
+    }
+
+    // Request details
+    if (error.request) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('📤 REQUEST DETAILS')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('🔹 URL:', error.request.responseURL)
+      console.error('🔹 Method:', error.request.method)
+      console.error('🔹 Status:', error.request.status)
+      console.error('🔹 Status Text:', error.request.statusText)
+    }
+
+    console.error('═══════════════════════════════════════════')
+    console.error('Full Error Object:', error)
+
+    const errorMessage =
+      error.response?.data?.message || error.message || 'Gagal memuat data work order'
+    message_toast.value = `Error: ${errorMessage}. ID yang diakses: ${workorder_id}`
+    show_toast.value = true
   } finally {
     loadingStore.hide()
   }
