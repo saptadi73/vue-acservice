@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isTokenExpired } from '../user/auth.utils'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -409,7 +410,28 @@ router.beforeEach((to, from, next) => {
   console.log('🔐 Route Guard Check')
   console.log('📍 Navigating to:', to.path)
   console.log('🔑 Token exists:', !!token)
-  console.log('✅ Is Authenticated:', isAuth)
+  
+  // ✅ CEK TOKEN EXPIRED
+  let isTokenValid = true
+  if (token) {
+    isTokenValid = !isTokenExpired(token)
+    console.log('⏰ Token expired:', !isTokenValid)
+  }
+
+  console.log('✅ Is Authenticated:', isAuth && isTokenValid)
+
+  // ✅ Jika token sudah expired, hapus dan redirect ke login
+  if (token && !isTokenValid) {
+    console.warn('⚠️ Token expired - clearing and redirecting to login')
+    localStorage.removeItem('token')
+    localStorage.removeItem('user_roles')
+    localStorage.removeItem('user_info')
+    return next({
+      path: '/login',
+      query: { redirect: to.fullPath },
+      replace: true,
+    })
+  }
 
   // ✅ Jika belum login dan mau masuk route privat
   if (!isAuth && !publicPaths.includes(to.path)) {

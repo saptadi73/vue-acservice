@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { isTokenExpired } from './user/auth.utils'
 
 const router = useRouter()
 
@@ -16,6 +17,20 @@ onMounted(() => {
   console.log('📍 Current path:', currentPath)
   console.log('🔓 Is public path:', publicPaths.includes(currentPath))
 
+  // ✅ CEK TOKEN EXPIRED
+  if (token && isTokenExpired(token)) {
+    console.warn('⚠️ Token expired - clearing and redirecting to login')
+    localStorage.removeItem('token')
+    localStorage.removeItem('user_roles')
+    localStorage.removeItem('user_info')
+    router.push({
+      path: '/login',
+      query: { redirect: currentPath },
+      replace: true,
+    })
+    return
+  }
+
   // Jika user membuka app tanpa token dan bukan di halaman public
   if (!token && !publicPaths.includes(currentPath)) {
     console.warn('⚠️ No token found - redirecting to login')
@@ -24,6 +39,7 @@ onMounted(() => {
       query: { redirect: currentPath },
       replace: true,
     })
+    return
   }
 
   // Optional: Validate token format

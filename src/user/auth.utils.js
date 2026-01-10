@@ -120,15 +120,88 @@ export function logout(router) {
 }
 
 /**
+ * Decode JWT token to extract payload
+ * @param {string} token - JWT token
+ * @returns {object|null} decoded payload or null if invalid
+ */
+export function decodeToken(token) {
+  try {
+    if (!token) return null
+
+    // Split token into parts
+    const parts = token.split('.')
+    if (parts.length !== 3) {
+      console.error('❌ Invalid token format')
+      return null
+    }
+
+    // Decode the payload (second part)
+    const payload = parts[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded
+  } catch (error) {
+    console.error('❌ Error decoding token:', error)
+    return null
+  }
+}
+
+/**
+ * Check if token is expired
+ * @param {string} token - JWT token (optional, will use localStorage if not provided)
+ * @returns {boolean} true if token is expired, false if valid
+ */
+export function isTokenExpired(token) {
+  const tokenToCheck = token || getToken()
+  if (!tokenToCheck) {
+    return true // No token is considered expired
+  }
+
+  const decoded = decodeToken(tokenToCheck)
+  if (!decoded || !decoded.exp) {
+    console.warn('⚠️ Cannot determine token expiration - no exp claim found')
+    return true // Cannot verify, treat as expired
+  }
+
+  // Convert to milliseconds and compare with current time
+  const currentTime = Math.floor(Date.now() / 1000)
+  const isExpired = decoded.exp < currentTime
+
+  if (isExpired) {
+    console.warn('⚠️ Token expired at:', new Date(decoded.exp * 1000))
+    console.warn('⏰ Current time:', new Date(currentTime * 1000))
+  }
+
+  return isExpired
+}
+
+/**
+ * Check if user is authenticated AND token is not expired
+ * @returns {boolean} true if token exists and is valid (not expired)
+ */
+export function isAuthenticatedAndValid() {
+  const token = getToken()
+  if (!token) {
+    return false
+  }
+  return !isTokenExpired(token)
+}
+
+/**
  * Debug: Log all stored auth data
  */
 export function debugAuthData() {
   console.log('═══════════════════════════════════════')
   console.log('🔐 Authentication Data Debug')
   console.log('═══════════════════════════════════════')
-  console.log('Token:', getToken() ? '✅ Present' : '❌ Missing')
+  const token = getToken()
+  console.log('Token:', token ? '✅ Present' : '❌ Missing')
+  if (token) {
+    const decoded = decodeToken(token)
+    console.log('Token Payload:', decoded)
+    console.log('Token Expired:', isTokenExpired(token) ? '⚠️ Yes' : '✅ No')
+  }
   console.log('User Roles:', getUserRoles())
   console.log('User Info:', getUserInfo())
-  console.log('Is Authenticated:', isAuthenticated() ? '✅ Yes' : '❌ No')
+  console.log('Is Authenticated:', isAuthenticatedAndValid() ? '✅ Yes' : '❌ No')
   console.log('═══════════════════════════════════════')
 }
