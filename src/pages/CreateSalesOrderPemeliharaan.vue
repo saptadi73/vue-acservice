@@ -547,6 +547,56 @@
         </div>
       </div>
     </div>
+
+    <!-- PDF Preview Modal -->
+    <div
+      v-if="pdfPreviewModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-800">Preview Invoice</h2>
+          <button
+            @click="pdfPreviewModal = false"
+            class="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <!-- Preview Content -->
+        <div class="flex-1 overflow-y-auto">
+          <iframe
+            :srcDoc="pdfPreviewHtml"
+            class="w-full h-full border-0"
+            style="min-height: 600px"
+          ></iframe>
+        </div>
+
+        <!-- Footer with Action Buttons -->
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <button
+            @click="pdfPreviewModal = false"
+            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition font-medium"
+          >
+            Tutup
+          </button>
+          <button
+            @click="downloadPdf"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-medium flex items-center gap-2"
+          >
+            💾 Download
+          </button>
+          <button
+            @click="printFromPreview"
+            class="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900 transition font-medium flex items-center gap-2"
+          >
+            🖨️ Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -556,7 +606,7 @@ import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL } from '@/base.utils.url'
-const companyLogo = new URL('@/assets/images/ac_lestari_black.png', import.meta.url).href
+const companyLogo = new URL('@/assets/images/ac_lestari.png', import.meta.url).href
 
 const router = useRouter()
 const route = useRoute()
@@ -598,6 +648,10 @@ const selectedBankAccountId = ref('')
 const paymentDate = ref(new Date().toISOString().split('T')[0])
 const paymentReference = ref('')
 const paymentDescription = ref('')
+
+// PDF Preview modal
+const pdfPreviewModal = ref(false)
+const pdfPreviewHtml = ref('')
 const paymentLoading = ref(false)
 const paymentError = ref('')
 const paymentAmount = computed(() => totals.value.total)
@@ -979,9 +1033,14 @@ async function submitPayment() {
   }
 }
 
-// Print invoice (browser print to PDF)
-function printInvoice() {
-  const productRows = form.value.productLines
+// Function to generate PDF HTML (filter empty products)
+function generatePdfHtml() {
+  // Filter only product lines that have description or qty > 0
+  const filteredProducts = form.value.productLines.filter(
+    (line) => line.description || line.qty > 0,
+  )
+
+  const productRows = filteredProducts
     .map(
       (line, idx) => `
         <tr>
@@ -995,7 +1054,12 @@ function printInvoice() {
     )
     .join('')
 
-  const serviceRows = form.value.serviceLines
+  // Filter only service lines that have description or qty > 0
+  const filteredServices = form.value.serviceLines.filter(
+    (line) => line.description || line.qty > 0,
+  )
+
+  const serviceRows = filteredServices
     .map(
       (line, idx) => `
         <tr>
@@ -1066,6 +1130,9 @@ function printInvoice() {
           </div>
         </div>
 
+        ${
+          filteredProducts.length > 0
+            ? `
         <div class="section">
           <h3>Produk</h3>
           <table>
@@ -1080,11 +1147,17 @@ function printInvoice() {
               </tr>
             </thead>
             <tbody>
-              ${productRows || '<tr><td colspan="6" style="padding:10px;text-align:center;border:1px solid #e5e7eb;color:#94a3b8;">Tidak ada produk</td></tr>'}
+              ${productRows}
             </tbody>
           </table>
         </div>
+        `
+            : ''
+        }
 
+        ${
+          filteredServices.length > 0
+            ? `
         <div class="section">
           <h3>Jasa</h3>
           <table>
@@ -1099,10 +1172,13 @@ function printInvoice() {
               </tr>
             </thead>
             <tbody>
-              ${serviceRows || '<tr><td colspan="6" style="padding:10px;text-align:center;border:1px solid #e5e7eb;color:#94a3b8;">Tidak ada jasa</td></tr>'}
+              ${serviceRows}
             </tbody>
           </table>
         </div>
+        `
+            : ''
+        }
 
         <div class="section" style="display:flex; justify-content:flex-end;">
           <table class="totals">
@@ -1127,16 +1203,40 @@ function printInvoice() {
     </html>
   `
 
+  return html
+}
+
+// Open PDF preview modal instead of direct print
+function printInvoice() {
+  pdfPreviewHtml.value = generatePdfHtml()
+  pdfPreviewModal.value = true
+}
+
+// Download PDF
+function downloadPdf() {
+  const html = pdfPreviewHtml.value
+  const link = document.createElement('a')
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  link.href = url
+  link.download = `Invoice_${form.value.order_number}.html`
+  link.click()
+  URL.revokeObjectURL(url)
+  showNotification('PDF berhasil diunduh', 'success')
+  pdfPreviewModal.value = false
+}
+
+// Print from preview
+function printFromPreview() {
   const invoiceWindow = window.open('', '_blank', 'width=900,height=1000')
   if (!invoiceWindow) {
     showNotification('Popup diblokir, izinkan popup untuk mencetak.', 'error')
     return
   }
-  invoiceWindow.document.write(html)
+  invoiceWindow.document.write(pdfPreviewHtml.value)
   invoiceWindow.document.close()
   invoiceWindow.focus()
   invoiceWindow.print()
-  invoiceWindow.close()
 }
 
 // Initialize
