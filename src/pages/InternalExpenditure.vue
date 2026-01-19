@@ -79,7 +79,7 @@
                   <div
                     v-if="item.showDropdown && productMatches(item.productSearch).length > 0"
                     class="fixed z-50 bg-white border rounded shadow"
-                    style="max-height: 300px; overflow-y: auto; min-width: 300px
+                    style="max-height: 300px; overflow-y: auto; min-width: 300px"
                   >
                     <div
                       v-for="product in productMatches(item.productSearch)"
