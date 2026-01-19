@@ -163,37 +163,40 @@
             <tbody>
               <tr v-for="(line, idx) in form.productLines" :key="`product-${idx}`">
                 <td class="border border-gray-300 px-3 py-2 text-sm">{{ idx + 1 }}</td>
-                <td class="border border-gray-300 px-3 py-2 text-sm relative">
-                  <input
-                    v-model="line.description"
-                    type="text"
-                    placeholder="Cari nama produk..."
-                    @input="onProductInput(line)"
-                    :disabled="isLocked"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                  <!-- Dropdown hasil search produk -->
-                  <div
-                    v-if="line.showDropdown && line.description && !isLocked"
-                    class="absolute bg-white border border-gray-300 rounded mt-1 w-full max-h-48 overflow-y-auto z-20 shadow-lg"
-                  >
+                <td class="border border-gray-300 px-3 py-2 text-sm">
+                  <div class="relative w-full">
+                    <input
+                      v-model="line.description"
+                      type="text"
+                      placeholder="Cari nama produk..."
+                      @input="onProductInput(line)"
+                      :disabled="isLocked"
+                      class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    />
+                    <!-- Dropdown hasil search produk dengan fixed positioning -->
                     <div
-                      v-for="product in productMatches(line.description)"
-                      :key="product.id"
-                      @click="selectProductLine(idx, product)"
-                      class="p-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      v-if="line.showDropdown && line.description && !isLocked"
+                      class="fixed bg-white border border-gray-300 rounded shadow-lg z-50"
+                      style="max-height: 300px; overflow-y: auto; min-width: 300px"
                     >
-                      <div class="font-semibold text-sm text-gray-800">{{ product.nama }}</div>
-                      <div class="text-xs text-gray-600">
-                        Kode: {{ product.kode || '-' }} | Harga:
-                        {{ formatCurrency(product.harga || product.hpp || 0) }}
+                      <div
+                        v-for="product in productMatches(line.description)"
+                        :key="product.id"
+                        @click="selectProductLine(idx, product)"
+                        class="p-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div class="font-semibold text-sm text-gray-800">{{ product.nama }}</div>
+                        <div class="text-xs text-gray-600">
+                          Kode: {{ product.kode || '-' }} | Harga:
+                          {{ formatCurrency(product.harga || product.hpp || 0) }}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      v-if="productMatches(line.description).length === 0"
-                      class="p-2 text-sm text-gray-500 text-center"
-                    >
-                      Produk tidak ditemukan
+                      <div
+                        v-if="productMatches(line.description).length === 0"
+                        class="p-2 text-sm text-gray-500 text-center"
+                      >
+                        Produk tidak ditemukan
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -296,36 +299,39 @@
             <tbody>
               <tr v-for="(line, idx) in form.serviceLines" :key="`service-${idx}`">
                 <td class="border border-gray-300 px-3 py-2 text-sm">{{ idx + 1 }}</td>
-                <td class="border border-gray-300 px-3 py-2 text-sm relative">
-                  <input
-                    v-model="line.description"
-                    type="text"
-                    placeholder="Cari nama jasa..."
-                    @input="onServiceInput(line)"
-                    :disabled="isLocked"
-                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                  <!-- Dropdown hasil search jasa -->
-                  <div
-                    v-if="line.showDropdown && line.description && !isLocked"
-                    class="absolute bg-white border border-gray-300 rounded mt-1 w-full max-h-48 overflow-y-auto z-20 shadow-lg"
-                  >
+                <td class="border border-gray-300 px-3 py-2 text-sm">
+                  <div class="relative w-full">
+                    <input
+                      v-model="line.description"
+                      type="text"
+                      placeholder="Cari nama jasa..."
+                      @input="onServiceInput(line)"
+                      :disabled="isLocked"
+                      class="w-full border border-gray-300 rounded px-2 py-1 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    />
+                    <!-- Dropdown hasil search jasa dengan fixed positioning -->
                     <div
-                      v-for="service in serviceMatches(line.description)"
-                      :key="service.id"
-                      @click="selectServiceLine(idx, service)"
-                      class="p-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      v-if="line.showDropdown && line.description && !isLocked"
+                      class="fixed bg-white border border-gray-300 rounded shadow-lg z-50"
+                      style="max-height: 300px; overflow-y: auto; min-width: 300px
                     >
-                      <div class="font-semibold text-sm text-gray-800">{{ service.nama }}</div>
-                      <div class="text-xs text-gray-600">
-                        Harga: {{ formatCurrency(service.harga || 0) }}
+                      <div
+                        v-for="service in serviceMatches(line.description)"
+                        :key="service.id"
+                        @click="selectServiceLine(idx, service)"
+                        class="p-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div class="font-semibold text-sm text-gray-800">{{ service.nama }}</div>
+                        <div class="text-xs text-gray-600">
+                          Harga: {{ formatCurrency(service.harga || 0) }}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      v-if="serviceMatches(line.description).length === 0"
-                      class="p-2 text-sm text-gray-500 text-center"
-                    >
-                      Jasa tidak ditemukan
+                      <div
+                        v-if="serviceMatches(line.description).length === 0"
+                        class="p-2 text-sm text-gray-500 text-center"
+                      >
+                        Jasa tidak ditemukan
+                      </div>
                     </div>
                   </div>
                 </td>

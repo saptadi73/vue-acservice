@@ -67,7 +67,7 @@
           <tbody class="divide-y divide-gray-200">
             <tr v-for="(item, idx) in items" :key="item.uid">
               <td class="px-3 py-2">
-                <div class="relative">
+                <div class="relative w-full">
                   <input
                     v-model="item.productSearch"
                     type="text"
@@ -78,7 +78,8 @@
                   />
                   <div
                     v-if="item.showDropdown && productMatches(item.productSearch).length > 0"
-                    class="absolute z-10 mt-1 w-full bg-white border rounded shadow max-h-60 overflow-y-auto"
+                    class="fixed z-50 bg-white border rounded shadow"
+                    style="max-height: 300px; overflow-y: auto; min-width: 300px
                   >
                     <div
                       v-for="product in productMatches(item.productSearch)"

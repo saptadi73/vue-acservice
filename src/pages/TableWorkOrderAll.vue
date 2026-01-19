@@ -243,7 +243,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
@@ -266,21 +266,24 @@ export default {
       orders: [],
     }
   },
-  created() {
-    this.getWorkOrders()
-    this.router = this.$router || this.router // fallback jika belum ada
-  },
   computed: {
     filteredOrders() {
+      if (!this.orders || this.orders.length === 0) {
+        return []
+      }
       const searchText = this.searchQuery.toLowerCase()
       return this.orders.filter((order) => {
         return (
-          order.nowo.toLowerCase().includes(searchText) ||
-          order.nama_pelanggan.toLowerCase().includes(searchText) ||
-          order.nama_pegawai.toLowerCase().includes(searchText)
+          (order.nowo && order.nowo.toLowerCase().includes(searchText)) ||
+          (order.nama_pelanggan && order.nama_pelanggan.toLowerCase().includes(searchText)) ||
+          (order.nama_pegawai && order.nama_pegawai.toLowerCase().includes(searchText))
         )
       })
     },
+  },
+  mounted() {
+    this.router = this.$router
+    this.getWorkOrders()
   },
   setup() {
     const route = useRoute()
@@ -289,10 +292,6 @@ export default {
     const show_toast = ref(false)
     const message_toast = ref('')
     const router = useRouter()
-
-    onMounted(() => {
-      // You can fetch initial data here if needed
-    })
 
     return {
       router,
@@ -353,10 +352,16 @@ export default {
       axios
         .get(`${BASE_URL}wo/wo/list`)
         .then((response) => {
-          this.orders = response.data.data
-          console.log('Work Orders fetched:', this.orders)
+          if (response.data && response.data.data) {
+            this.orders = Array.isArray(response.data.data) ? response.data.data : []
+            console.log('Work Orders fetched:', this.orders)
+          } else {
+            this.orders = []
+            console.warn('No data found in response')
+          }
         })
         .catch((error) => {
+          this.orders = []
           this.message_toast = error.response?.data?.message || 'Gagal memuat data Work Order.'
           this.show_toast = true
           console.error('Error fetching work orders:', error)

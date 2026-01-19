@@ -7,7 +7,8 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('../layouts/LayoutDashboard.vue'),
+      redirect: '/main/dashboard',
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -40,6 +41,7 @@ const router = createRouter({
       path: '/main',
       name: 'main',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'dashboard',
@@ -62,6 +64,7 @@ const router = createRouter({
       path: '/pelanggan',
       name: 'pelanggan',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'all',
@@ -99,6 +102,7 @@ const router = createRouter({
       path: '/wo',
       name: 'work order',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'all',
@@ -259,6 +263,7 @@ const router = createRouter({
       path: '/inventory',
       name: 'inventory',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'list',
@@ -389,6 +394,7 @@ const router = createRouter({
       path: '/services',
       name: 'services',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'list',
@@ -402,7 +408,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token') || ''
-  const isAuth = !!token // pastikan falsy jika kosong/undefined/null
+  // Check apakah token benar-benar ada dan valid (bukan string 'null' atau 'undefined')
+  const hasValidToken = token && token !== '' && token !== 'null' && token !== 'undefined'
+  const isAuth = !!hasValidToken
 
   // daftar route publik (tidak perlu login)
   const publicPaths = ['/login', '/register']
@@ -410,10 +418,11 @@ router.beforeEach((to, from, next) => {
   console.log('🔐 Route Guard Check')
   console.log('📍 Navigating to:', to.path)
   console.log('🔑 Token exists:', !!token)
-  
+  console.log('🔑 Has valid token:', hasValidToken)
+
   // ✅ CEK TOKEN EXPIRED
   let isTokenValid = true
-  if (token) {
+  if (hasValidToken) {
     isTokenValid = !isTokenExpired(token)
     console.log('⏰ Token expired:', !isTokenValid)
   }
@@ -421,7 +430,7 @@ router.beforeEach((to, from, next) => {
   console.log('✅ Is Authenticated:', isAuth && isTokenValid)
 
   // ✅ Jika token sudah expired, hapus dan redirect ke login
-  if (token && !isTokenValid) {
+  if (hasValidToken && !isTokenValid) {
     console.warn('⚠️ Token expired - clearing and redirecting to login')
     localStorage.removeItem('token')
     localStorage.removeItem('user_roles')
@@ -434,7 +443,9 @@ router.beforeEach((to, from, next) => {
   }
 
   // ✅ Jika belum login dan mau masuk route privat
-  if (!isAuth && !publicPaths.includes(to.path)) {
+  // Cek jika route memerlukan auth (via meta atau bukan public path)
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+  if (!isAuth && (requiresAuth || !publicPaths.includes(to.path))) {
     console.warn('⚠️ No token found - redirecting to login')
     console.warn('📍 Redirect destination:', to.fullPath)
     return next({
@@ -444,11 +455,11 @@ router.beforeEach((to, from, next) => {
     })
   }
 
-  // ✅ Jika sudah login tapi mencoba akses login/register (optional - aktifkan jika perlu)
-  // if (isAuth && publicPaths.includes(to.path)) {
-  //   console.log('✅ Already authenticated - redirecting from', to.path)
-  //   return next({ path: '/main/dashboard' })
-  // }
+  // ✅ Jika sudah login tapi mencoba akses login/register, redirect ke dashboard
+  if (isAuth && isTokenValid && publicPaths.includes(to.path)) {
+    console.log('✅ Already authenticated - redirecting to dashboard')
+    return next({ path: '/main/dashboard', replace: true })
+  }
 
   // ✅ Role-based access control
   if (to.meta && to.meta.requiresRole) {

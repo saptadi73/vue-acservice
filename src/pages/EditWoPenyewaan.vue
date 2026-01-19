@@ -731,26 +731,36 @@
         </div>
       </div>
     </div>
-    <button
-      class="bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createWorkOrder"
-      :disabled="status === 'selesai' && pelangganSignUrl"
-    >
-      simpan perubahan
-    </button>
-    <button
-      class="bg-green-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md"
-      @click="createPelangganSignLink"
-      :disabled="status === 'selesai' && pelangganSignUrl"
-    >
-      Buat Link untuk Pelanggan
-    </button>
-    <button
-      class="bg-blue-600 mt-3 font-montserrat text-center cursor-pointer text-white font-bold w-full p-2 rounded-md hover:bg-blue-700"
-      @click="createSalesOrder"
-    >
-      + Buat Sales Order
-    </button>
+    <div class="flex gap-3 mt-3 flex-wrap">
+      <button
+        class="flex-1 min-w-[200px] bg-slate-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-slate-700 transition"
+        @click="createWorkOrder"
+        :disabled="status === 'selesai' && pelangganSignUrl"
+      >
+        Simpan Perubahan
+      </button>
+      <button
+        class="flex-1 min-w-[200px] bg-indigo-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-indigo-700 transition"
+        @click="previewPdfJsPdf"
+      >
+        📄 Preview & Download PDF
+      </button>
+    </div>
+    <div class="flex gap-3 mt-3 flex-wrap">
+      <button
+        class="flex-1 min-w-[200px] bg-green-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-green-700 transition"
+        @click="createPelangganSignLink"
+        :disabled="status === 'selesai' && pelangganSignUrl"
+      >
+        Buat Link untuk Pelanggan
+      </button>
+      <button
+        class="flex-1 min-w-[200px] bg-blue-600 font-montserrat text-center cursor-pointer text-white font-bold p-2 rounded-md hover:bg-blue-700 transition"
+        @click="createSalesOrder"
+      >
+        + Buat Sales Order
+      </button>
+    </div>
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
@@ -766,6 +776,8 @@ import api from '@/user/axios'
 import { useLoadingStore } from '../stores/loading'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import jsPDF from 'jspdf'
+import logoImage from '@/assets/images/ac_lestari_black.png'
 
 const loadingStore = useLoadingStore()
 const route = useRoute()
@@ -1132,6 +1144,294 @@ function createSalesOrder() {
       customer_phone: no_hp.value,
     },
   })
+}
+
+// function serializeForPrint(element) {
+//   const clone = element.cloneNode(true)
+//   const originals = element.querySelectorAll('input, textarea, select')
+//   const clonedNodes = clone.querySelectorAll('input, textarea, select')
+
+//   clonedNodes.forEach((node, idx) => {
+//     const orig = originals[idx]
+//     if (!orig) return
+//     if (node.tagName === 'INPUT') {
+//       const type = (orig.getAttribute('type') || 'text').toLowerCase()
+//       if (type === 'checkbox' || type === 'radio') {
+//         if (orig.checked) {
+//           node.setAttribute('checked', 'checked')
+//         } else {
+//           node.removeAttribute('checked')
+//         }
+//       }
+//       node.setAttribute('value', orig.value || '')
+//     } else if (node.tagName === 'TEXTAREA') {
+//       node.textContent = orig.value || ''
+//     } else if (node.tagName === 'SELECT') {
+//       Array.from(node.options || []).forEach((opt) => {
+//         if (opt.value === orig.value) {
+//           opt.setAttribute('selected', 'selected')
+//         } else {
+//           opt.removeAttribute('selected')
+//         }
+//       })
+//     }
+//   })
+
+//   return clone.outerHTML
+// }
+
+function previewPdfJsPdf() {
+  const doc = new jsPDF('p', 'mm', 'a4')
+  const primaryColor = [0, 0, 0]
+
+  doc.setFillColor(245, 245, 245)
+  doc.rect(10, 8, 190, 20, 'F')
+
+  doc.setDrawColor(220, 220, 220)
+  doc.roundedRect(12, 10, 50, 16, 2, 2)
+  if (logoImage) {
+    doc.addImage(logoImage, 'PNG', 12, 10, 50, 16)
+  }
+
+  doc.setTextColor(...primaryColor)
+  doc.setFontSize(13)
+  doc.setFont('Helvetica', 'bold')
+  doc.text('AC Lestari', 66, 15)
+
+  doc.setFontSize(8.5)
+  doc.setFont('Helvetica', 'normal')
+  doc.text('No. Telp. 0859 4321 3369', 66, 20)
+
+  doc.setDrawColor(220, 220, 220)
+  doc.setLineWidth(0.4)
+  doc.line(10, 30, 200, 30)
+
+  let y = 36
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.text('WO Penyewaan AC', 10, y)
+  y += 6
+
+  doc.setFont('Helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.text(`Type Pelanggan: ${jenis_pelanggan.value || '-'}`, 10, y)
+  doc.text(`No. WO: WO-001`, 120, y)
+  y += 6
+
+  doc.text(`Nama: ${nama_pelanggan.value || '-'}`, 10, y)
+  doc.text(`HP: ${no_hp.value || '-'}`, 120, y)
+  y += 6
+  doc.text(`Alamat: ${alamat.value || '-'}`, 10, y)
+  y += 10
+
+  doc.setFont('Helvetica', 'bold')
+  doc.text('Spesifikasi Unit AC', 10, y)
+  y += 6
+  doc.setFont('Helvetica', 'normal')
+  doc.text(`Brand: ${brand.value || '-'}`, 10, y)
+  doc.text(`Tipe: ${tipe.value || '-'}`, 120, y)
+  y += 6
+  doc.text(`Model: ${model.value || '-'}`, 10, y)
+  doc.text(`Kapasitas: ${kapasitas.value || '-'}`, 120, y)
+  y += 6
+  doc.text(`Freon: ${freon.value || '-'}`, 10, y)
+  doc.text(`Lokasi: ${lokasi.value || '-'}`, 120, y)
+  y += 10
+
+  // Pengecekan Teknisi Section
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.text('PENGECEKAN TEKNISI', 10, y)
+  y += 6
+
+  const checkSymbol = '\u2713' // ✓
+  const crossSymbol = '\u2717' // ✗
+
+  // Unit AC dan Accessories Section
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.text('UNIT AC DAN ACCESSORIES:', 10, y)
+  y += 5
+  doc.setFont('Helvetica', 'normal')
+  doc.setFontSize(7.5)
+
+  const unitItems = [
+    {
+      label: '1. Unit Indoor',
+      check: formData.value.checkIndoor,
+      ket: formData.value.keteranganIndoor,
+    },
+    {
+      label: '2. Unit Outdoor',
+      check: formData.value.checkOutdoor,
+      ket: formData.value.keteranganOutdoor,
+    },
+    { label: '3. Pipa AC', check: formData.value.checkPipa, ket: formData.value.keteranganPipa },
+    {
+      label: '4. Selang Buangan',
+      check: formData.value.checkSelang,
+      ket: formData.value.keteranganSelang,
+    },
+    {
+      label: '5. Kabel dan Asesori',
+      check: formData.value.checkKabel,
+      ket: formData.value.keteranganKabel,
+    },
+  ]
+
+  unitItems.forEach((item) => {
+    const status = item.check ? checkSymbol : crossSymbol
+    doc.text(`${status} ${item.label}`, 12, y)
+    if (!item.check && item.ket) {
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
+      doc.setFont('Helvetica', 'normal')
+      y += 3
+    }
+    y += 4
+  })
+
+  y += 3
+
+  // Pemasangan Section
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.text('PEMASANGAN:', 10, y)
+  y += 5
+  doc.setFont('Helvetica', 'normal')
+  doc.setFontSize(7.5)
+
+  const installItems = [
+    {
+      label: '1. Instalasi Indoor',
+      check: formData.value.checkInstIndoor,
+      ket: formData.value.keteranganInstIndoor,
+    },
+    {
+      label: '2. Instalasi Outdoor',
+      check: formData.value.checkInstOutdoor,
+      ket: formData.value.keteranganInstOutdoor,
+    },
+    {
+      label: '3. Instalasi Listrik',
+      check: formData.value.checkInstListrik,
+      ket: formData.value.keteranganInstListrik,
+    },
+    {
+      label: '4. Instalasi Pipa',
+      check: formData.value.checkInstPipa,
+      ket: formData.value.keteranganInstPipa,
+    },
+    {
+      label: '5. Instalasi Buangan',
+      check: formData.value.checkBuangan,
+      ket: formData.value.keteranganBuangan,
+    },
+    { label: '6. Vaccum', check: formData.value.checkVaccum, ket: formData.value.keteranganVaccum },
+    {
+      label: '7. Tekanan Freon',
+      check: formData.value.checkFreon,
+      ket: formData.value.keteranganFreon,
+    },
+    {
+      label: '8. Arus (Ampere)',
+      check: formData.value.checkArus,
+      ket: formData.value.keteranganArus,
+    },
+    {
+      label: '9. Temperatur Evaporator',
+      check: formData.value.checkEva,
+      ket: formData.value.keteranganEva,
+    },
+    {
+      label: '10. Temperatur Kondensor',
+      check: formData.value.checkKondensor,
+      ket: formData.value.keteranganKondensor,
+    },
+  ]
+
+  installItems.forEach((item) => {
+    const status = item.check ? checkSymbol : crossSymbol
+    doc.text(`${status} ${item.label}`, 12, y)
+    if (!item.check && item.ket) {
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
+      doc.setFont('Helvetica', 'normal')
+      y += 3
+    }
+    y += 4
+  })
+
+  y += 3
+
+  // Pekerjaan Bongkar Section
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.text('PEKERJAAN BONGKAR:', 10, y)
+  y += 5
+  doc.setFont('Helvetica', 'normal')
+  doc.setFontSize(7.5)
+
+  const bongkarItems = [
+    {
+      label: '1. Unit Indoor',
+      check: formData.value.checkIndoorB,
+      ket: formData.value.keteranganIndoorB,
+    },
+    {
+      label: '2. Unit Outdoor',
+      check: formData.value.checkOutdoorB,
+      ket: formData.value.keteranganOutdoorB,
+    },
+    { label: '3. Pipa AC', check: formData.value.checkPipaB, ket: formData.value.keteranganPipaB },
+    {
+      label: '4. Selang Buangan',
+      check: formData.value.checkSelangB,
+      ket: formData.value.keteranganSelangB,
+    },
+    {
+      label: '5. Kabel dan Asesori',
+      check: formData.value.checkKabelB,
+      ket: formData.value.keteranganKabelB,
+    },
+  ]
+
+  bongkarItems.forEach((item) => {
+    const status = item.check ? checkSymbol : crossSymbol
+    doc.text(`${status} ${item.label}`, 12, y)
+    if (!item.check && item.ket) {
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
+      doc.setFont('Helvetica', 'normal')
+      y += 3
+    }
+    y += 4
+  })
+
+  y += 5
+
+  doc.setFont('Helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.text('Hasil Pekerjaan', 10, y)
+  y += 6
+  doc.setFont('Helvetica', 'normal')
+  doc.setFontSize(8)
+  const hasil = formData.value.hasil_pekerjaan || ''
+  const hasilLines = doc.splitTextToSize(hasil, 180)
+  doc.text(hasilLines, 10, y)
+  y += Math.max(hasilLines.length * 4 + 2, 10)
+
+  // Open preview in new window
+  const pdfBlob = doc.output('blob')
+  const pdfUrl = URL.createObjectURL(pdfBlob)
+  const previewWindow = window.open(pdfUrl, '_blank')
+
+  if (!previewWindow) {
+    // Fallback: direct download if popup blocked
+    doc.save('WO-Penyewaan-AC.pdf')
+    message_toast.value = 'Popup diblokir. PDF langsung diunduh.'
+    show_toast.value = true
+  }
 }
 
 // Lifecycle

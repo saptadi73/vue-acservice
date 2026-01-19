@@ -1,7 +1,7 @@
 <template>
   <router-link
     :to="subItem.url"
-    exact-active-class="bg-white bg-opacity-5 hover:text-opacity-100"
+    exact-active-class="bg-blue-500 bg-opacity-70 text-white text-opacity-100 hover:text-opacity-100"
     class="w-full flex items-center text-left rounded-md px-4 py-2 text-sm font-normal text-white text-opacity-60 hover:text-opacity-100 hover:bg-gray-400 hover:bg-opacity-10 transform duration-200"
     @click="isMobile && $emitter.emit('haddleSidebar')"
   >

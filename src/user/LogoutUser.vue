@@ -38,14 +38,21 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
 const router = useRouter()
 
-function goToLogin() {
-  // Bersihkan token dan data user
+// Bersihkan token segera saat component dimount
+onMounted(() => {
+  console.log('🚪 Logging out - clearing all auth data')
   localStorage.removeItem('token')
+  localStorage.removeItem('user_roles')
+  localStorage.removeItem('user_info')
   localStorage.removeItem('role')
   localStorage.removeItem('email')
+})
+
+function goToLogin() {
   // Redirect ke halaman login
   router.push({ name: 'login' })
 }

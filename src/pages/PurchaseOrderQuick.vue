@@ -33,7 +33,7 @@
     <!-- Vendor selector -->
     <div class="bg-white rounded shadow p-4 space-y-3">
       <h2 class="text-lg font-semibold text-gray-800">Pilih Vendor</h2>
-      <div class="relative">
+      <div class="relative w-full">
         <input
           v-model="vendorSearch"
           type="text"
@@ -43,7 +43,8 @@
         />
         <div
           v-if="showVendorDropdown"
-          class="absolute z-10 mt-1 w-full bg-white border rounded shadow max-h-60 overflow-y-auto"
+          class="fixed z-50 bg-white border rounded shadow"
+          style="max-height: 300px; overflow-y: auto; min-width: 300px"
         >
           <div
             v-for="v in filteredVendors"
@@ -100,7 +101,7 @@
           <tbody class="divide-y divide-gray-200">
             <tr v-for="(row, idx) in items" :key="row.uid">
               <td class="px-3 py-2 w-64">
-                <div class="relative">
+                <div class="relative w-full">
                   <input
                     v-model="row.productSearch"
                     type="text"
@@ -110,7 +111,8 @@
                   />
                   <div
                     v-if="row.showDropdown"
-                    class="absolute z-10 mt-1 w-full bg-white border rounded shadow max-h-80 overflow-y-auto"
+                    class="fixed z-50 bg-white border rounded shadow"
+                    style="max-height: 300px; overflow-y: auto; min-width: 300px"
                   >
                     <div
                       v-for="p in productMatches(row.productSearch)"
