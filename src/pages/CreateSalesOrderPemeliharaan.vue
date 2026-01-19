@@ -313,7 +313,7 @@
                     <div
                       v-if="line.showDropdown && line.description && !isLocked"
                       class="fixed bg-white border border-gray-300 rounded shadow-lg z-50"
-                      style="max-height: 300px; overflow-y: auto; min-width: 300px
+                      style="max-height: 300px; overflow-y: auto; min-width: 300px"
                     >
                       <div
                         v-for="service in serviceMatches(line.description)"
