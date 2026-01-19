@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate WO AC Lestari PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        button { padding: 15px 30px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h2>Generator Work Order (WO)</h2>
+    <p>Klik tombol di bawah untuk mengunduh PDF sesuai format gambar.</p>
+    <button onclick="generatePDF()">Download PDF</button>
+
+    <script>
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait, Millimeters, A4
+
+            // --- KONFIGURASI UMUM ---
+            const marginX = 15;
+            let currentY = 15;
+            
+            // Helper function untuk menggambar header section dengan background abu-abu/biru muda
+            function drawSectionHeader(text, y) {
+                doc.setFillColor(230, 240, 250); // Warna background muda
+                doc.setDrawColor(200, 200, 200); // Warna border
+                doc.rect(marginX, y, 180, 8, 'FD'); // Fill and Draw
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                doc.text(text, 105, y + 5.5, { align: "center" });
+            }
+
+            // --- 1. HEADER PERUSAHAAN ---
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("WO Penyewaan AC Lestari", marginX, currentY);
+            
+            currentY += 6;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text("No. Telp. 0859 4321 3369", marginX, currentY);
+
+            // Logo Placeholder (Kanan Atas)
+            // doc.addImage(imgData, 'PNG', 160, 10, 30, 15); // Jika ada logo
+
+            // Garis Pembatas Header
+            currentY += 8;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(marginX, currentY, 195, currentY);
+
+            // --- 2. INFORMASI PELANGGAN (ATAS) ---
+            currentY += 10;
+            
+            // Kolom Kiri
+            doc.setFontSize(9);
+            doc.text(`Hari Tanggal      : 15 Oktober 2023`, marginX, currentY);
+            doc.text(`Type Pelanggan  : Perusahaan`, marginX, currentY + 5);
+
+            // Kolom Kanan
+            doc.text(`No. WO             : WO-001`, 130, currentY);
+            doc.text(`Pilih Pelanggan  : Raya Kiranti`, 130, currentY + 5);
+
+            currentY += 15;
+            doc.line(marginX, currentY, 195, currentY); // Garis pembatas
+
+            // --- 3. DETAIL PELANGGAN ---
+            currentY += 8;
+            doc.text(`Nama Pelanggan  : Raya Kiranti`, marginX, currentY);
+            doc.text(`Alamat                 : Jl. SA. Tirtayasa No.11`, marginX, currentY + 5);
+            doc.text(`No. HP                 : 0216281615`, marginX, currentY + 10);
+            
+            // Dropdown simulasi di kanan
+            doc.rect(130, currentY - 2, 65, 7);
+            doc.text("AC yang Disewa : Gree, TTK901876 - Standing", 132, currentY + 2.5);
+
+            // --- 4. SPESIFIKASI UNIT AC ---
+            currentY += 20;
+            drawSectionHeader("Spesifikasi Unit AC", currentY);
+            
+            currentY += 14;
+            // Kiri
+            doc.setFont("helvetica", "normal");
+            doc.text(`Brand     : Gree`, marginX, currentY);
+            doc.text(`Model     : TTK901876`, marginX, currentY + 5);
+            doc.text(`Freon     : R410A`, marginX, currentY + 10);
+            
+            // Kanan
+            doc.text(`Tipe          : Standing`, 130, currentY);
+            doc.text(`Kapasitas  : 3600 BTU`, 130, currentY + 5);
+            doc.text(`Lokasi       : Gudang`, 130, currentY + 10);
+
+            // --- 5. PENGECEKAN TEKNISI (3 KOLOM) ---
+            currentY += 20;
+            drawSectionHeader("Pengecekan Teknisi", currentY);
+            
+            currentY += 10; // Mulai konten 3 kolom
+            const boxY = currentY;
+            const boxHeight = 65; // Tinggi kotak checklist
+            const colWidth = 58;
+            const gap = 3;
+
+            // Define Columns X
+            const col1X = marginX;
+            const col2X = marginX + colWidth + gap;
+            const col3X = marginX + (colWidth * 2) + (gap * 2);
+
+            // --- Fungsi Gambar Kotak Checklist ---
+            function drawChecklistBox(title, x, y, w, h, items) {
+                // Header Box
+                doc.setFillColor(240, 245, 255);
+                doc.rect(x, y, w, 8, 'FD');
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(8);
+                doc.text(title, x + (w/2), y + 5, { align: "center" });
+
+                // Border Luar
+                doc.rect(x, y, w, h);
+
+                // Items
+                doc.setFont("helvetica", "normal");
+                let itemY = y + 14;
+                items.forEach(item => {
+                    // Checkbox square
+                    doc.rect(x + w - 10, itemY - 3, 4, 4); // Kotak centang kosong
+                    // Text
+                    doc.text(item, x + 3, itemY);
+                    
+                    // Garis bawah tipis (opsional, agar mirip grid)
+                    // doc.setDrawColor(240);
+                    // doc.line(x, itemY + 2, x + w, itemY + 2);
+                    // doc.setDrawColor(200); // Reset warna border
+
+                    itemY += 6;
+                });
+            }
+
+            // Data Checklist
+            const list1 = ["1. Unit Indoor", "2. Unit Outdoor", "3. Pipa AC", "4. Selang Buangan", "5. Kabel dan Asesori"];
+            const list2 = ["1. Instalasi Indoor", "2. Instalasi Outdoor", "3. Instalasi Listrik", "4. Instalasi Pipa", "5. Instalasi Buangan", "6. Vaccum", "7. Tekanan Freon", "8. Arus (Ampere)", "9. Temperatur Evap.", "10. Temperatur Kond."];
+            const list3 = ["1. Unit Indoor", "2. Unit Outdoor", "3. Pipa AC", "4. Selang Buangan", "5. Kabel dan Asesori"];
+
+            drawChecklistBox("Unit AC dan Assesories", col1X, boxY, colWidth, boxHeight, list1);
+            drawChecklistBox("Pemasangan", col2X, boxY, colWidth, boxHeight, list2);
+            drawChecklistBox("Pekerjaan Bongkar", col3X, boxY, colWidth, boxHeight, list3);
+
+            // --- 6. INFORMASI TAMBAHAN ---
+            currentY = boxY + boxHeight + 5;
+            drawSectionHeader("Informasi Tambahan dan Hasil", currentY);
+            
+            currentY += 8;
+            doc.rect(marginX, currentY, 180, 15); // Kotak input besar
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(150);
+            doc.text("Informasi Tambahan dan Hasil Pekerjaan...", marginX + 2, currentY + 5);
+            doc.setTextColor(0);
+
+            // --- 7. TANDA TANGAN ---
+            currentY += 25;
+            
+            // Box TTD Teknisi (Kiri)
+            const signBoxWidth = 85;
+            const signBoxHeight = 40;
+            
+            // Box Kiri
+            doc.setDrawColor(200); // Border abu muda
+            doc.setLineWidth(0.5);
+            doc.roundedRect(marginX, currentY, signBoxWidth, signBoxHeight, 3, 3);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(0, 102, 204); // Biru seperti di gambar
+            doc.text("Tanda Tangan Teknisi", marginX + (signBoxWidth/2), currentY + 8, { align: "center" });
+            
+            // Garis Bawah Nama
+            doc.line(marginX + 20, currentY + 32, marginX + signBoxWidth - 20, currentY + 32);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0);
+            doc.setFontSize(8);
+            doc.text("( Budi Arie )", marginX + (signBoxWidth/2), currentY + 37, { align: "center" });
+
+
+            // Box TTD Pelanggan (Kanan)
+            const rightSignX = 195 - signBoxWidth;
+            doc.roundedRect(rightSignX, currentY, signBoxWidth, signBoxHeight, 3, 3);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(0, 102, 204);
+            doc.text("Tanda Tangan Pelanggan", rightSignX + (signBoxWidth/2), currentY + 8, { align: "center" });
+
+            // Garis Bawah Nama
+            doc.line(rightSignX + 20, currentY + 32, rightSignX + signBoxWidth - 20, currentY + 32);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0);
+            doc.setFontSize(8);
+            doc.text("( Raya Kiranti )", rightSignX + (signBoxWidth/2), currentY + 37, { align: "center" });
+
+            // Simpan PDF
+            doc.save("WO-Penyewaan-AC-Lestari.pdf");
+        }
+    </script>
+</body>
+</html>

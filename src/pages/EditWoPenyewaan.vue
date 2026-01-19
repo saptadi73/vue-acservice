@@ -41,7 +41,7 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">No. WO</td>
-                <td class="font-semibold text-gray-900">: WO-001</td>
+                <td class="font-semibold text-gray-900">: {{ no_wo || '-' }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Pilih Pelanggan</td>
@@ -681,6 +681,7 @@
                 class="w-full h-24 flex items-center justify-center border-b-2 border-blue-200 bg-blue-50 rounded-md overflow-hidden"
               >
                 <img
+                  id="teknisiSignImg"
                   v-if="teknisiSignUrl"
                   :src="teknisiSignUrl"
                   alt="Tanda Tangan Teknisi"
@@ -716,6 +717,7 @@
                 class="w-full h-24 flex items-center justify-center border-b-2 border-blue-200 bg-blue-50 rounded-md overflow-hidden"
               >
                 <img
+                  id="pelangganSignImg"
                   v-if="pelangganSignUrl"
                   :src="pelangganSignUrl"
                   alt="Tanda Tangan Pelanggan"
@@ -776,12 +778,12 @@ import api from '@/user/axios'
 import { useLoadingStore } from '../stores/loading'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
-import jsPDF from 'jspdf'
-import logoImage from '@/assets/images/ac_lestari_black.png'
+import { useWorkOrderPdf } from '@/composables/useWorkOrderPdf'
 
 const loadingStore = useLoadingStore()
 const route = useRoute()
 const workorder_id = route.params.id
+const no_wo = ref(route.query.nowo || '')
 
 const show_toast = ref(false)
 const message_toast = ref('')
@@ -848,6 +850,8 @@ const jenis_pelanggan = ref('')
 const teknisi = ref([])
 const customers = ref([])
 const pelangganSignUrl = ref(null)
+const teknisiSignBase64 = ref(null)
+const pelangganSignBase64 = ref(null)
 const status = ref('')
 
 const formData = ref({
@@ -896,6 +900,41 @@ const formData = ref({
   checkKabelB: false,
   keteranganKabelB: '',
 })
+
+// Normalize absolute upload URL to relative path so Vite proxy applies
+function toRelativeUploadPath(path) {
+  if (!path) return null
+  try {
+    // If already relative
+    if (path.startsWith('/uploads')) return path
+    // If absolute, strip origin and keep /uploads...
+    const u = new URL(path, BASE_URL)
+    const rel = u.pathname + (u.search || '')
+    if (rel.startsWith('/uploads')) return rel
+    return path // fallback, return as provided
+  } catch {
+    return path
+  }
+}
+
+// Helper: convert relative /uploads path to Base64 via Vite proxy (no CORS)
+async function convertImageUrlToBase64(relativePath) {
+  try {
+    console.log('  🔄 Fetching image via Vite proxy:', relativePath)
+    const res = await fetch(relativePath, { credentials: 'include' })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const blob = await res.blob()
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch (error) {
+    console.error('  ❌ Proxy fetch failed:', error.message)
+    throw new Error(`Failed to convert image: ${error.message}`)
+  }
+}
 
 // Ambil data work order
 async function getForNewWorkOrder() {
@@ -978,6 +1017,18 @@ async function getWorkOrderPenyewaanByID() {
     console.log('🔹 Status Value:', dataku.status)
     console.log('🔹 Customer ID:', dataku.customer_id)
     console.log('🔹 Rental Asset ID:', dataku.rental_asset_id)
+    console.log('🔹 Signature URLs:')
+    console.log('  - tanda_tangan_teknisi:', dataku.tanda_tangan_teknisi || 'Not available')
+    console.log('  - tanda_tangan_pelanggan:', dataku.tanda_tangan_pelanggan || 'Not available')
+    console.log('🔹 Signature Base64 Fields:')
+    console.log(
+      '  - tanda_tangan_teknisi_base64:',
+      dataku.tanda_tangan_teknisi_base64 ? 'Available ✓' : 'Not available',
+    )
+    console.log(
+      '  - tanda_tangan_pelanggan_base64:',
+      dataku.tanda_tangan_pelanggan_base64 ? 'Available ✓' : 'Not available',
+    )
     console.log('🔹 All Fields:', dataku)
     console.log('═══════════════════════════════════════════')
 
@@ -1032,8 +1083,56 @@ async function getWorkOrderPenyewaanByID() {
     selectedAssetId.value = dataku.rental_asset_id || ''
     onSelectAsset()
     pelangganSignUrl.value = dataku.tanda_tangan_pelanggan
-      ? BASE_URL + dataku.tanda_tangan_pelanggan
+      ? BASE_URL + dataku.tanda_tangan_pelanggan.replace(/^\//, '')
       : null
+
+    // Simpan Base64 signatures dari backend
+    teknisiSignBase64.value = dataku.tanda_tangan_teknisi_base64 || null
+    pelangganSignBase64.value = dataku.tanda_tangan_pelanggan_base64 || null
+
+    console.log('📝 Signature URLs from backend:')
+    console.log('  - Teknisi URL:', dataku.tanda_tangan_teknisi || 'Not available')
+    console.log('  - Pelanggan URL:', dataku.tanda_tangan_pelanggan || 'Not available')
+    console.log(
+      '  - Teknisi Base64:',
+      dataku.tanda_tangan_teknisi_base64 ? 'Available' : 'Not available',
+    )
+    console.log(
+      '  - Pelanggan Base64:',
+      dataku.tanda_tangan_pelanggan_base64 ? 'Available' : 'Not available',
+    )
+
+    // Fallback: Jika backend tidak kirim Base64, convert dari URL menggunakan relative path
+    if (!teknisiSignBase64.value && dataku.tanda_tangan_teknisi) {
+      const teknisiPath = toRelativeUploadPath(dataku.tanda_tangan_teknisi)
+      console.log('🔄 Converting Teknisi signature from path:', teknisiPath)
+      try {
+        teknisiSignBase64.value = await convertImageUrlToBase64(teknisiPath)
+        console.log('✅ Teknisi Base64 converted successfully')
+      } catch (err) {
+        console.error('❌ Failed to convert teknisi signature:', err.message)
+      }
+    }
+
+    if (!pelangganSignBase64.value && dataku.tanda_tangan_pelanggan) {
+      const pelangganPath = toRelativeUploadPath(dataku.tanda_tangan_pelanggan)
+      console.log('🔄 Converting Pelanggan signature from path:', pelangganPath)
+      try {
+        pelangganSignBase64.value = await convertImageUrlToBase64(pelangganPath)
+        console.log('✅ Pelanggan Base64 converted successfully')
+      } catch (err) {
+        console.error('❌ Failed to convert pelanggan signature:', err.message)
+      }
+    }
+
+    console.log('✨ Final Base64 Status:')
+    console.log('  - Teknisi:', teknisiSignBase64.value ? 'Ready ✓' : 'Not available')
+    console.log('  - Pelanggan:', pelangganSignBase64.value ? 'Ready ✓' : 'Not available')
+
+    console.log('📸 Signature Base64 status:')
+    console.log('  - Teknisi Base64:', teknisiSignBase64.value ? 'Loaded ✓' : 'Not available')
+    console.log('  - Pelanggan Base64:', pelangganSignBase64.value ? 'Loaded ✓' : 'Not available')
+
     status.value = dataku.status || ''
 
     console.log('Work order data successfully loaded for status:', status.value)
@@ -1125,10 +1224,8 @@ const teknisiSignUrl = computed(() => {
   if (!formData.value.teknisi_id) return null
   const tech = teknisi.value.find((t) => t.id === formData.value.teknisi_id)
   if (tech && tech.tanda_tangan) {
-    if (tech.tanda_tangan.startsWith('http') || tech.tanda_tangan.startsWith('data:')) {
-      return tech.tanda_tangan
-    }
-    return BASE_URL + tech.tanda_tangan
+    const rel = toRelativeUploadPath(tech.tanda_tangan)
+    return rel || tech.tanda_tangan
   }
   return null
 })
@@ -1181,257 +1278,155 @@ function createSalesOrder() {
 // }
 
 function previewPdfJsPdf() {
-  const doc = new jsPDF('p', 'mm', 'a4')
-  const primaryColor = [0, 0, 0]
+  const { generatePdf } = useWorkOrderPdf()
 
-  doc.setFillColor(245, 245, 245)
-  doc.rect(10, 8, 190, 20, 'F')
-
-  doc.setDrawColor(220, 220, 220)
-  doc.roundedRect(12, 10, 50, 16, 2, 2)
-  if (logoImage) {
-    doc.addImage(logoImage, 'PNG', 12, 10, 50, 16)
+  // Prepare checklist data structure
+  const checklistData = {
+    unit: [
+      {
+        label: '1. Unit Indoor',
+        check: formData.value.checkIndoor,
+        ket: formData.value.keteranganIndoor,
+      },
+      {
+        label: '2. Unit Outdoor',
+        check: formData.value.checkOutdoor,
+        ket: formData.value.keteranganOutdoor,
+      },
+      { label: '3. Pipa AC', check: formData.value.checkPipa, ket: formData.value.keteranganPipa },
+      {
+        label: '4. Selang Buangan',
+        check: formData.value.checkSelang,
+        ket: formData.value.keteranganSelang,
+      },
+      {
+        label: '5. Kabel dan Asesori',
+        check: formData.value.checkKabel,
+        ket: formData.value.keteranganKabel,
+      },
+    ],
+    install: [
+      {
+        label: '1. Instalasi Indoor',
+        check: formData.value.checkInstIndoor,
+        ket: formData.value.keteranganInstIndoor,
+      },
+      {
+        label: '2. Instalasi Outdoor',
+        check: formData.value.checkInstOutdoor,
+        ket: formData.value.keteranganInstOutdoor,
+      },
+      {
+        label: '3. Instalasi Listrik',
+        check: formData.value.checkInstListrik,
+        ket: formData.value.keteranganInstListrik,
+      },
+      {
+        label: '4. Instalasi Pipa',
+        check: formData.value.checkInstPipa,
+        ket: formData.value.keteranganInstPipa,
+      },
+      {
+        label: '5. Instalasi Buangan',
+        check: formData.value.checkBuangan,
+        ket: formData.value.keteranganBuangan,
+      },
+      {
+        label: '6. Vaccum',
+        check: formData.value.checkVaccum,
+        ket: formData.value.keteranganVaccum,
+      },
+      {
+        label: '7. Tekanan Freon',
+        check: formData.value.checkFreon,
+        ket: formData.value.keteranganFreon,
+      },
+      {
+        label: '8. Arus (Ampere)',
+        check: formData.value.checkArus,
+        ket: formData.value.keteranganArus,
+      },
+      {
+        label: '9. Temperatur Evap.',
+        check: formData.value.checkEva,
+        ket: formData.value.keteranganEva,
+      },
+      {
+        label: '10. Temperatur Kond.',
+        check: formData.value.checkKondensor,
+        ket: formData.value.keteranganKondensor,
+      },
+    ],
+    dismantle: [
+      {
+        label: '1. Unit Indoor',
+        check: formData.value.checkIndoorB,
+        ket: formData.value.keteranganIndoorB,
+      },
+      {
+        label: '2. Unit Outdoor',
+        check: formData.value.checkOutdoorB,
+        ket: formData.value.keteranganOutdoorB,
+      },
+      {
+        label: '3. Pipa AC',
+        check: formData.value.checkPipaB,
+        ket: formData.value.keteranganPipaB,
+      },
+      {
+        label: '4. Selang Buangan',
+        check: formData.value.checkSelangB,
+        ket: formData.value.keteranganSelangB,
+      },
+      {
+        label: '5. Kabel dan Asesori',
+        check: formData.value.checkKabelB,
+        ket: formData.value.keteranganKabelB,
+      },
+    ],
   }
 
-  doc.setTextColor(...primaryColor)
-  doc.setFontSize(13)
-  doc.setFont('Helvetica', 'bold')
-  doc.text('AC Lestari', 66, 15)
+  // Get teknisi name
+  const teknisiName = teknisi.value.find((t) => t.id === formData.value.teknisi_id)?.nama || ''
 
-  doc.setFontSize(8.5)
-  doc.setFont('Helvetica', 'normal')
-  doc.text('No. Telp. 0859 4321 3369', 66, 20)
-
-  doc.setDrawColor(220, 220, 220)
-  doc.setLineWidth(0.4)
-  doc.line(10, 30, 200, 30)
-
-  let y = 36
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('WO Penyewaan AC', 10, y)
-  y += 6
-
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.text(`Type Pelanggan: ${jenis_pelanggan.value || '-'}`, 10, y)
-  doc.text(`No. WO: WO-001`, 120, y)
-  y += 6
-
-  doc.text(`Nama: ${nama_pelanggan.value || '-'}`, 10, y)
-  doc.text(`HP: ${no_hp.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Alamat: ${alamat.value || '-'}`, 10, y)
-  y += 10
-
-  doc.setFont('Helvetica', 'bold')
-  doc.text('Spesifikasi Unit AC', 10, y)
-  y += 6
-  doc.setFont('Helvetica', 'normal')
-  doc.text(`Brand: ${brand.value || '-'}`, 10, y)
-  doc.text(`Tipe: ${tipe.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Model: ${model.value || '-'}`, 10, y)
-  doc.text(`Kapasitas: ${kapasitas.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Freon: ${freon.value || '-'}`, 10, y)
-  doc.text(`Lokasi: ${lokasi.value || '-'}`, 120, y)
-  y += 10
-
-  // Pengecekan Teknisi Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('PENGECEKAN TEKNISI', 10, y)
-  y += 6
-
-  const checkSymbol = '\u2713' // ✓
-  const crossSymbol = '\u2717' // ✗
-
-  // Unit AC dan Accessories Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(8.5)
-  doc.text('UNIT AC DAN ACCESSORIES:', 10, y)
-  y += 5
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(7.5)
-
-  const unitItems = [
-    {
-      label: '1. Unit Indoor',
-      check: formData.value.checkIndoor,
-      ket: formData.value.keteranganIndoor,
+  // Call composable with clean data structure
+  generatePdf({
+    woNumber: no_wo.value || '-',
+    customer: {
+      nama: nama_pelanggan.value || '-',
+      alamat: alamat.value || '-',
+      hp: no_hp.value || '-',
     },
-    {
-      label: '2. Unit Outdoor',
-      check: formData.value.checkOutdoor,
-      ket: formData.value.keteranganOutdoor,
+    unit: {
+      brand: brand.value || '-',
+      model: model.value || '-',
+      tipe: tipe.value || '-',
+      kapasitas: kapasitas.value || '-',
+      freon: freon.value || '-',
+      lokasi: lokasi.value || '-',
     },
-    { label: '3. Pipa AC', check: formData.value.checkPipa, ket: formData.value.keteranganPipa },
-    {
-      label: '4. Selang Buangan',
-      check: formData.value.checkSelang,
-      ket: formData.value.keteranganSelang,
+    checklist: checklistData,
+    hasilPekerjaan: formData.value.hasil_pekerjaan || '',
+    teknisi: {
+      nama: teknisiName,
     },
-    {
-      label: '5. Kabel dan Asesori',
-      check: formData.value.checkKabel,
-      ket: formData.value.keteranganKabel,
+    signatures: {
+      teknisi: {
+        base64: teknisiSignBase64.value,
+        url: teknisiSignUrl.value,
+      },
+      pelanggan: {
+        base64: pelangganSignBase64.value,
+        url: pelangganSignUrl.value,
+      },
     },
-  ]
-
-  unitItems.forEach((item) => {
-    const status = item.check ? checkSymbol : crossSymbol
-    doc.text(`${status} ${item.label}`, 12, y)
-    if (!item.check && item.ket) {
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
-      doc.setFont('Helvetica', 'normal')
-      y += 3
-    }
-    y += 4
   })
+}
 
-  y += 3
-
-  // Pemasangan Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(8.5)
-  doc.text('PEMASANGAN:', 10, y)
-  y += 5
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(7.5)
-
-  const installItems = [
-    {
-      label: '1. Instalasi Indoor',
-      check: formData.value.checkInstIndoor,
-      ket: formData.value.keteranganInstIndoor,
-    },
-    {
-      label: '2. Instalasi Outdoor',
-      check: formData.value.checkInstOutdoor,
-      ket: formData.value.keteranganInstOutdoor,
-    },
-    {
-      label: '3. Instalasi Listrik',
-      check: formData.value.checkInstListrik,
-      ket: formData.value.keteranganInstListrik,
-    },
-    {
-      label: '4. Instalasi Pipa',
-      check: formData.value.checkInstPipa,
-      ket: formData.value.keteranganInstPipa,
-    },
-    {
-      label: '5. Instalasi Buangan',
-      check: formData.value.checkBuangan,
-      ket: formData.value.keteranganBuangan,
-    },
-    { label: '6. Vaccum', check: formData.value.checkVaccum, ket: formData.value.keteranganVaccum },
-    {
-      label: '7. Tekanan Freon',
-      check: formData.value.checkFreon,
-      ket: formData.value.keteranganFreon,
-    },
-    {
-      label: '8. Arus (Ampere)',
-      check: formData.value.checkArus,
-      ket: formData.value.keteranganArus,
-    },
-    {
-      label: '9. Temperatur Evaporator',
-      check: formData.value.checkEva,
-      ket: formData.value.keteranganEva,
-    },
-    {
-      label: '10. Temperatur Kondensor',
-      check: formData.value.checkKondensor,
-      ket: formData.value.keteranganKondensor,
-    },
-  ]
-
-  installItems.forEach((item) => {
-    const status = item.check ? checkSymbol : crossSymbol
-    doc.text(`${status} ${item.label}`, 12, y)
-    if (!item.check && item.ket) {
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
-      doc.setFont('Helvetica', 'normal')
-      y += 3
-    }
-    y += 4
-  })
-
-  y += 3
-
-  // Pekerjaan Bongkar Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(8.5)
-  doc.text('PEKERJAAN BONGKAR:', 10, y)
-  y += 5
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(7.5)
-
-  const bongkarItems = [
-    {
-      label: '1. Unit Indoor',
-      check: formData.value.checkIndoorB,
-      ket: formData.value.keteranganIndoorB,
-    },
-    {
-      label: '2. Unit Outdoor',
-      check: formData.value.checkOutdoorB,
-      ket: formData.value.keteranganOutdoorB,
-    },
-    { label: '3. Pipa AC', check: formData.value.checkPipaB, ket: formData.value.keteranganPipaB },
-    {
-      label: '4. Selang Buangan',
-      check: formData.value.checkSelangB,
-      ket: formData.value.keteranganSelangB,
-    },
-    {
-      label: '5. Kabel dan Asesori',
-      check: formData.value.checkKabelB,
-      ket: formData.value.keteranganKabelB,
-    },
-  ]
-
-  bongkarItems.forEach((item) => {
-    const status = item.check ? checkSymbol : crossSymbol
-    doc.text(`${status} ${item.label}`, 12, y)
-    if (!item.check && item.ket) {
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
-      doc.setFont('Helvetica', 'normal')
-      y += 3
-    }
-    y += 4
-  })
-
-  y += 5
-
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('Hasil Pekerjaan', 10, y)
-  y += 6
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(8)
-  const hasil = formData.value.hasil_pekerjaan || ''
-  const hasilLines = doc.splitTextToSize(hasil, 180)
-  doc.text(hasilLines, 10, y)
-  y += Math.max(hasilLines.length * 4 + 2, 10)
-
-  // Open preview in new window
-  const pdfBlob = doc.output('blob')
-  const pdfUrl = URL.createObjectURL(pdfBlob)
-  const previewWindow = window.open(pdfUrl, '_blank')
-
-  if (!previewWindow) {
-    // Fallback: direct download if popup blocked
-    doc.save('WO-Penyewaan-AC.pdf')
-    message_toast.value = 'Popup diblokir. PDF langsung diunduh.'
-    show_toast.value = true
-  }
+// Alias untuk kompatibilitas
+// eslint-disable-next-line no-unused-vars
+function generateJsPdfReport() {
+  previewPdfJsPdf()
 }
 
 // Lifecycle

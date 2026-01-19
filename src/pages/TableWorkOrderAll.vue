@@ -322,15 +322,16 @@ export default {
     },
 
     getLinkToWorkOrder(order) {
+      const q = order.nowo ? `?nowo=${encodeURIComponent(order.nowo)}` : ''
       switch (order.jenis) {
         case 'pemeliharaan':
-          return `/wo/service/update/${order.work_order_ac_service.id}`
+          return `/wo/service/update/${order.work_order_ac_service.id}${q}`
         case 'penjualan':
-          return `/wo/penjualan/update/${order.workorder_penjualan.id}`
+          return `/wo/penjualan/update/${order.workorder_penjualan.id}${q}`
         case 'penyewaan':
-          return `/wo/sewa/update/${order.workorder_penyewaan.id}`
+          return `/wo/sewa/update/${order.workorder_penyewaan.id}${q}`
         default:
-          return `/wo/service/update/${order.work_order_ac_service.id}`
+          return `/wo/service/update/${order.work_order_ac_service.id}${q}`
       }
     },
 

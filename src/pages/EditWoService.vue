@@ -41,7 +41,7 @@
             <tbody>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">No. WO</td>
-                <td class="font-semibold text-gray-900">: WO-001</td>
+                <td class="font-semibold text-gray-900">: {{ no_wo || '-' }}</td>
               </tr>
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Kode Pelanggan</td>
@@ -722,17 +722,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted } from 'vue'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
 import { useLoadingStore } from '../stores/loading'
 import LoadingOverlay from '../components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
-import jsPDF from 'jspdf'
-import logoImage from '@/assets/images/ac_lestari_black.png'
+import { useWorkOrderPdfService } from '@/composables/useWorkOrderPdfService'
 
 const loadingStore = useLoadingStore()
 
@@ -747,6 +745,7 @@ function tutupToast() {
 
 const route = useRoute()
 const customerAssetId = route.params.id
+const no_wo = ref(route.query.nowo || '')
 const customer_id = ref('')
 const nama_pelanggan = ref('')
 const alamat = ref('')
@@ -763,6 +762,11 @@ const teknisi = ref([])
 const tanggal = ref(
   new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
 )
+const pelangganSignUrl = ref(null)
+const teknisiSignUploadUrl = ref(null)
+const teknisiSignBase64 = ref(null)
+const pelangganSignBase64 = ref(null)
+const status = ref('')
 
 const formData = ref({
   customer_asset_id: '',
@@ -906,8 +910,11 @@ async function getForNewWorkOrder(id) {
     kode_pelanggan.value = response.data.data.customer_asset.customer.kode_pelanggan || ''
     jenis_pelanggan.value = response.data.data.customer_asset.customer.jenis || ''
     pelangganSignUrl.value = response.data.data.tanda_tangan_pelanggan
-      ? BASE_URL + response.data.data.tanda_tangan_pelanggan
+      ? toRelativeUploadPath(response.data.data.tanda_tangan_pelanggan)
       : null
+    teknisiSignBase64.value = response.data.data.tanda_tangan_teknisi_base64 || null
+    pelangganSignBase64.value = response.data.data.tanda_tangan_pelanggan_base64 || null
+    teknisiSignUploadUrl.value = null
     status.value = response.data.data.status || ''
 
     // nama_pelanggan.value = response.data.data.customer_nama
@@ -928,6 +935,15 @@ async function getForNewWorkOrder(id) {
     loadingStore.hide()
   }
 }
+// Helper: Convert absolute upload path to relative path for Vite proxy
+function toRelativeUploadPath(path) {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path.replace(/^https?:\/\/[^/]+/, '')
+  }
+  return path
+}
+
 async function getPegawai() {
   try {
     const response = await axios.get(`${BASE_URL}wo/pegawai/list`)
@@ -937,6 +953,84 @@ async function getPegawai() {
     console.error('Error fetching teknisi data:', error)
   }
 }
+
+// Helper: File to Base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+// Upload handler for pelanggan signature
+async function onPelangganSignChange(e) {
+  const file = e.target.files[0]
+  if (!file) return
+
+  pelangganSignBase64.value = await fileToBase64(file)
+  pelangganSignUrl.value = URL.createObjectURL(file)
+}
+
+// Watcher: When teknisi changes, convert their signature to Base64
+watch(
+  () => formData.value.teknisi_id,
+  async (teknisiId) => {
+    if (!teknisiId) {
+      teknisiSignBase64.value = null
+      return
+    }
+
+    const tech = teknisi.value.find((t) => t.id === teknisiId)
+    if (!tech || !tech.tanda_tangan) {
+      teknisiSignBase64.value = null
+      return
+    }
+
+    // If it's already Base64, use it directly
+    if (tech.tanda_tangan.startsWith('data:')) {
+      teknisiSignBase64.value = tech.tanda_tangan
+      return
+    }
+
+    // Build the URL for fetching
+    let fetchUrl = tech.tanda_tangan
+    if (fetchUrl.startsWith('http')) {
+      // If it's absolute URL, extract the path for proxy
+      try {
+        const url = new URL(fetchUrl)
+        fetchUrl = url.pathname
+      } catch {
+        // If not a valid URL, use as-is
+      }
+    }
+    if (!fetchUrl.startsWith('/')) {
+      fetchUrl = `/${fetchUrl}`
+    }
+
+    // Convert from URL/path to Base64
+    try {
+      console.log('Converting teknisi signature from path:', fetchUrl)
+      const res = await fetch(fetchUrl, { credentials: 'include' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        teknisiSignBase64.value = reader.result
+        console.log('✅ Teknisi Base64 converted successfully')
+      }
+      reader.onerror = () => {
+        console.error('❌ Failed to read teknisi signature blob')
+        teknisiSignBase64.value = null
+      }
+      reader.readAsDataURL(blob)
+    } catch (error) {
+      console.error('❌ Failed to convert teknisi signature:', error.message)
+      teknisiSignBase64.value = null
+    }
+  },
+)
 
 onMounted(() => {
   console.log('Customer Asset ID:', customerAssetId)
@@ -958,28 +1052,25 @@ function createSalesOrder() {
 }
 
 const teknisiSignUrl = computed(() => {
+  if (teknisiSignUploadUrl.value) return teknisiSignUploadUrl.value
+
   if (!formData.value.teknisi_id) return null
   const tech = teknisi.value.find((t) => t.id === formData.value.teknisi_id)
   if (tech && tech.tanda_tangan) {
-    if (tech.tanda_tangan.startsWith('http') || tech.tanda_tangan.startsWith('data:')) {
+    // If already data URL or absolute URL, use it directly
+    if (tech.tanda_tangan.startsWith('data:') || tech.tanda_tangan.startsWith('http')) {
       return tech.tanda_tangan
     }
-    return BASE_URL + tech.tanda_tangan
+    // If relative path, use it
+    if (tech.tanda_tangan.startsWith('/')) {
+      return tech.tanda_tangan
+    }
+    // Otherwise, assume it's relative and prepend /
+    return `/${tech.tanda_tangan}`
   }
   return null
 })
-const pelangganSignUrl = ref(null)
-const status = ref('')
 
-function onPelangganSignChange(e) {
-  const file = e.target.files[0]
-  if (file) {
-    pelangganSignUrl.value = URL.createObjectURL(file)
-  }
-}
-
-// function serializeForPrint(element) {
-//   const clone = element.cloneNode(true)
 //   const originals = element.querySelectorAll('input, textarea, select')
 //   const clonedNodes = clone.querySelectorAll('input, textarea, select')
 
@@ -1012,216 +1103,123 @@ function onPelangganSignChange(e) {
 //   return clone.outerHTML
 // }
 
-function previewPdfJsPdf() {
-  const doc = new jsPDF('p', 'mm', 'a4')
-  const primaryColor = [0, 0, 0]
+async function previewPdfJsPdf() {
+  const { generatePdf } = useWorkOrderPdfService()
 
-  doc.setFillColor(245, 245, 245)
-  doc.rect(10, 8, 190, 20, 'F')
-
-  doc.setDrawColor(220, 220, 220)
-  doc.roundedRect(12, 10, 50, 16, 2, 2)
-  if (logoImage) {
-    doc.addImage(logoImage, 'PNG', 12, 10, 50, 16)
+  const checklistData = {
+    indoor: [
+      {
+        label: '1. Evaporator',
+        check: formData.value.check_evaporator,
+        ket: formData.value.keterangan_evaporator,
+      },
+      {
+        label: '2. Fan/Blower Indoor',
+        check: formData.value.check_fan_indoor,
+        ket: formData.value.keterangan_fan_indoor,
+      },
+      {
+        label: '3. Kondisi Swing',
+        check: formData.value.check_swing,
+        ket: formData.value.keterangan_swing,
+      },
+      {
+        label: '4. Tegangan Input',
+        check: formData.value.check_tegangan_input,
+        ket: formData.value.keterangan_tegangan_input,
+      },
+      {
+        label: '5. Thermis Sensor',
+        check: formData.value.check_thermis,
+        ket: formData.value.keterangan_thermis,
+      },
+      {
+        label: '6. Temperatur',
+        check: formData.value.check_temperatur_indoor,
+        ket: formData.value.keterangan_temperatur_indoor,
+      },
+      {
+        label: '7. Lain-lain',
+        check: formData.value.check_lain_indoor,
+        ket: formData.value.keterangan_lain_indoor,
+      },
+    ],
+    outdoor: [
+      {
+        label: '1. Kondensor',
+        check: formData.value.check_kondensor,
+        ket: formData.value.keterangan_kondensor,
+      },
+      {
+        label: '2. Fan/Blower Outdoor',
+        check: formData.value.check_fan_outdoor,
+        ket: formData.value.keterangan_fan_outdoor,
+      },
+      {
+        label: '3. Kapasitor',
+        check: formData.value.check_kapasitor,
+        ket: formData.value.keterangan_kapasitor,
+      },
+      {
+        label: '4. Tekanan Freon',
+        check: formData.value.check_tekanan_freon,
+        ket: formData.value.keterangan_tekanan_freon,
+      },
+      {
+        label: '5. Arus (Ampere)',
+        check: formData.value.check_arus,
+        ket: formData.value.keterangan_arus,
+      },
+      {
+        label: '6. Temperatur',
+        check: formData.value.check_temperatur_outdoor,
+        ket: formData.value.keterangan_temperatur_outdoor,
+      },
+      {
+        label: '7. Lain-lain',
+        check: formData.value.check_lain_outdoor,
+        ket: formData.value.keterangan_lain_outdoor,
+      },
+    ],
   }
 
-  doc.setTextColor(...primaryColor)
-  doc.setFontSize(13)
-  doc.setFont('Helvetica', 'bold')
-  doc.text('AC Lestari', 66, 15)
+  const teknisiName = teknisi.value.find((t) => t.id === formData.value.teknisi_id)?.nama || ''
 
-  doc.setFontSize(8.5)
-  doc.setFont('Helvetica', 'normal')
-  doc.text('No. Telp. 0859 4321 3369', 66, 20)
-
-  doc.setDrawColor(220, 220, 220)
-  doc.setLineWidth(0.4)
-  doc.line(10, 30, 200, 30)
-
-  let y = 36
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('WO Pemeliharaan AC', 10, y)
-  y += 6
-
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.text(`Type Pelanggan: ${jenis_pelanggan.value || '-'}`, 10, y)
-  doc.text(`Tanggal: ${tanggal.value || '-'}`, 120, y)
-  y += 6
-
-  doc.text(`Nama: ${nama_pelanggan.value || '-'}`, 10, y)
-  doc.text(`HP: ${no_hp.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Alamat: ${alamat.value || '-'}`, 10, y)
-  y += 10
-
-  doc.setFont('Helvetica', 'bold')
-  doc.text('Spesifikasi Unit AC', 10, y)
-  y += 6
-  doc.setFont('Helvetica', 'normal')
-  doc.text(`Brand: ${brand.value || '-'}`, 10, y)
-  doc.text(`Tipe: ${tipe.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Model: ${model.value || '-'}`, 10, y)
-  doc.text(`Kapasitas: ${kapasitas.value || '-'}`, 120, y)
-  y += 6
-  doc.text(`Freon: ${freon.value || '-'}`, 10, y)
-  doc.text(`Lokasi: ${lokasi.value || '-'}`, 120, y)
-  y += 10
-
-  // Pengecekan Teknisi Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('PENGECEKAN TEKNISI', 10, y)
-  y += 6
-
-  // Indoor Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(8.5)
-  doc.text('INDOOR:', 10, y)
-  y += 5
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(7.5)
-
-  const checkSymbol = '\u2713' // ✓
-  const crossSymbol = '\u2717' // ✗
-
-  // Indoor checklist items
-  const indoorItems = [
-    {
-      label: '1. Evaporator',
-      check: formData.value.check_evaporator,
-      ket: formData.value.keterangan_evaporator,
+  await generatePdf({
+    woNumber: no_wo.value || '-',
+    customer: {
+      nama: nama_pelanggan.value || '-',
+      alamat: alamat.value || '-',
+      hp: no_hp.value || '-',
+      jenis: jenis_pelanggan.value || '-',
+      kode: kode_pelanggan.value || '-',
     },
-    {
-      label: '2. Fan/Blower Indoor',
-      check: formData.value.check_fan_indoor,
-      ket: formData.value.keterangan_fan_indoor,
+    unit: {
+      brand: brand.value || '-',
+      model: model.value || '-',
+      tipe: tipe.value || '-',
+      kapasitas: kapasitas.value || '-',
+      freon: freon.value || '-',
+      lokasi: lokasi.value || '-',
     },
-    {
-      label: '3. Kondisi Swing',
-      check: formData.value.check_swing,
-      ket: formData.value.keterangan_swing,
+    keluhan: formData.value.keluhan || '-',
+    keterangan: formData.value.keterangan || '-',
+    checklist: checklistData,
+    hasilPekerjaan: formData.value.hasil_pekerjaan || '',
+    teknisi: {
+      nama: teknisiName,
     },
-    {
-      label: '4. Tegangan Input',
-      check: formData.value.check_tegangan_input,
-      ket: formData.value.keterangan_tegangan_input,
+    signatures: {
+      teknisi: {
+        base64: teknisiSignBase64.value,
+        url: teknisiSignUrl.value,
+      },
+      pelanggan: {
+        base64: pelangganSignBase64.value,
+        url: pelangganSignUrl.value,
+      },
     },
-    {
-      label: '5. Thermis Sensor',
-      check: formData.value.check_thermis,
-      ket: formData.value.keterangan_thermis,
-    },
-    {
-      label: '6. Temperatur',
-      check: formData.value.check_temperatur_indoor,
-      ket: formData.value.keterangan_temperatur_indoor,
-    },
-    {
-      label: '7. Lain-lain',
-      check: formData.value.check_lain_indoor,
-      ket: formData.value.keterangan_lain_indoor,
-    },
-  ]
-
-  indoorItems.forEach((item) => {
-    const status = item.check ? checkSymbol : crossSymbol
-    doc.text(`${status} ${item.label}`, 12, y)
-    if (!item.check && item.ket) {
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
-      doc.setFont('Helvetica', 'normal')
-      y += 3
-    }
-    y += 4
   })
-
-  y += 3
-
-  // Outdoor Section
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(8.5)
-  doc.text('OUTDOOR:', 10, y)
-  y += 5
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(7.5)
-
-  const outdoorItems = [
-    {
-      label: '1. Kondensor',
-      check: formData.value.check_kondensor,
-      ket: formData.value.keterangan_kondensor,
-    },
-    {
-      label: '2. Fan/Blower Outdoor',
-      check: formData.value.check_fan_outdoor,
-      ket: formData.value.keterangan_fan_outdoor,
-    },
-    {
-      label: '3. Kapasitor',
-      check: formData.value.check_kapasitor,
-      ket: formData.value.keterangan_kapasitor,
-    },
-    {
-      label: '4. Tekanan Freon',
-      check: formData.value.check_tekanan_freon,
-      ket: formData.value.keterangan_tekanan_freon,
-    },
-    {
-      label: '5. Arus (Ampere)',
-      check: formData.value.check_arus,
-      ket: formData.value.keterangan_arus,
-    },
-    {
-      label: '6. Temperatur',
-      check: formData.value.check_temperatur_outdoor,
-      ket: formData.value.keterangan_temperatur_outdoor,
-    },
-    {
-      label: '7. Lain-lain',
-      check: formData.value.check_lain_outdoor,
-      ket: formData.value.keterangan_lain_outdoor,
-    },
-  ]
-
-  outdoorItems.forEach((item) => {
-    const status = item.check ? checkSymbol : crossSymbol
-    doc.text(`${status} ${item.label}`, 12, y)
-    if (!item.check && item.ket) {
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`  Ket: ${item.ket}`, 14, y + 3)
-      doc.setFont('Helvetica', 'normal')
-      y += 3
-    }
-    y += 4
-  })
-
-  y += 5
-
-  doc.setFont('Helvetica', 'bold')
-  doc.setFontSize(9)
-  doc.text('Hasil Pekerjaan', 10, y)
-  y += 6
-  doc.setFont('Helvetica', 'normal')
-  doc.setFontSize(8)
-  const hasil = formData.value.hasil_pekerjaan || ''
-  const hasilLines = doc.splitTextToSize(hasil, 180)
-  doc.text(hasilLines, 10, y)
-  y += Math.max(hasilLines.length * 4 + 2, 10)
-
-  // Open preview in new window
-  const pdfBlob = doc.output('blob')
-  const pdfUrl = URL.createObjectURL(pdfBlob)
-  const previewWindow = window.open(pdfUrl, '_blank')
-
-  if (!previewWindow) {
-    // Fallback: direct download if popup blocked
-    doc.save('WO-Pemeliharaan-AC.pdf')
-    message_toast.value = 'Popup diblokir. PDF langsung diunduh.'
-    show_toast.value = true
-  }
 }
 </script>
 

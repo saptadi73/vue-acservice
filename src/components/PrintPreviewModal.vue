@@ -108,7 +108,7 @@ function printPDF() {
   doc.open()
   doc.write('<html><head><title>Print Workorder</title>')
   doc.write(
-    '<style>body{margin:0;padding:24px;font-family:Arial, sans-serif;} .page{max-width:8.5in;margin:0 auto;} .page img{max-width:100%; height:auto;} </style>'
+    '<style>body{margin:0;padding:24px;font-family:Arial, sans-serif;} .page{max-width:8.5in;margin:0 auto;} .page img{max-width:100%; height:auto;} </style>',,
   )
   doc.write('</head><body>')
   doc.write(`<div class="page">${element.innerHTML}</div>`)
