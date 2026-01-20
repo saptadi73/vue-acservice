@@ -48,12 +48,40 @@
               </Popover>
             </PopoverGroup>
 
-            <button
-              type="button"
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-100 bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200 hover:border-gray-200 tansition-all duration-200"
-            >
-              <font-awesome-icon icon="fa-regular fa-bell" />
-            </button>
+            <Popover class="relative flex flex-col">
+              <PopoverButton
+                class="relative inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-100 bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200 hover:border-gray-200 tansition-all duration-200"
+              >
+                <font-awesome-icon icon="fa-regular fa-bell" />
+                <span
+                  v-if="overdueCount > 0"
+                  class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white"
+                  aria-hidden="true"
+                ></span>
+              </PopoverButton>
+              <transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="opacity-0 translate-y-1"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-150"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 translate-y-1"
+              >
+                <PopoverPanel
+                  class="absolute right-0 top-full mt-2 w-56 rounded-md bg-white shadow-md ring-1 ring-gray-200 p-3 text-sm"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-gray-900">Terlambat</div>
+                    <div
+                      class="inline-flex items-center justify-center rounded-full bg-rose-100 text-rose-700 px-2 py-0.5 text-xs font-semibold"
+                    >
+                      {{ overdueCount }}
+                    </div>
+                  </div>
+                  <p class="mt-2 text-gray-600">Jumlah unit yang terlambat servis.</p>
+                </PopoverPanel>
+              </transition>
+            </Popover>
 
             <PopoverGroup>
               <Popover class="relative flex flex-col">
@@ -108,10 +136,26 @@ import { Popover, PopoverButton, PopoverGroup, PopoverPanel } from '@headlessui/
 import HeaderSearchBengkel from '../components/HeaderSearchBengkel.vue'
 import { useRouter } from 'vue-router'
 
-import { inject, computed } from 'vue'
+import { inject, computed, onMounted, onUnmounted } from 'vue'
+import { useCustomersStore } from '../stores/customers'
 
 const $emitter = inject('$emitter')
 const router = useRouter()
+
+const customers = useCustomersStore()
+const overdueCount = computed(() => customers.overdueCount)
+
+onMounted(() => {
+  if ($emitter && typeof $emitter.on === 'function') {
+    $emitter.on('customers:updated', customers.setCustomers)
+  }
+})
+
+onUnmounted(() => {
+  if ($emitter && typeof $emitter.off === 'function') {
+    $emitter.off('customers:updated', customers.setCustomers)
+  }
+})
 
 // Get user email from localStorage
 const userEmail = computed(() => {

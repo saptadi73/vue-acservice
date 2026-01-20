@@ -54,7 +54,9 @@
           class="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Filter Status</option>
-          <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
+          <option v-for="o in statusOptions" :key="o.label" :value="o.label">
+            {{ o.label }} ({{ o.count }})
+          </option>
         </select>
       </div>
       <div>
@@ -192,6 +194,7 @@
           <!-- Actions -->
           <div class="mt-4 flex items-center gap-2">
             <button
+              @click="openUpdateServiceModal(customer)"
               class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2 text-white text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <!-- bell -->
@@ -217,6 +220,22 @@
               <!-- pencil -->
               <span class="material-symbols-outlined">plumbing</span>
               Service
+            </button>
+            <button
+              @click="openHistoryModal(customer)"
+              class="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-gray-700 text-sm font-medium ring-1 ring-gray-200 hover:bg-gray-50"
+              title="Lihat History Service"
+            >
+              <!-- history icon -->
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </button>
             <button
               @click="$router.push({ name: 'wo jual baru', params: { id: customer.asset_id } })"
@@ -250,6 +269,159 @@
       Tidak ada data yang cocok.
     </p>
     <loading-overlay />
+
+    <!-- Update Next Service Modal -->
+    <div
+      v-if="showUpdateModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closeUpdateModal"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-900">Update Jadwal Service</h3>
+          <button @click="closeUpdateModal" class="rounded-lg p-1 hover:bg-gray-100">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 18L18 6M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-1">Pelanggan:</p>
+          <p class="font-medium text-gray-900">{{ selectedCustomer?.nama }}</p>
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2"> Tanggal Next Service </label>
+          <input
+            v-model="updateNextServiceDate"
+            type="date"
+            class="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            @click="closeUpdateModal"
+            class="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Batal
+          </button>
+          <button
+            @click="updateNextService"
+            class="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service History Modal -->
+    <div
+      v-if="showHistoryModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closeHistoryModal"
+    >
+      <div class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-auto">
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-gray-900">History Service</h3>
+          <button @click="closeHistoryModal" class="rounded-lg p-1 hover:bg-gray-100">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 18L18 6M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-1">Pelanggan:</p>
+          <p class="font-medium text-gray-900">{{ selectedCustomer?.nama }}</p>
+          <p class="text-sm text-gray-500">
+            {{ selectedCustomer?.tipe }} - {{ selectedCustomer?.brand }}
+          </p>
+        </div>
+
+        <div v-if="loadingHistory" class="py-12 text-center">
+          <div
+            class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"
+          ></div>
+          <p class="mt-2 text-sm text-gray-500">Memuat history...</p>
+        </div>
+
+        <div v-else-if="serviceHistory.length === 0" class="py-12 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <p class="mt-2 text-gray-500">Belum ada history service</p>
+        </div>
+
+        <div v-else class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tanggal</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">No. WO</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Teknisi</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Keluhan</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Keterangan</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in serviceHistory"
+                :key="item.id"
+                class="border-b border-gray-100 hover:bg-gray-50"
+              >
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  {{ formatDate(item.created_at) }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ item.nowo || '-' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ item.pegawai?.nama || '-' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ item.keluhan || '-' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                  {{ item.keterangan || '-' }}
+                </td>
+                <td class="px-4 py-3">
+                  <span
+                    class="inline-block rounded-full px-2.5 py-1 text-xs font-medium"
+                    :class="{
+                      'bg-green-100 text-green-700': item.status === 'selesai',
+                      'bg-blue-100 text-blue-700': item.status === 'progress',
+                      'bg-gray-100 text-gray-700':
+                        item.status !== 'selesai' && item.status !== 'progress',
+                    }"
+                  >
+                    {{ item.status || '-' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -259,6 +431,7 @@ import { useLoadingStore } from '../stores/loading'
 import { mapStores } from 'pinia'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { BASE_URL } from '@/base.utils.url'
+import { useCustomersStore } from '../stores/customers'
 
 export default {
   name: 'CustomerCard',
@@ -270,17 +443,34 @@ export default {
       filterBrand: '',
       customers: [],
       BASE_URL,
+      showUpdateModal: false,
+      showHistoryModal: false,
+      selectedCustomer: null,
+      updateNextServiceDate: '',
+      serviceHistory: [],
+      loadingHistory: false,
     }
   },
   created() {
     this.fetchCustomers()
   },
   computed: {
-    ...mapStores(useLoadingStore),
+    ...mapStores(useLoadingStore, useCustomersStore),
     // opsi filter dinamis dari data
     statusOptions() {
-      const set = new Set(this.customers.map((c) => c.status))
-      return Array.from(set)
+      const counts = {
+        Aman: 0,
+        'Dekat Jatuh Tempo': 0,
+        Terlambat: 0,
+      }
+      this.customers.forEach((raw) => {
+        const c = this.withComputedService(raw)
+        const label = this.serviceCategory(c)
+        if (counts[label] != null) counts[label] += 1
+      })
+      return Object.entries(counts)
+        .filter(([, count]) => count > 0)
+        .map(([label, count]) => ({ label, count }))
     },
     brandOptions() {
       const set = new Set(this.customers.map((c) => c.brand))
@@ -291,23 +481,28 @@ export default {
       const q = this.searchQuery.trim().toLowerCase()
       const now = new Date()
 
+      const toStr = (v) => (v == null ? '' : String(v))
+
       return (
         this.customers
           .map((c) => this.withComputedService(c)) // pastikan _lastService & _nextService ada
           .filter((c) => {
-            // search
+            // search (aman terhadap field undefined/null)
             const matchText =
-              c.nama.toLowerCase().includes(q) ||
-              c.alamat.toLowerCase().includes(q) ||
-              c.tipe.toLowerCase().includes(q) ||
-              c.brand.toLowerCase().includes(q) ||
-              c.model.toLowerCase().includes(q) ||
-              c.kapasitas.toLowerCase().includes(q) ||
-              c.lokasi.toLowerCase().includes(q) ||
-              c.hp.toLowerCase().includes(q)
+              toStr(c.nama).toLowerCase().includes(q) ||
+              toStr(c.alamat).toLowerCase().includes(q) ||
+              toStr(c.tipe).toLowerCase().includes(q) ||
+              toStr(c.brand).toLowerCase().includes(q) ||
+              toStr(c.model).toLowerCase().includes(q) ||
+              toStr(c.kapasitas).toLowerCase().includes(q) ||
+              toStr(c.lokasi).toLowerCase().includes(q) ||
+              toStr(c.hp).toLowerCase().includes(q) ||
+              toStr(c.kode_pelanggan).toLowerCase().includes(q)
 
-            // filter dropdown
-            const matchStatus = this.filterStatus ? c.status === this.filterStatus : true
+            // filter dropdown (berdasarkan kategori servis)
+            const matchStatus = this.filterStatus
+              ? this.serviceCategory(c) === this.filterStatus
+              : true
             const matchBrand = this.filterBrand ? c.brand === this.filterBrand : true
 
             return (q ? matchText : true) && matchStatus && matchBrand
@@ -327,8 +522,32 @@ export default {
       await api
         .get('/customers/assets/all')
         .then((response) => {
-          this.customers = response.data.data
-          console.log('Fetched customers:', this.customers)
+          console.log('=== FETCH CUSTOMERS API RESPONSE ===')
+          console.log('Full Response:', response.data)
+          console.log('Raw data array:', response.data.data)
+
+          // Log first 3 customers to see structure
+          if (response.data.data && response.data.data.length > 0) {
+            console.log('First customer sample:', JSON.stringify(response.data.data[0], null, 2))
+            response.data.data.slice(0, 3).forEach((c, i) => {
+              console.log(
+                `Customer ${i}: ${c.customer_id || 'no id'} - nextService: ${c.nextService}, lastService: ${c.lastService}`,
+
+                `Customer ${i}: ${c.customer_id || 'no id'} - nextService: ${c.nextService}, lastService: ${c.lastService}`,
+              )
+            })
+          }
+
+          // Force reactivity by creating new array
+          this.customers = [...response.data.data]
+          console.log('Customers set to component:', this.customers.length, 'items')
+          console.log('Sample customer nextService after set:', this.customers[0]?.nextService)
+          console.log('=== END FETCH ===')
+
+          this.customersStore.setCustomers(this.customers)
+          if (this.$emitter && typeof this.$emitter.emit === 'function') {
+            this.$emitter.emit('customers:updated', this.customers)
+          }
         })
         .catch((error) => {
           console.error('Error fetching customers:', error)
@@ -376,7 +595,14 @@ export default {
     serviceBadge(customer) {
       const s = this.serviceState(customer)
       if (s.state === 'overdue') return 'Terlambat'
-      if (s.state === 'dueSoon') return 'Segera Servis'
+      if (s.state === 'dueSoon') return 'Dekat Jatuh Tempo'
+      if (s.state === 'ok') return 'Aman'
+      return '—'
+    },
+    serviceCategory(customer) {
+      const s = this.serviceState(customer)
+      if (s.state === 'overdue') return 'Terlambat'
+      if (s.state === 'dueSoon') return 'Dekat Jatuh Tempo'
       if (s.state === 'ok') return 'Aman'
       return '—'
     },
@@ -420,6 +646,104 @@ export default {
         month: 'short',
         year: 'numeric',
       })
+    },
+    openUpdateServiceModal(customer) {
+      this.selectedCustomer = customer
+      this.updateNextServiceDate = customer._nextService || ''
+      this.showUpdateModal = true
+    },
+    closeUpdateModal() {
+      this.showUpdateModal = false
+      this.selectedCustomer = null
+      this.updateNextServiceDate = ''
+    },
+    async updateNextService() {
+      if (!this.updateNextServiceDate) {
+        alert('Tanggal next service harus diisi')
+        return
+      }
+
+      this.loadingStore.show()
+      try {
+        console.log('Updating next service for asset:', this.selectedCustomer.asset_id)
+        console.log('New date:', this.updateNextServiceDate)
+
+        const response = await api.post(
+          `/customers/assets/update-next-service/${this.selectedCustomer.asset_id}`,
+          { nextService: this.updateNextServiceDate },
+        )
+
+        console.log('Update response:', response.data)
+
+        if (response.data.status) {
+          console.log('=== UPDATE NEXT SERVICE - BEFORE LOCAL UPDATE ===')
+          console.log('Selected Customer asset_id:', this.selectedCustomer.asset_id)
+          console.log('New nextService date to set:', this.updateNextServiceDate)
+
+          // Update the customer in the local array immediately for instant UI update
+          const customerIndex = this.customers.findIndex(
+            (c) => c.asset_id === this.selectedCustomer.asset_id,
+          )
+          console.log('Customer found at index:', customerIndex)
+
+          if (customerIndex !== -1) {
+            // Update nextService in local array
+            console.log('Before update:', this.customers[customerIndex].nextService)
+            this.customers[customerIndex].nextService = this.updateNextServiceDate
+            console.log('After update:', this.customers[customerIndex].nextService)
+            console.log('Updated local customer:', this.customers[customerIndex])
+          } else {
+            console.warn('Customer not found in local array!')
+          }
+
+          this.closeUpdateModal()
+          alert('Jadwal service berhasil diupdate')
+
+          // Then fetch fresh data from server
+          console.log('Fetching fresh data from server...')
+          await this.fetchCustomers()
+          console.log('=== UPDATE COMPLETE ===')
+
+          console.log('Data refreshed, check updated customer')
+        } else {
+          alert('Update gagal: ' + (response.data.message || 'Unknown error'))
+        }
+      } catch (error) {
+        console.error('Error updating next service:', error)
+        console.error('Error response:', error.response?.data)
+        alert(
+          'Gagal mengupdate jadwal service: ' + (error.response?.data?.message || error.message),
+        )
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    openHistoryModal(customer) {
+      this.selectedCustomer = customer
+      this.showHistoryModal = true
+      this.fetchServiceHistory(customer.asset_id)
+    },
+    closeHistoryModal() {
+      this.showHistoryModal = false
+      this.selectedCustomer = null
+      this.serviceHistory = []
+    },
+    async fetchServiceHistory(assetId) {
+      this.loadingHistory = true
+      try {
+        const response = await api.get(`/wo/service/history/asset/${assetId}`)
+
+        if (response.data.status) {
+          this.serviceHistory = response.data.data || []
+        } else {
+          this.serviceHistory = []
+        }
+      } catch (error) {
+        console.error('Error fetching service history:', error)
+        this.serviceHistory = []
+      } finally {
+        this.loadingHistory = false
+      }
     },
   },
 }

@@ -110,9 +110,14 @@ export function useWorkOrderPdfPenjualan() {
     )
 
     /* ================= OUTPUT ================= */
-    const blob = doc.output('blob')
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
+    const safeName = (customer?.nama || 'customer')
+      .toString()
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 40)
+    const fileName = `WO_Penjualan_${woNumber || 'WO'}_${safeName}.pdf`
+    doc.save(fileName)
   }
 
   return { generatePdf }

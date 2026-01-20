@@ -1,6 +1,7 @@
 # API Documentation - Product, Brand, Kategori, Satuan CRUD
 
 ## Overview
+
 Dokumentasi lengkap untuk CRUD operations pada Product, Brand, Kategori, dan Satuan.
 
 ---
@@ -8,16 +9,19 @@ Dokumentasi lengkap untuk CRUD operations pada Product, Brand, Kategori, dan Sat
 ## 1. PRODUCT CRUD
 
 ### Base URL
-```
+
+```text
 http://localhost:8080/products
 ```
 
 ### 1.1 List Products
+
 **Endpoint:** `GET /products`
 
 **Description:** Mendapatkan daftar semua produk
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -60,11 +64,13 @@ http://localhost:8080/products
 ---
 
 ### 1.2 Get Product Detail
+
 **Endpoint:** `GET /products/{id}`
 
 **Description:** Mendapatkan detail satu produk
 
 **URL Parameters:**
+
 - `id` (required): UUID produk
 
 **Response:** Same as single product object in list
@@ -72,6 +78,7 @@ http://localhost:8080/products
 ---
 
 ### 1.3 Create Product
+
 **Endpoint:** `POST /products`
 
 **Description:** Membuat produk baru
@@ -79,7 +86,8 @@ http://localhost:8080/products
 **Content-Type:** `multipart/form-data`
 
 **Request Body:**
-```
+
+```text
 nama: Laptop Dell (required)
 deskripsi: Laptop gaming high performance
 kode: LAP001
@@ -96,6 +104,7 @@ gambar: file (optional - jpg, png, gif, webp max 5MB)
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -106,7 +115,6 @@ gambar: file (optional - jpg, png, gif, webp max 5MB)
       "nama": "Laptop Dell",
       "gambar": "/uploads/products/abc123_20251214_120530.jpg",
       "deskripsi": "Laptop gaming high performance",
-      "kode": "LAP001",
       "type": "Elektronik",
       "harga": 15000000,
       "hpp": 12000000,
@@ -129,6 +137,7 @@ gambar: file (optional - jpg, png, gif, webp max 5MB)
 ```
 
 **Error Response:**
+
 ```json
 {
   "status": false,
@@ -140,6 +149,7 @@ gambar: file (optional - jpg, png, gif, webp max 5MB)
 ---
 
 ### 1.4 Update Product
+
 **Endpoint:** `POST /products/{id}` (atau `PUT /products/{id}`)
 
 **Description:** Mengupdate produk yang sudah ada
@@ -147,10 +157,12 @@ gambar: file (optional - jpg, png, gif, webp max 5MB)
 **Content-Type:** `multipart/form-data`
 
 **URL Parameters:**
+
 - `id` (required): UUID produk
 
 **Request Body:** (semua field optional, hanya kirim yang ingin diubah)
-```
+
+```text
 nama: Laptop Dell Updated
 deskripsi: Laptop gaming updated
 harga: 16000000
@@ -158,13 +170,13 @@ gambar: file (optional - jika ada, file lama akan dihapus)
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
   "message": "Produk diperbarui",
   "data": {
     "product": {
-      "id": "uuid",
       "nama": "Laptop Dell Updated",
       "gambar": "/uploads/products/newfile_20251214_120530.jpg",
       "harga": 16000000,
@@ -182,14 +194,17 @@ gambar: file (optional - jika ada, file lama akan dihapus)
 ---
 
 ### 1.5 Delete Product
+
 **Endpoint:** `DELETE /products/{id}`
 
 **Description:** Menghapus produk dan file gambar-nya
 
 **URL Parameters:**
+
 - `id` (required): UUID produk
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -199,6 +214,7 @@ gambar: file (optional - jika ada, file lama akan dihapus)
 ```
 
 **Error Response:**
+
 ```json
 {
   "status": false,
@@ -212,14 +228,17 @@ gambar: file (optional - jika ada, file lama akan dihapus)
 ## 2. BRAND CRUD
 
 ### Base URL
-```
+
+```text
 http://localhost:8080/brands
 ```
 
 ### 2.1 List Brands
+
 **Endpoint:** `GET /brands`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -239,19 +258,23 @@ http://localhost:8080/brands
 ---
 
 ### 2.2 Get Brand Detail
+
 **Endpoint:** `GET /brands/{id}`
 
 **URL Parameters:**
+
 - `id` (required): UUID brand
 
 ---
 
 ### 2.3 Create Brand
+
 **Endpoint:** `POST /brands`
 
 **Content-Type:** `application/json` atau `application/x-www-form-urlencoded`
 
 **Request Body:**
+
 ```json
 {
   "nama": "Dell"
@@ -259,6 +282,7 @@ http://localhost:8080/brands
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -275,9 +299,11 @@ http://localhost:8080/brands
 ---
 
 ### 2.4 Update Brand
+
 **Endpoint:** `POST /brands/{id}` (atau `PUT /brands/{id}`)
 
 **Request Body:**
+
 ```json
 {
   "nama": "Dell Inc."
@@ -285,6 +311,7 @@ http://localhost:8080/brands
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -300,9 +327,11 @@ http://localhost:8080/brands
 ---
 
 ### 2.5 Delete Brand
+
 **Endpoint:** `DELETE /brands/{id}`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -316,14 +345,17 @@ http://localhost:8080/brands
 ## 3. KATEGORI CRUD
 
 ### Base URL
-```
+
+```text
 http://localhost:8080/kategoris
 ```
 
 ### 3.1 List Kategoris
+
 **Endpoint:** `GET /kategoris`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -343,19 +375,23 @@ http://localhost:8080/kategoris
 ---
 
 ### 3.2 Get Kategori Detail
+
 **Endpoint:** `GET /kategoris/{id}`
 
 **URL Parameters:**
+
 - `id` (required): UUID kategori
 
 ---
 
 ### 3.3 Create Kategori
+
 **Endpoint:** `POST /kategoris`
 
 **Content-Type:** `application/json` atau `application/x-www-form-urlencoded`
 
 **Request Body:**
+
 ```json
 {
   "nama": "Elektronik"
@@ -363,6 +399,7 @@ http://localhost:8080/kategoris
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -379,9 +416,11 @@ http://localhost:8080/kategoris
 ---
 
 ### 3.4 Update Kategori
+
 **Endpoint:** `POST /kategoris/{id}` (atau `PUT /kategoris/{id}`)
 
 **Request Body:**
+
 ```json
 {
   "nama": "Elektronik & Gadget"
@@ -389,6 +428,7 @@ http://localhost:8080/kategoris
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -404,9 +444,11 @@ http://localhost:8080/kategoris
 ---
 
 ### 3.5 Delete Kategori
+
 **Endpoint:** `DELETE /kategoris/{id}`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -420,14 +462,17 @@ http://localhost:8080/kategoris
 ## 4. SATUAN CRUD
 
 ### Base URL
-```
+
+```text
 http://localhost:8080/satuans
 ```
 
 ### 4.1 List Satuans
+
 **Endpoint:** `GET /satuans`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -447,19 +492,23 @@ http://localhost:8080/satuans
 ---
 
 ### 4.2 Get Satuan Detail
+
 **Endpoint:** `GET /satuans/{id}`
 
 **URL Parameters:**
+
 - `id` (required): UUID satuan
 
 ---
 
 ### 4.3 Create Satuan
+
 **Endpoint:** `POST /satuans`
 
 **Content-Type:** `application/json` atau `application/x-www-form-urlencoded`
 
 **Request Body:**
+
 ```json
 {
   "nama": "Pcs"
@@ -467,6 +516,7 @@ http://localhost:8080/satuans
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -483,9 +533,11 @@ http://localhost:8080/satuans
 ---
 
 ### 4.4 Update Satuan
+
 **Endpoint:** `POST /satuans/{id}` (atau `PUT /satuans/{id}`)
 
 **Request Body:**
+
 ```json
 {
   "nama": "Pieces"
@@ -493,6 +545,7 @@ http://localhost:8080/satuans
 ```
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -508,9 +561,11 @@ http://localhost:8080/satuans
 ---
 
 ### 4.5 Delete Satuan
+
 **Endpoint:** `DELETE /satuans/{id}`
 
 **Response:**
+
 ```json
 {
   "status": true,
@@ -537,6 +592,7 @@ http://localhost:8080/satuans
 ## Common Error Responses
 
 ### Validation Error
+
 ```json
 {
   "status": false,
@@ -546,6 +602,7 @@ http://localhost:8080/satuans
 ```
 
 ### Not Found Error
+
 ```json
 {
   "status": false,
@@ -555,6 +612,7 @@ http://localhost:8080/satuans
 ```
 
 ### Upload Error
+
 ```json
 {
   "status": false,
@@ -564,6 +622,7 @@ http://localhost:8080/satuans
 ```
 
 ### Server Error
+
 ```json
 {
   "status": false,
@@ -578,6 +637,7 @@ http://localhost:8080/satuans
 ## cURL Examples
 
 ### Create Product with Image
+
 ```bash
 curl -X POST http://localhost:8080/products \
   -F "nama=Laptop Dell" \
@@ -587,6 +647,7 @@ curl -X POST http://localhost:8080/products \
 ```
 
 ### Update Product
+
 ```bash
 curl -X POST http://localhost:8080/products/{id} \
   -F "nama=Laptop Dell Updated" \
@@ -595,6 +656,7 @@ curl -X POST http://localhost:8080/products/{id} \
 ```
 
 ### Create Brand (JSON)
+
 ```bash
 curl -X POST http://localhost:8080/brands \
   -H "Content-Type: application/json" \
@@ -602,13 +664,200 @@ curl -X POST http://localhost:8080/brands \
 ```
 
 ### List Products
+
 ```bash
 curl -X GET http://localhost:8080/products
 ```
 
 ### Delete Product
+
 ```bash
 curl -X DELETE http://localhost:8080/products/{id}
+```
+
+---
+
+## 5. WORKORDER SERVICE API
+
+### Base URL
+
+```text
+http://localhost:8080/wo
+```
+
+### 5.1 Get WorkOrder History by Customer Asset ID
+
+**Endpoint:** `GET /wo/service/history/asset/{customer_asset_id}`
+
+**Description:** Mendapatkan history semua workorder service berdasarkan customer asset ID, diurutkan dari terbaru
+
+**URL Parameters:**
+
+- `customer_asset_id` (required): UUID dari customer asset
+
+**Response:**
+
+```json
+{
+  "status": true,
+  "message": "Berhasil mengambil history workorder service",
+  "data": [
+    {
+      "id": "uuid-string",
+      "workorder_id": "uuid-workorder",
+      "customer_asset_id": "uuid-customer-asset",
+      "teknisi_id": "uuid-teknisi",
+      "keluhan": "AC tidak dingin",
+      "keterangan": "Sudah dicek dan diperbaiki",
+      "status": "selesai",
+      "nowo": "WO-00001",
+      "customerCode": "CUS123456",
+      "tanda_tangan_pelanggan": "/uploads/signatures/abc123.jpg",
+      "check_evaporator": true,
+      "keterangan_evaporator": "Normal",
+      "check_fan_indoor": true,
+      "keterangan_fan_indoor": "Berputar lancar",
+      "created_at": "2026-01-20T10:00:00.000000Z",
+      "updated_at": "2026-01-20T15:30:00.000000Z",
+      "customer_asset": {
+        "id": "uuid",
+        "kode_ac": "AC-001",
+        "customer_id": "uuid-customer",
+        "brand_id": "uuid-brand",
+        "tipe_id": "uuid-tipe",
+        "customer": {
+          "id": "uuid",
+          "nama": "PT. ABC",
+          "alamat": "Jl. Sudirman No. 123"
+        },
+        "brand": {
+          "id": "uuid",
+          "nama": "Daikin"
+        },
+        "tipe": {
+          "id": "uuid",
+          "nama": "Split 1 PK"
+        }
+      },
+      "pegawai": {
+        "id": "uuid",
+        "nama": "John Doe",
+        "nip": "12345"
+      }
+    }
+  ]
+}
+```
+
+**Success Response (No History):**
+
+```json
+{
+  "status": true,
+  "message": "Tidak ada history workorder untuk asset ini",
+  "data": []
+}
+```
+
+**Error Response:**
+
+```json
+{
+  "status": false,
+  "message": "Error message",
+  "data": null
+}
+```
+
+**Example cURL:**
+
+```bash
+curl -X GET http://localhost:8080/wo/service/history/asset/uuid-customer-asset-id
+```
+
+---
+
+## 6. CUSTOMER ASSETS API
+
+### Base URL
+
+```text
+http://localhost:8080/customers
+```
+
+### 6.1 Update Next Service Date
+
+**Endpoint:** `POST /customers/assets/update-next-service/{id}`
+
+**Description:** Mengupdate tanggal next service untuk customer asset tertentu
+
+**Authentication:** Required (JWT Token)
+
+**URL Parameters:**
+
+- `id` (required): UUID dari customer asset
+
+**Request Body:**
+
+```json
+{
+  "nextService": "2026-02-20"
+}
+```
+
+**Response Success:**
+
+```json
+{
+  "status": true,
+  "message": "Next service date updated successfully",
+  "data": {
+    "id": "uuid-customer-asset",
+    "customer_id": "uuid-customer",
+    "brand_id": "uuid-brand",
+    "tipe_id": "uuid-tipe",
+    "model": "Inverter",
+    "kapasitas": "1 PK",
+    "freon": "R32",
+    "lokasi": "Ruang Tamu",
+    "keterangan": "AC Normal",
+    "lastService": "2026-01-15",
+    "nextService": "2026-02-20",
+    "status": "aktif",
+    "gambar": "/uploads/assets/abc123.jpg",
+    "created_at": "2026-01-10T10:00:00.000000Z",
+    "updated_at": "2026-01-20T10:30:00.000000Z"
+  }
+}
+```
+
+**Error Response (Asset Not Found):**
+
+```json
+{
+  "status": false,
+  "message": "Customer Asset not found",
+  "data": null
+}
+```
+
+**Error Response (Missing Field):**
+
+```json
+{
+  "status": false,
+  "message": "nextService field is required",
+  "data": null
+}
+```
+
+**Example cURL:**
+
+```bash
+curl -X POST http://localhost:8080/customers/assets/update-next-service/uuid-customer-asset-id \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"nextService": "2026-02-20"}'
 ```
 
 ---

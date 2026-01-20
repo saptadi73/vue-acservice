@@ -31,11 +31,14 @@
 <script setup>
 import SideMenuParentItem from '../components/SideMenuParentItem.vue'
 import SideMenuSubItem from '../components/SideMenuSubItem.vue'
-import { reactive, inject, computed } from 'vue'
+import { reactive, inject, computed, onMounted } from 'vue'
 const $emitter = inject('$emitter')
 
 import { useScreenSize } from '@/composables/useScreenSize.js'
 const { isMobile } = useScreenSize()
+
+import { useWorkOrdersStore } from '@/stores/workOrders'
+const woStore = useWorkOrdersStore()
 
 const navItems = reactive([
   {
@@ -95,10 +98,7 @@ const navItems = reactive([
       {
         text: 'Daftar WO',
         url: '/wo/all',
-        badge: {
-          text: 20,
-          style: '',
-        },
+        badge: null, // Will be updated by computed
       },
       {
         text: 'Buat WO Rental Baru',
@@ -350,4 +350,36 @@ const haddleSubMenu = (index) => {
     }
   })
 }
+
+// Fetch work orders on component mount and update badge
+onMounted(async () => {
+  await woStore.fetchWorkOrders()
+  updateDaftarWOBadge()
+})
+
+// Watch for store changes and update badge dynamically
+const woIncompleteCount = computed(() => woStore.incompleteCount)
+
+// Update Daftar WO badge text reactively
+const updateDaftarWOBadge = () => {
+  const woMenuItem = navItems.find((item) => item.text === 'Work Order')
+  if (woMenuItem && woMenuItem.children) {
+    const daftarWoItem = woMenuItem.children.find((child) => child.text === 'Daftar WO')
+    if (daftarWoItem) {
+      daftarWoItem.badge =
+        woIncompleteCount.value > 0
+          ? {
+              text: woIncompleteCount.value,
+              style: 'bg-amber-500 text-white',
+            }
+          : null
+    }
+  }
+}
+
+// Watch the store count and update badge
+computed(() => {
+  updateDaftarWOBadge()
+  return woIncompleteCount.value
+})
 </script>
