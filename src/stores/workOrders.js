@@ -10,8 +10,11 @@ export const useWorkOrdersStore = defineStore('work-orders', {
   }),
   getters: {
     incomplete() {
-      // Count WOs where status is not "Selesai" (completed)
-      return this.workOrders.filter((wo) => wo.status !== 'Selesai').length
+      // Count WOs where status is not "selesai" (case-insensitive)
+      return this.workOrders.filter((wo) => {
+        const status = (wo.status || '').toString().toLowerCase()
+        return status !== 'selesai'
+      }).length
     },
   },
   actions: {

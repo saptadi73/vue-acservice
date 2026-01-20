@@ -2,15 +2,10 @@ import { jsPDF } from 'jspdf'
 import { normalizeBase64Image, isValidBase64Image } from '@/utils/imageBase64'
 
 export function useWorkOrderPdf() {
-  async function generatePdf({
-    woNumber,
-    customer,
-    unit,
-    checklist,
-    hasilPekerjaan,
-    teknisi,
-    signatures,
-  }) {
+  async function generatePdf(
+    { woNumber, customer, unit, checklist, hasilPekerjaan, teknisi, signatures },
+    options = {},
+  ) {
     console.log('📄 generatePdf() called')
     console.log('  - Teknisi signature:', signatures.teknisi ? 'Received' : 'Not received')
     console.log('  - Pelanggan signature:', signatures.pelanggan ? 'Received' : 'Not received')
@@ -102,9 +97,15 @@ export function useWorkOrderPdf() {
     )
 
     /* ================= OUTPUT ================= */
+    if (options.preview) {
+      // Return blob URL for preview iframe/modal
+      return doc.output('bloburl')
+    }
+
     const blob = doc.output('blob')
     const url = URL.createObjectURL(blob)
     window.open(url, '_blank')
+    return null
   }
 
   return { generatePdf }
@@ -161,34 +162,80 @@ async function drawSignatureBox(doc, x, y, title, name, signature) {
   console.log('  - Base64 received:', base64 ? 'Yes' : 'No')
   console.log('  - URL received:', url ? url : 'No')
 
+  let imageAdded = false
+
   if (base64) {
     const img = normalizeBase64Image(base64)
     if (img && isValidBase64Image(img)) {
       try {
         doc.addImage(img, 'PNG', x + 5, y + 8, boxW - 10, 30)
         console.log('  - ✅ Image added via Base64')
+        imageAdded = true
       } catch (err) {
         console.error('  - ❌ addImage Base64 failed:', err.message)
+        console.log('  - 🔄 Attempting fallback to URL...')
       }
     } else {
-      console.warn('  - ⚠️ Invalid Base64 format')
+      console.warn('  - ⚠️ Invalid Base64 format, attempting fallback to URL')
     }
-  } else if (url) {
-    try {
-      const imgEl = await loadImage(url)
-      doc.addImage(imgEl, 'PNG', x + 5, y + 8, boxW - 10, 30)
-      console.log('  - ✅ Image added via URL')
-    } catch (err) {
-      console.error('  - ❌ addImage URL failed:', err.message)
+  }
+
+  // Fallback to URL if Base64 failed or not available
+  if (!imageAdded && url) {
+    // Try to load image as base64 blob first (handles CORS better)
+    const base64FromUrl = await loadImageAsBase64(url)
+    if (base64FromUrl) {
+      try {
+        doc.addImage(base64FromUrl, 'PNG', x + 5, y + 8, boxW - 10, 30)
+        console.log('  - ✅ Image added via URL (blob conversion)')
+        imageAdded = true
+      } catch (err) {
+        console.error('  - ❌ addImage blob failed:', err.message)
+        console.log('  - 🔄 Attempting direct image load...')
+      }
     }
-  } else {
-    console.log('  - ⚠️ No signature data provided')
+
+    // Final fallback: try direct image load
+    if (!imageAdded) {
+      try {
+        const imgEl = await loadImage(url)
+        doc.addImage(imgEl, 'PNG', x + 5, y + 8, boxW - 10, 30)
+        console.log('  - ✅ Image added via direct URL load')
+        imageAdded = true
+      } catch (err) {
+        console.error('  - ❌ Direct URL load failed:', err.message)
+      }
+    }
+  }
+
+  if (!imageAdded) {
+    console.log('  - ⚠️ No signature image could be added')
   }
 
   doc.line(x + 5, y + boxH - 10, x + boxW - 5, y + boxH - 10)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.text(`(${name || '..............'})`, x + boxW / 2, y + boxH - 5, { align: 'center' })
+}
+
+// Load image as base64 from URL via fetch (CORS-aware)
+async function loadImageAsBase64(url) {
+  try {
+    console.log('  - 📥 Fetching image as blob from:', url)
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const blob = await response.blob()
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch (err) {
+    console.error('  - ❌ Failed to load image as blob:', err.message)
+    return null
+  }
 }
 
 // Load image element from URL (with CORS) for jsPDF

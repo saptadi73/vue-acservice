@@ -11,16 +11,27 @@ export function normalizeBase64Image(base64) {
   // jsPDF SANGAT sensitif whitespace
   const clean = base64.replace(/\s+/g, '')
 
-  // Jika sudah data URI
+  // Jika sudah data URI, extract formatnya dari URI jika ada
   if (clean.startsWith('data:image/')) {
     return clean
   }
 
-  // Deteksi format dari signature awal base64
-  let format = 'png'
-  if (clean.startsWith('/9j/')) format = 'jpeg'
-  else if (clean.startsWith('R0lGOD')) format = 'gif'
-  else if (clean.startsWith('iVBOR')) format = 'png'
+  // Jika clean masih dimulai dengan "data:" berarti ada format, return as-is
+  if (clean.startsWith('data:')) {
+    return clean
+  }
+
+  // Deteksi format dari signature awal base64 (magic bytes)
+  let format = 'png' // default
+  if (clean.startsWith('/9j/'))
+    format = 'jpeg' // JPEG magic bytes
+  else if (clean.startsWith('R0lGOD'))
+    format = 'gif' // GIF magic bytes
+  else if (clean.startsWith('iVBOR'))
+    format = 'png' // PNG magic bytes
+  // Fallback: coba detect dari common encoding
+  else if (clean.includes('PNG') || clean.startsWith('89504e47')) format = 'png'
+  else if (clean.includes('JPEG') || clean.includes('FFD8')) format = 'jpeg'
 
   return `data:image/${format};base64,${clean}`
 }

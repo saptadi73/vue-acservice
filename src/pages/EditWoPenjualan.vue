@@ -605,6 +605,40 @@
         + Buat Sales Order
       </button>
     </div>
+
+    <!-- PDF Preview Modal -->
+    <div
+      v-if="showPdfModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closePdfPreview"
+    >
+      <div class="w-[92vw] max-w-5xl h-[86vh] rounded-2xl bg-white p-4 shadow-xl flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold text-gray-800">Preview WO Penjualan</h3>
+          <div class="flex items-center gap-2">
+            <button
+              @click="downloadFromPreview"
+              class="rounded-lg bg-indigo-600 text-white px-3 py-1.5 text-sm hover:bg-indigo-700"
+            >
+              Download
+            </button>
+            <button
+              @click="printFromPreview"
+              class="rounded-lg bg-gray-700 text-white px-3 py-1.5 text-sm hover:bg-gray-800"
+            >
+              Print
+            </button>
+            <button
+              @click="closePdfPreview"
+              class="rounded-lg px-2 py-1.5 text-sm hover:bg-gray-100"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+        <iframe :src="pdfPreviewUrl" class="flex-1 w-full border rounded-lg"></iframe>
+      </div>
+    </div>
   </div>
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
@@ -627,10 +661,19 @@ const loadingStore = useLoadingStore()
 const show_toast = ref(false)
 const message_toast = ref('')
 
+// Preview modal state
+const showPdfModal = ref(false)
+const pdfPreviewUrl = ref('')
+
 function tutupToast() {
   show_toast.value = false
   message_toast.value = ''
   window.location.reload()
+}
+
+function closePdfPreview() {
+  showPdfModal.value = false
+  // Do not revoke here; jsPDF blob URLs are managed by the browser
 }
 
 // Routing dan data utama
@@ -1059,39 +1102,74 @@ async function previewPdfJsPdf() {
 
   const teknisiName = teknisi.value.find((t) => t.id === formData.value.teknisi_id)?.nama || ''
 
-  await generatePdf({
-    woNumber: no_wo.value || '-',
-    customer: {
-      nama: nama_pelanggan.value || '-',
-      alamat: alamat.value || '-',
-      hp: no_hp.value || '-',
-      jenis: jenis_pelanggan.value || '-',
-      kode: kode_pelanggan.value || '-',
-    },
-    unit: {
-      brand: brand.value || '-',
-      model: model.value || '-',
-      tipe: tipe.value || '-',
-      kapasitas: kapasitas.value || '-',
-      freon: freon.value || '-',
-      lokasi: lokasi.value || '-',
-    },
-    checklist: checklistData,
-    hasilPekerjaan: formData.value.hasil_pekerjaan || '',
-    teknisi: {
-      nama: teknisiName,
-    },
-    signatures: {
+  const blobUrl = await generatePdf(
+    {
+      woNumber: no_wo.value || '-',
+      customer: {
+        nama: nama_pelanggan.value || '-',
+        alamat: alamat.value || '-',
+        hp: no_hp.value || '-',
+        jenis: jenis_pelanggan.value || '-',
+        kode: kode_pelanggan.value || '-',
+      },
+      unit: {
+        brand: brand.value || '-',
+        model: model.value || '-',
+        tipe: tipe.value || '-',
+        kapasitas: kapasitas.value || '-',
+        freon: freon.value || '-',
+        lokasi: lokasi.value || '-',
+      },
+      checklist: checklistData,
+      hasilPekerjaan: formData.value.hasil_pekerjaan || '',
       teknisi: {
-        base64: teknisiSignBase64.value,
-        url: teknisiSignUrl.value,
+        nama: teknisiName,
       },
-      pelanggan: {
-        base64: pelangganSignBase64.value,
-        url: pelangganSignUrl.value,
+      signatures: {
+        teknisi: {
+          base64: teknisiSignBase64.value,
+          url: teknisiSignUrl.value,
+        },
+        pelanggan: {
+          base64: pelangganSignBase64.value,
+          url: pelangganSignUrl.value,
+        },
       },
     },
-  })
+    { preview: true },
+  )
+
+  if (blobUrl) {
+    pdfPreviewUrl.value = blobUrl
+    showPdfModal.value = true
+  }
+}
+
+function downloadFromPreview() {
+  if (!pdfPreviewUrl.value) return
+  const a = document.createElement('a')
+  const safeName = (nama_pelanggan.value || 'customer')
+    .toString()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .slice(0, 40)
+  a.href = pdfPreviewUrl.value
+  a.download = `WO_Penjualan_${no_wo.value || 'WO'}_${safeName}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+function printFromPreview() {
+  if (!pdfPreviewUrl.value) return
+  const w = window.open(pdfPreviewUrl.value)
+  if (w) {
+    w.addEventListener('load', () => {
+      w.focus()
+      w.print()
+    })
+  }
 }
 
 // Lifecycle

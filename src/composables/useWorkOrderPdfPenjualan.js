@@ -2,15 +2,10 @@ import { jsPDF } from 'jspdf'
 import { normalizeBase64Image, isValidBase64Image } from '@/utils/imageBase64'
 
 export function useWorkOrderPdfPenjualan() {
-  async function generatePdf({
-    woNumber,
-    customer,
-    unit,
-    checklist,
-    hasilPekerjaan,
-    teknisi,
-    signatures,
-  }) {
+  async function generatePdf(
+    { woNumber, customer, unit, checklist, hasilPekerjaan, teknisi, signatures },
+    options = {},
+  ) {
     const doc = new jsPDF('p', 'mm', 'a4')
 
     const marginX = 11
@@ -117,7 +112,14 @@ export function useWorkOrderPdfPenjualan() {
       .replace(/\s+/g, '_')
       .slice(0, 40)
     const fileName = `WO_Penjualan_${woNumber || 'WO'}_${safeName}.pdf`
+
+    if (options.preview) {
+      // Return blob URL so caller can preview in modal/iframe
+      return doc.output('bloburl')
+    }
+
     doc.save(fileName)
+    return null
   }
 
   return { generatePdf }

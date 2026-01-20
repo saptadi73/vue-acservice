@@ -763,6 +763,39 @@
         + Buat Sales Order
       </button>
     </div>
+    <!-- PDF Preview Modal -->
+    <div
+      v-if="showPdfModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="closePdfPreview"
+    >
+      <div class="w-[92vw] max-w-5xl h-[86vh] rounded-2xl bg-white p-4 shadow-xl flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold text-gray-800">Preview WO Penyewaan</h3>
+          <div class="flex items-center gap-2">
+            <button
+              @click="downloadFromPreview"
+              class="rounded-lg bg-indigo-600 text-white px-3 py-1.5 text-sm hover:bg-indigo-700"
+            >
+              Download
+            </button>
+            <button
+              @click="printFromPreview"
+              class="rounded-lg bg-gray-700 text-white px-3 py-1.5 text-sm hover:bg-gray-800"
+            >
+              Print
+            </button>
+            <button
+              @click="closePdfPreview"
+              class="rounded-lg px-2 py-1.5 text-sm hover:bg-gray-100"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+        <iframe :src="pdfPreviewUrl" class="flex-1 w-full border rounded-lg"></iframe>
+      </div>
+    </div>
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
@@ -788,10 +821,19 @@ const no_wo = ref(route.query.nowo || '')
 const show_toast = ref(false)
 const message_toast = ref('')
 
+// Preview modal state
+const showPdfModal = ref(false)
+const pdfPreviewUrl = ref('')
+
 function tutupToast() {
   show_toast.value = false
   message_toast.value = ''
   window.location.reload()
+}
+
+function closePdfPreview() {
+  showPdfModal.value = false
+  // Do not revoke blob URL here; browser manages jsPDF bloburl lifecycle
 }
 
 // Routing dan data utama
@@ -947,6 +989,36 @@ async function getForNewWorkOrder() {
   }
 }
 
+// Handle teknisi signature upload
+function onTeknisiSignChange(event) {
+  const file = event.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64Data = e.target.result
+      teknisiSignBase64.value = base64Data
+      // Note: teknisiSignUrl is computed from teknisi object, but we can store in base64 for PDF
+      console.log('✅ Teknisi signature updated')
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+// Handle pelanggan signature upload
+function onPelangganSignChange(event) {
+  const file = event.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64Data = e.target.result
+      pelangganSignBase64.value = base64Data
+      pelangganSignUrl.value = base64Data
+      console.log('✅ Pelanggan signature updated')
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
 async function createPelangganSignLink() {
   loadingStore.show()
   try {
@@ -1082,8 +1154,9 @@ async function getWorkOrderPenyewaanByID() {
     onSelectCustomer()
     selectedAssetId.value = dataku.rental_asset_id || ''
     onSelectAsset()
+    // Gunakan relative path agar melalui Vite proxy (hindari CORS)
     pelangganSignUrl.value = dataku.tanda_tangan_pelanggan
-      ? BASE_URL + dataku.tanda_tangan_pelanggan.replace(/^\//, '')
+      ? toRelativeUploadPath(dataku.tanda_tangan_pelanggan)
       : null
 
     // Simpan Base64 signatures dari backend
@@ -1277,7 +1350,7 @@ function createSalesOrder() {
 //   return clone.outerHTML
 // }
 
-function previewPdfJsPdf() {
+async function previewPdfJsPdf() {
   const { generatePdf } = useWorkOrderPdf()
 
   // Prepare checklist data structure
@@ -1389,38 +1462,80 @@ function previewPdfJsPdf() {
   // Get teknisi name
   const teknisiName = teknisi.value.find((t) => t.id === formData.value.teknisi_id)?.nama || ''
 
+  // Debug: Log signatures before sending to PDF
+  console.log('📋 PDF Generation - Signatures Data:')
+  console.log('  Teknisi Base64:', teknisiSignBase64.value ? 'Yes' : 'No')
+  console.log('  Teknisi URL:', teknisiSignUrl.value ? teknisiSignUrl.value : 'No')
+  console.log('  Pelanggan Base64:', pelangganSignBase64.value ? 'Yes' : 'No')
+  console.log('  Pelanggan URL:', pelangganSignUrl.value ? pelangganSignUrl.value : 'No')
+
   // Call composable with clean data structure
-  generatePdf({
-    woNumber: no_wo.value || '-',
-    customer: {
-      nama: nama_pelanggan.value || '-',
-      alamat: alamat.value || '-',
-      hp: no_hp.value || '-',
-    },
-    unit: {
-      brand: brand.value || '-',
-      model: model.value || '-',
-      tipe: tipe.value || '-',
-      kapasitas: kapasitas.value || '-',
-      freon: freon.value || '-',
-      lokasi: lokasi.value || '-',
-    },
-    checklist: checklistData,
-    hasilPekerjaan: formData.value.hasil_pekerjaan || '',
-    teknisi: {
-      nama: teknisiName,
-    },
-    signatures: {
+  const blobUrl = await generatePdf(
+    {
+      woNumber: no_wo.value || '-',
+      customer: {
+        nama: nama_pelanggan.value || '-',
+        alamat: alamat.value || '-',
+        hp: no_hp.value || '-',
+      },
+      unit: {
+        brand: brand.value || '-',
+        model: model.value || '-',
+        tipe: tipe.value || '-',
+        kapasitas: kapasitas.value || '-',
+        freon: freon.value || '-',
+        lokasi: lokasi.value || '-',
+      },
+      checklist: checklistData,
+      hasilPekerjaan: formData.value.hasil_pekerjaan || '',
       teknisi: {
-        base64: teknisiSignBase64.value,
-        url: teknisiSignUrl.value,
+        nama: teknisiName,
       },
-      pelanggan: {
-        base64: pelangganSignBase64.value,
-        url: pelangganSignUrl.value,
+      signatures: {
+        teknisi: {
+          base64: teknisiSignBase64.value,
+          url: teknisiSignUrl.value,
+        },
+        pelanggan: {
+          base64: pelangganSignBase64.value,
+          url: pelangganSignUrl.value,
+        },
       },
     },
-  })
+    { preview: true },
+  )
+
+  if (blobUrl) {
+    pdfPreviewUrl.value = blobUrl
+    showPdfModal.value = true
+  }
+}
+
+function downloadFromPreview() {
+  if (!pdfPreviewUrl.value) return
+  const a = document.createElement('a')
+  const safeName = (nama_pelanggan.value || 'customer')
+    .toString()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .slice(0, 40)
+  a.href = pdfPreviewUrl.value
+  a.download = `WO_Penyewaan_${no_wo.value || 'WO'}_${safeName}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+function printFromPreview() {
+  if (!pdfPreviewUrl.value) return
+  const w = window.open(pdfPreviewUrl.value)
+  if (w) {
+    w.addEventListener('load', () => {
+      w.focus()
+      w.print()
+    })
+  }
 }
 
 // Alias untuk kompatibilitas

@@ -2,17 +2,20 @@ import { jsPDF } from 'jspdf'
 import { normalizeBase64Image, isValidBase64Image } from '@/utils/imageBase64'
 
 export function useWorkOrderPdfService() {
-  async function generatePdf({
-    woNumber,
-    customer,
-    unit,
-    keluhan,
-    keterangan,
-    checklist,
-    hasilPekerjaan,
-    teknisi,
-    signatures,
-  }) {
+  async function generatePdf(
+    {
+      woNumber,
+      customer,
+      unit,
+      keluhan,
+      keterangan,
+      checklist,
+      hasilPekerjaan,
+      teknisi,
+      signatures,
+    },
+    options = {},
+  ) {
     const doc = new jsPDF('p', 'mm', 'a4')
 
     const marginX = 11
@@ -129,7 +132,12 @@ export function useWorkOrderPdfService() {
       .replace(/\s+/g, '_')
       .slice(0, 40)
     const fileName = `WO_Pemeliharaan_${woNumber || 'WO'}_${safeName}.pdf`
+    if (options.preview) {
+      // Return blob URL for preview in iframe
+      return doc.output('bloburl')
+    }
     doc.save(fileName)
+    return null
   }
 
   return { generatePdf }
