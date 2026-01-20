@@ -78,17 +78,30 @@
               <tr>
                 <td class="pr-4 font-medium text-gray-700">Keluhan</td>
                 <td class="font-semibold text-gray-900">
-                  <select
-                    v-model="formData.keluhan"
-                    class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm"
-                    :disabled="status === 'selesai' && pelangganSignUrl"
-                  >
-                    <option value="" disabled selected>Pilih Keluhan</option>
-                    <option value="AC Tidak Dingin">AC tidak dingin</option>
-                    <option value="AC Bocor">AC bocor</option>
-                    <option value="AC Berisik">AC berisik</option>
-                    <option value="AC Mati Total">AC mati total</option>
-                  </select>
+                  <!-- Debug: {{ daftarKeluhan.length }} keluhan available -->
+                  <div class="flex items-center gap-2">
+                    <select
+                      v-model="formData.keluhan"
+                      class="bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm flex-1"
+                      :disabled="status === 'selesai' && pelangganSignUrl"
+                    >
+                      <option value="" disabled>Pilih Keluhan</option>
+                      <option
+                        v-for="keluhan in daftarKeluhan"
+                        :key="keluhan.id"
+                        :value="keluhan.nama"
+                      >
+                        {{ keluhan.nama }}
+                      </option>
+                    </select>
+                    <button
+                      @click="showAddKeluhanModal = true"
+                      class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap"
+                      :disabled="status === 'selesai' && pelangganSignUrl"
+                    >
+                      + Tambah
+                    </button>
+                  </div>
                 </td>
               </tr>
               <tr>
@@ -750,13 +763,58 @@
         <iframe :src="pdfPreviewUrl" class="flex-1 w-full border rounded-lg"></iframe>
       </div>
     </div>
+
+    <!-- Modal Tambah Keluhan -->
+    <div
+      v-if="showAddKeluhanModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="showAddKeluhanModal = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Tambah Keluhan Baru</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Keluhan</label>
+            <input
+              v-model="newKeluhanForm.nama"
+              type="text"
+              placeholder="Contoh: AC Kurang Dingin"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi (Opsional)</label>
+            <textarea
+              v-model="newKeluhanForm.deskripsi"
+              placeholder="Deskripsi singkat keluhan"
+              rows="3"
+              class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button
+            @click="createKeluhan"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+          >
+            Simpan
+          </button>
+          <button
+            @click="showAddKeluhanModal = false"
+            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 rounded transition"
+          >
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   <loading-overlay />
   <ToastCard v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
@@ -770,6 +828,24 @@ const loadingStore = useLoadingStore()
 
 const show_toast = ref(false)
 const message_toast = ref('')
+
+// Keluhan management
+const daftarKeluhan = ref([])
+const showAddKeluhanModal = ref(false)
+const newKeluhanForm = ref({
+  nama: '',
+  deskripsi: '',
+})
+
+// Debug: Watch daftarKeluhan changes
+watch(
+  daftarKeluhan,
+  (newVal) => {
+    console.log('🔍 daftarKeluhan changed:', newVal)
+    console.log('🔍 Length:', newVal?.length)
+  },
+  { deep: true },
+)
 
 function tutupToast() {
   show_toast.value = false
@@ -858,19 +934,20 @@ const formData = ref({
 async function createWorkOrder() {
   loadingStore.show()
   try {
+    console.log('📤 Submitting Work Order:', formData.value)
     const response = await api.post(
       `${BASE_URL}wo/service/update/${customerAssetId}`,
       formData.value,
     )
-    console.log('Work Order Created:', response.data.data)
-    console.log('Form datanya :', formData.value)
+    console.log('✅ Work Order Response:', response.data)
     show_toast.value = true
     message_toast.value = response.data.message || 'Work order created successfully.'
-    // Optionally reset form or provide user feedback here
   } catch (error) {
-    console.error('Error creating work order:', error)
+    console.error('❌ Error creating work order:', error)
+    console.error('Response:', error.response?.data)
     show_toast.value = true
-    message_toast.value = error.message || 'Failed to create work order.'
+    message_toast.value =
+      error.response?.data?.message || error.message || 'Gagal menyimpan work order'
   } finally {
     loadingStore.hide()
   }
@@ -997,6 +1074,82 @@ async function getPegawai() {
   }
 }
 
+async function fetchDaftarKeluhan() {
+  try {
+    console.log('🔄 Fetching keluhan from:', `${BASE_URL}keluhan`)
+    const response = await axios.get(`${BASE_URL}keluhan`)
+    console.log('✅ Keluhan Response:', response)
+    console.log('📦 Response Data:', response.data)
+    console.log('📋 Keluhan Array:', response.data.data)
+
+    if (response.data && response.data.data) {
+      daftarKeluhan.value = response.data.data
+      await nextTick()
+      console.log('✅ Daftar Keluhan Set:', daftarKeluhan.value)
+      console.log('📊 Total Keluhan:', daftarKeluhan.value.length)
+    } else {
+      console.warn('⚠️ No data in response')
+      daftarKeluhan.value = []
+    }
+  } catch (error) {
+    console.error('❌ Error fetching keluhan list:', error)
+    // Fallback ke hardcoded list jika endpoint belum ada
+    console.warn('⚠️ Using fallback keluhan list')
+    daftarKeluhan.value = [
+      { id: 1, nama: 'AC Tidak Dingin' },
+      { id: 2, nama: 'AC Bocor' },
+      { id: 3, nama: 'AC Berisik' },
+      { id: 4, nama: 'AC Mati Total' },
+    ]
+  }
+}
+
+async function createKeluhan() {
+  if (!newKeluhanForm.value.nama.trim()) {
+    show_toast.value = true
+    message_toast.value = 'Nama keluhan tidak boleh kosong'
+    return
+  }
+
+  loadingStore.show()
+  try {
+    console.log('📤 Creating Keluhan:', newKeluhanForm.value)
+    const response = await api.post(`${BASE_URL}keluhan`, {
+      nama: newKeluhanForm.value.nama,
+      deskripsi: newKeluhanForm.value.deskripsi || '',
+    })
+
+    console.log('✅ Keluhan Response:', response.data)
+    console.log('Keluhan Data:', response.data.data)
+
+    // Add new keluhan to list
+    if (response.data.data) {
+      daftarKeluhan.value.push(response.data.data)
+      console.log('Updated Daftar Keluhan:', daftarKeluhan.value)
+    }
+
+    // Set as selected value - gunakan nama dari response
+    const keluhanNama = response.data.data?.nama || newKeluhanForm.value.nama
+    formData.value.keluhan = keluhanNama
+    console.log('Selected Keluhan:', formData.value.keluhan)
+
+    // Reset form dan close modal
+    newKeluhanForm.value = { nama: '', deskripsi: '' }
+    showAddKeluhanModal.value = false
+
+    show_toast.value = true
+    message_toast.value = `Keluhan '${keluhanNama}' berhasil ditambahkan`
+  } catch (error) {
+    console.error('❌ Error creating keluhan:', error)
+    console.error('Response Error:', error.response?.data)
+    show_toast.value = true
+    message_toast.value =
+      error.response?.data?.message || 'Gagal menambah keluhan. Cek console untuk detail.'
+  } finally {
+    loadingStore.hide()
+  }
+}
+
 // Helper: File to Base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -1075,9 +1228,10 @@ watch(
   },
 )
 
-onMounted(() => {
+onMounted(async () => {
   console.log('Customer Asset ID:', customerAssetId)
-  getForNewWorkOrder(customerAssetId)
+  await fetchDaftarKeluhan()
+  await getForNewWorkOrder(customerAssetId)
   getPegawai()
 })
 
